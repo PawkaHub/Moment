@@ -1,0 +1,53 @@
+head
+	title moment
+	body
+		h1 Welcome to Meteor!
+
+template(name="layout")
+	//-Page main wrapper
+  #main-content.abs.dark-template
+    .page-wrapper
+      //-Page main content
+      .page-main.no-side
+        //-Kenburn slider
+        .kb-slider
+          #videoWrapper.videoWrapper.transitionOpacity
+            video#video.video
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/01.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/02.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/03.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/04.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/05.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/06.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/07.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/08.jpg', alt='img')
+          //-Kenburn slide
+          .item
+            img(src='assets/img/home/09.jpg', alt='img')
+        //-Caption
+        #intro.transitionOpacity.caption.cap-full
+          .vcenter-wrapper
+            .cap-lg.cap-lg-def.vcenter
+              h2.cap-title.allcaps Moment
+              .cap-des
+                p
+                  | If you had just one minute to share your life with the world, what would you say?
+              a#shareMoment.btn.btn-transparent.btn-lg
+                | Share your moment
+                i.fa.fa-long-arrow-right
