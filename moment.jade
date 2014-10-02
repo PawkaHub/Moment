@@ -1,0 +1,26 @@
+head
+	title moment
+	body
+
+template(name='layout')
+	+RenderController target='content' size='[undefined,undefined]'
+		+yield
+
+template(name='about')
+	+View size='[undefined,undefined]'
+		+Surface template='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=backgroundStyles
+		+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=overlayStyles
+		+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=introStyles
+		+Surface template='momentButton' size='[100,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=momentButtonStyles
+
+template(name='background')
+	//-This is the background for cycling of images
+
+template(name='overlay')
+	//-This is the dot overlay
+
+template(name='intro')
+	| Hello Moment
+
+template(name='momentButton')
+	| Moment Button
