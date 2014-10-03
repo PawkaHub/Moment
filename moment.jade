@@ -1,6 +1,9 @@
 head
-	title moment
-	body
+	title Moment
+	meta(name='apple-mobile-web-app-capable' content='yes')
+	meta(name='apple-mobile-web-app-status-bar-style' content='black-translucent')
+	meta(name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no')
+body
 
 template(name='layout')
 	+RenderController target='content' size='[undefined,undefined]'
@@ -12,6 +15,7 @@ template(name='about')
 		+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=overlayStyles
 		+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=introStyles
 		+Surface template='momentButton' size='[100,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=momentButtonStyles
+		+Surface template='ppLogo' size='[100,100]' origin='[1,1]' align='[1,1]' translate='[-10,-10,0]' opacity='0.14' properties=ppLogoStyles
 
 template(name='background')
 	//-This is the background for cycling of images
@@ -24,3 +28,29 @@ template(name='intro')
 
 template(name='momentButton')
 	| Moment Button
+
+template(name='ppLogo')
+	svg#ppLogo.icon(viewbox='0 0 100 100')
+		defs
+			pattern#ppImageFill(patternunits='userSpaceOnUse', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/nebula.png', x='-100', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/starry.jpg', x='-120', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/mayan.jpeg', x='-70', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/rain.png', x='-135', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/owl.jpg', x='-80', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/earth.png', x='-80', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/samurai.png', x='-140', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/cave.jpg', x='-120', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/skullkid.jpg', x='-120', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/deer.jpg', x='-90', y='0', width='300', height='100')
+				image.ppImageFillImage(xlink:href='img/performers/01.jpg', x='-90', y='0', width='300', height='100')
+		defs#pFirstDef
+			path#pFirst(d='M68.791,3.982H34.513v58v3.824v30.211h20.72V65.935v-0.128h13.558C86.059,65.807,100,51.912,100,34.703C100,17.622,86.059,3.982,68.791,3.982z')
+		clippath#pFirstMask
+			use(xlink:href='#pFirst', overflow='visible')
+		rect#pFirstFill(x='32.301', y='1.77', clip-path='url(#pFirstMask)', width='69.911', height='96.46')
+		defs#pLastDef
+			path#pLast(d='M34.278,3.982H0v58v3.824v30.211h20.72V65.935v-0.128h13.558c17.267,0,31.208-13.895,31.208-31.104C65.486,17.622,51.545,3.982,34.278,3.982z')
+		clippath#pLastMask
+			use(xlink:href='#pLast', overflow='visible')
+		rect#pLastFill(x='-2.212', y='1.77', clip-path='url(#pLastMask)', width='69.912', height='96.46')
