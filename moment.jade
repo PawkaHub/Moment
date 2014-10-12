@@ -16,9 +16,12 @@ template(name='about')
 		+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=introStyles
 		+Surface template='momentButton' size='[100,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=momentButtonStyles
 		+Surface template='ppLogo' size='[100,100]' origin='[1,1]' align='[1,1]' translate='[-10,-10,0]' opacity='0.14' properties=ppLogoStyles
+		+Surface template='timer' size='[60,60]' origin='[0,0]' align='[0,0]' translate='[10,300,0]' properties=timerStyles
+		+Surface template='question' size='[200,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,-200]' properties=questionStyles
 
 template(name='background')
 	//-This is the background for cycling of images
+	#video
 
 template(name='overlay')
 	//-This is the dot overlay
@@ -28,6 +31,12 @@ template(name='intro')
 
 template(name='momentButton')
 	| Moment Button
+
+template(name='timer')
+	= timer
+
+template(name='question')
+	| Question of the Day
 
 template(name='ppLogo')
 	svg#ppLogo.icon(viewbox='0 0 100 100')
