@@ -14,23 +14,23 @@ template(name='about')
 		+Surface template='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=backgroundStyles
 		+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=overlayStyles
 		+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=introStyles
-		+Surface template='momentButton' size='[100,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=momentButtonStyles
+		+Surface template='question' size='[200,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=questionStyles
+		+Surface template='momentButton' size='[200,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=momentButtonStyles
 		+Surface template='ppLogo' size='[100,100]' origin='[1,1]' align='[1,1]' translate='[-10,-10,0]' opacity='0.14' properties=ppLogoStyles
-		+Surface template='timer' size='[60,60]' origin='[0,0]' align='[0,0]' translate='[10,300,0]' properties=timerStyles
-		+Surface template='question' size='[200,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,-200]' properties=questionStyles
+		+Surface template='timer' size='[60,60]' origin='[0.5,1]' align='[0.5,0.5]' translate='[0,100,0]' properties=timerStyles
 
 template(name='background')
 	//-This is the background for cycling of images
-	#video
+	#video.bigClass
 
 template(name='overlay')
 	//-This is the dot overlay
 
 template(name='intro')
-	| Hello Moment
+	| Moment
 
 template(name='momentButton')
-	| Moment Button
+	| Share Your Moment
 
 template(name='timer')
 	= timer

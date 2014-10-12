@@ -89,19 +89,24 @@ if Meteor.isClient
 					backgroundColor: 'rgba(0,0,0,0.4)'
 			introStyles: ->
 				styles =
-					backgroundColor: '#e5e5e5'
-					textAlign: 'center'
-			momentButtonStyles: ->
-				styles =
-					backgroundColor: '#333333'
+					#backgroundColor: '#e5e5e5'
 					textAlign: 'center'
 					color: '#ffffff'
+			momentButtonStyles: ->
+				styles =
+					border: '1px solid #ffffff'
+					textAlign: 'center'
+					color: '#fff'
+					lineHeight: '40px'
 			ppLogoStyles: ->
 				styles = {}
 			timerStyles: ->
-				backgroundColor: '#dddddd'
+				#backgroundColor: '#dddddd'
+				textAlign: 'center'
+				color: '#ffffff'
 			questionStyles: ->
-				backgroundColor: '#666666'
+				#backgroundColor: '#666666'
+				textAlign: 'center'
 				color: '#ffffff'
 
 		Template.background.rendered = ->
@@ -110,8 +115,18 @@ if Meteor.isClient
 			log 'Set video layout!'
 			video = this.find '#video'
 			log 'video',video
-			window.layout = TB.initLayoutContainer(video).layout
+			window.layout = TB.initLayoutContainer(video,
+				bigFixedRatio: false
+			).layout
 			log 'layout',layout
+
+			# Recalculate layout on resize
+			window.onresize = ->
+				clearTimeout resizeTimeout
+				resizeTimeout = setTimeout(->
+					log 'Layouting'
+					layout()
+				, 20)
 
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
@@ -170,8 +185,10 @@ if Meteor.isClient
 					log 'User can publish!'
 					publisher = OT.initPublisher('video',
 						insertMode: 'append'
+						resolution: '1280x720'
 					)
 					layout()
+
 					publisher.on
 						streamCreated: (e) ->
 							log 'publishStream created!',e
@@ -180,14 +197,14 @@ if Meteor.isClient
 							#Start the timer!
 							clock = 60
 							timeLeft = ->
-							  if clock > 0
-							    clock--
-							    Session.set 'timer', clock
-							    console.log clock
-							  else
-							    console.log "That's All Folks"
-							    #session.unpublish publisher
-							    Meteor.clearInterval interval
+								if clock > 0
+									clock--
+									Session.set 'timer', clock
+									console.log clock
+								else
+									console.log "That's All Folks"
+									#session.unpublish publisher
+									Meteor.clearInterval interval
 
 							interval = Meteor.setInterval(timeLeft, 1000)
 						streamDestroyed: (e) ->
@@ -233,7 +250,7 @@ if Meteor.isClient
 				if Session.equals 'timerTranslation', 300 then Session.set 'timerTranslation', 100 else Session.set 'timerTranslation', 300
 
 				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(Session.get('timerTranslation'), 300),
+				fview.modifier.setTransform Transform.translate(0, Session.get('timerTranslation')),
 					method: 'spring'
 					period: 1000
 					dampingRatio: 0.3

@@ -64,8 +64,19 @@ Template["about"] = new Template("Template.about", (function() {
         return Spacebars.include(view.lookupTemplate("Surface"));
       }), "\n", Blaze._TemplateWith(function() {
         return {
+          template: Spacebars.call("question"),
+          size: Spacebars.call("[200,80]"),
+          origin: Spacebars.call("[0.5,0.5]"),
+          align: Spacebars.call("[0.5,0.5]"),
+          translate: Spacebars.call("[0,0,0]"),
+          properties: Spacebars.call(view.lookup("questionStyles"))
+        };
+      }, function() {
+        return Spacebars.include(view.lookupTemplate("Surface"));
+      }), "\n", Blaze._TemplateWith(function() {
+        return {
           template: Spacebars.call("momentButton"),
-          size: Spacebars.call("[100,40]"),
+          size: Spacebars.call("[200,40]"),
           origin: Spacebars.call("[0.5,0.5]"),
           align: Spacebars.call("[0.5,0.5]"),
           translate: Spacebars.call("[0,0,0]"),
@@ -89,21 +100,10 @@ Template["about"] = new Template("Template.about", (function() {
         return {
           template: Spacebars.call("timer"),
           size: Spacebars.call("[60,60]"),
-          origin: Spacebars.call("[0,0]"),
-          align: Spacebars.call("[0,0]"),
-          translate: Spacebars.call("[10,300,0]"),
-          properties: Spacebars.call(view.lookup("timerStyles"))
-        };
-      }, function() {
-        return Spacebars.include(view.lookupTemplate("Surface"));
-      }), "\n", Blaze._TemplateWith(function() {
-        return {
-          template: Spacebars.call("question"),
-          size: Spacebars.call("[200,80]"),
-          origin: Spacebars.call("[0.5,0.5]"),
+          origin: Spacebars.call("[0.5,1]"),
           align: Spacebars.call("[0.5,0.5]"),
-          translate: Spacebars.call("[0,-200]"),
-          properties: Spacebars.call(view.lookup("questionStyles"))
+          translate: Spacebars.call("[0,100,0]"),
+          properties: Spacebars.call(view.lookup("timerStyles"))
         };
       }, function() {
         return Spacebars.include(view.lookupTemplate("Surface"));
@@ -115,7 +115,7 @@ Template["about"] = new Template("Template.about", (function() {
 Template.__checkName("background");
 Template["background"] = new Template("Template.background", (function() {
   var view = this;
-  return HTML.Raw('<div id="video"></div>');
+  return HTML.Raw('<div id="video" class="bigClass"></div>');
 }));
 
 Template.__checkName("overlay");
@@ -127,13 +127,13 @@ Template["overlay"] = new Template("Template.overlay", (function() {
 Template.__checkName("intro");
 Template["intro"] = new Template("Template.intro", (function() {
   var view = this;
-  return "Hello Moment";
+  return "Moment";
 }));
 
 Template.__checkName("momentButton");
 Template["momentButton"] = new Template("Template.momentButton", (function() {
   var view = this;
-  return "Moment Button";
+  return "Share Your Moment";
 }));
 
 Template.__checkName("timer");

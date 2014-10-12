@@ -93,16 +93,17 @@ if (Meteor.isClient) {
       introStyles: function() {
         var styles;
         return styles = {
-          backgroundColor: '#e5e5e5',
-          textAlign: 'center'
+          textAlign: 'center',
+          color: '#ffffff'
         };
       },
       momentButtonStyles: function() {
         var styles;
         return styles = {
-          backgroundColor: '#333333',
+          border: '1px solid #ffffff',
           textAlign: 'center',
-          color: '#ffffff'
+          color: '#fff',
+          lineHeight: '40px'
         };
       },
       ppLogoStyles: function() {
@@ -111,12 +112,13 @@ if (Meteor.isClient) {
       },
       timerStyles: function() {
         return {
-          backgroundColor: '#dddddd'
+          textAlign: 'center',
+          color: '#ffffff'
         };
       },
       questionStyles: function() {
         return {
-          backgroundColor: '#666666',
+          textAlign: 'center',
           color: '#ffffff'
         };
       }
@@ -127,8 +129,18 @@ if (Meteor.isClient) {
       log('Set video layout!');
       video = this.find('#video');
       log('video', video);
-      window.layout = TB.initLayoutContainer(video).layout;
+      window.layout = TB.initLayoutContainer(video, {
+        bigFixedRatio: false
+      }).layout;
       log('layout', layout);
+      window.onresize = function() {
+        var resizeTimeout;
+        clearTimeout(resizeTimeout);
+        return resizeTimeout = setTimeout(function() {
+          log('Layouting');
+          return layout();
+        }, 20);
+      };
       target = fview.surface || fview.view._eventInput;
       return target.on('click', function() {
         log('TARGET CLICKED', fview, target);
@@ -193,7 +205,8 @@ if (Meteor.isClient) {
         if (Session.equals('canSubscribeToStream', true && Session.equals('userCanPublish', true && Session.equals('userIsPublishing', false)))) {
           log('User can publish!');
           publisher = OT.initPublisher('video', {
-            insertMode: 'append'
+            insertMode: 'append',
+            resolution: '1280x720'
           });
           layout();
           publisher.on({
@@ -268,7 +281,7 @@ if (Meteor.isClient) {
           Session.set('timerTranslation', 300);
         }
         fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(Session.get('timerTranslation'), 300), {
+        return fview.modifier.setTransform(Transform.translate(0, Session.get('timerTranslation')), {
           method: 'spring',
           period: 1000,
           dampingRatio: 0.3
