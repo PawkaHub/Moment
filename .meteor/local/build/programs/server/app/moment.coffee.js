@@ -35,16 +35,17 @@ if (Meteor.isClient) {
         log('session', session);
         session.on('streamCreated', function(event) {
           log('streamCreated!', event);
-          return session.subscribe(event.stream, 'video', {
-            width: 600,
-            height: 400
+          session.subscribe(event.stream, 'video', {
+            insertMode: 'append'
           });
+          return layout();
         });
         return session.connect(result.token, function(err) {
           if (err) {
             return log('session connect err', err);
           } else {
             log('Connected to session!');
+            layout();
             if (session.capabilities.publish === 1) {
               log('User is capable of publishing!', session.capabilities);
               return Session.set('userCanPublish', false);
@@ -121,8 +122,13 @@ if (Meteor.isClient) {
       }
     });
     Template.background.rendered = function() {
-      var fview, target;
+      var fview, target, video;
       fview = FView.from(this);
+      log('Set video layout!');
+      video = this.find('#video');
+      log('video', video);
+      window.layout = TB.initLayoutContainer(video).layout;
+      log('layout', layout);
       target = fview.surface || fview.view._eventInput;
       return target.on('click', function() {
         log('TARGET CLICKED', fview, target);
@@ -187,9 +193,9 @@ if (Meteor.isClient) {
         if (Session.equals('canSubscribeToStream', true && Session.equals('userCanPublish', true && Session.equals('userIsPublishing', false)))) {
           log('User can publish!');
           publisher = OT.initPublisher('video', {
-            width: 600,
-            height: 400
+            insertMode: 'append'
           });
+          layout();
           publisher.on({
             streamCreated: function(e) {
               var clock, interval, timeLeft;

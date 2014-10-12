@@ -28,11 +28,13 @@ if Meteor.isClient
 				log 'createOpenTokSession result',result
 				@session = OT.initSession result.apiKey, result.session
 				log 'session',session
+
 				session.on 'streamCreated', (event) ->
 					log 'streamCreated!',event
+
 					session.subscribe event.stream, 'video',
-						width: 600
-						height: 400
+						insertMode: 'append'
+					layout()
 
 				# Connect to the session
 				session.connect result.token, (err) ->
@@ -40,6 +42,7 @@ if Meteor.isClient
 						log 'session connect err',err
 					else
 						log 'Connected to session!'
+						layout()
 						if session.capabilities.publish is 1
 							log 'User is capable of publishing!',session.capabilities
 							#Session.set 'canSubscribeToStream', true
@@ -104,6 +107,12 @@ if Meteor.isClient
 		Template.background.rendered = ->
 			fview = FView.from(this)
 
+			log 'Set video layout!'
+			video = this.find '#video'
+			log 'video',video
+			window.layout = TB.initLayoutContainer(video).layout
+			log 'layout',layout
+
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
 				log 'TARGET CLICKED',fview, target
@@ -160,9 +169,9 @@ if Meteor.isClient
 				if Session.equals 'canSubscribeToStream', true and Session.equals 'userCanPublish', true and Session.equals 'userIsPublishing',false
 					log 'User can publish!'
 					publisher = OT.initPublisher('video',
-						width: 600
-						height: 400
+						insertMode: 'append'
 					)
+					layout()
 					publisher.on
 						streamCreated: (e) ->
 							log 'publishStream created!',e

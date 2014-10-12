@@ -607,11 +607,11 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?c50077b0471fd685b75941ac322ee56b234b4cf1",
+      "url": "/moment.coffee.js?3999b2a9f4e0502e8dfe75dfef39ac1135e29c5c",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/c50077b0471fd685b75941ac322ee56b234b4cf1.map",
-      "size": 11233,
-      "hash": "c50077b0471fd685b75941ac322ee56b234b4cf1"
+      "sourceMapUrl": "/3999b2a9f4e0502e8dfe75dfef39ac1135e29c5c.map",
+      "size": 11455,
+      "hash": "3999b2a9f4e0502e8dfe75dfef39ac1135e29c5c"
     },
     {
       "path": "packages/service-configuration.js",
