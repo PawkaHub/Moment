@@ -30,11 +30,24 @@ if Meteor.isClient
 				log 'session',session
 
 				session.on 'streamCreated', (event) ->
-					log 'streamCreated!',event
+					log 'Another streamCreated!',event
+					if window.publisher
+						session.unpublish window.publisher
 
-					session.subscribe event.stream, 'video',
-						insertMode: 'append'
+					window.subscriber = session.subscribe event.stream, 'video',
+						insertMode: 'replace'
+						resolution: '1280x720'
+					, (err) ->
+						if err
+							log 'Subscribe err',err
+						else
+							log 'Subscribed to stream!'
+
 					layout()
+
+				session.on 'streamDestroyed', (event) ->
+					event.preventDefault()
+					log 'Another streamDestroyed!',event
 
 				# Connect to the session
 				session.connect result.token, (err) ->
@@ -42,11 +55,8 @@ if Meteor.isClient
 						log 'session connect err',err
 					else
 						log 'Connected to session!'
-						layout()
 						if session.capabilities.publish is 1
 							log 'User is capable of publishing!',session.capabilities
-							#Session.set 'canSubscribeToStream', true
-							Session.set 'userCanPublish', false
 						else
 							log 'You are not able to publish a stream'
 		)
@@ -112,10 +122,10 @@ if Meteor.isClient
 		Template.background.rendered = ->
 			fview = FView.from(this)
 
-			log 'Set video layout!'
-			video = this.find '#video'
-			log 'video',video
-			window.layout = TB.initLayoutContainer(video,
+			log 'Set videoWrapper layout!'
+			videoWrapper = this.find '#videoWrapper'
+			log 'videoWrapper',videoWrapper
+			window.layout = TB.initLayoutContainer(videoWrapper,
 				bigFixedRatio: false
 			).layout
 			log 'layout',layout
@@ -181,18 +191,16 @@ if Meteor.isClient
 				log 'TARGET CLICKED',fview, target
 
 				#Set up the session connection
-				if Session.equals 'canSubscribeToStream', true and Session.equals 'userCanPublish', true and Session.equals 'userIsPublishing',false
+				if session.capabilities.publish is 1
 					log 'User can publish!'
-					publisher = OT.initPublisher('video',
-						insertMode: 'append'
+					window.publisher = OT.initPublisher('video',
+						insertMode: 'replace'
 						resolution: '1280x720'
 					)
-					layout()
 
 					publisher.on
-						streamCreated: (e) ->
-							log 'publishStream created!',e
-							Session.set 'userIsPublishing',true
+						streamCreated: (event) ->
+							log 'publishStream created!',event
 
 							#Start the timer!
 							clock = 60
@@ -206,12 +214,15 @@ if Meteor.isClient
 									#session.unpublish publisher
 									Meteor.clearInterval interval
 
-							interval = Meteor.setInterval(timeLeft, 1000)
-						streamDestroyed: (e) ->
-							log 'publishStream destroyed!',e
-							Session.set 'userIsPublishing',false
+							#interval = Meteor.setInterval(timeLeft, 1000)
+						streamDestroyed: (event) ->
+							event.preventDefault()
+							log 'publishStream destroyed!',event
+							#Session.set 'userIsPublishing',false
 							Session.set 'timer', 60
+					#if window.subscriber then session.unsubscribe window.subscriber
 					session.publish publisher
+					layout()
 				else
 					log 'Nope!'
 

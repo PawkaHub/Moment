@@ -34,21 +34,33 @@ if (Meteor.isClient) {
         this.session = OT.initSession(result.apiKey, result.session);
         log('session', session);
         session.on('streamCreated', function(event) {
-          log('streamCreated!', event);
-          session.subscribe(event.stream, 'video', {
-            insertMode: 'append'
+          log('Another streamCreated!', event);
+          if (window.publisher) {
+            session.unpublish(window.publisher);
+          }
+          window.subscriber = session.subscribe(event.stream, 'video', {
+            insertMode: 'replace',
+            resolution: '1280x720'
+          }, function(err) {
+            if (err) {
+              return log('Subscribe err', err);
+            } else {
+              return log('Subscribed to stream!');
+            }
           });
           return layout();
+        });
+        session.on('streamDestroyed', function(event) {
+          event.preventDefault();
+          return log('Another streamDestroyed!', event);
         });
         return session.connect(result.token, function(err) {
           if (err) {
             return log('session connect err', err);
           } else {
             log('Connected to session!');
-            layout();
             if (session.capabilities.publish === 1) {
-              log('User is capable of publishing!', session.capabilities);
-              return Session.set('userCanPublish', false);
+              return log('User is capable of publishing!', session.capabilities);
             } else {
               return log('You are not able to publish a stream');
             }
@@ -124,12 +136,12 @@ if (Meteor.isClient) {
       }
     });
     Template.background.rendered = function() {
-      var fview, target, video;
+      var fview, target, videoWrapper;
       fview = FView.from(this);
-      log('Set video layout!');
-      video = this.find('#video');
-      log('video', video);
-      window.layout = TB.initLayoutContainer(video, {
+      log('Set videoWrapper layout!');
+      videoWrapper = this.find('#videoWrapper');
+      log('videoWrapper', videoWrapper);
+      window.layout = TB.initLayoutContainer(videoWrapper, {
         bigFixedRatio: false
       }).layout;
       log('layout', layout);
@@ -200,22 +212,19 @@ if (Meteor.isClient) {
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
       return target.on('click', function() {
-        var publisher;
         log('TARGET CLICKED', fview, target);
-        if (Session.equals('canSubscribeToStream', true && Session.equals('userCanPublish', true && Session.equals('userIsPublishing', false)))) {
+        if (session.capabilities.publish === 1) {
           log('User can publish!');
-          publisher = OT.initPublisher('video', {
-            insertMode: 'append',
+          window.publisher = OT.initPublisher('video', {
+            insertMode: 'replace',
             resolution: '1280x720'
           });
-          layout();
           publisher.on({
-            streamCreated: function(e) {
-              var clock, interval, timeLeft;
-              log('publishStream created!', e);
-              Session.set('userIsPublishing', true);
+            streamCreated: function(event) {
+              var clock, timeLeft;
+              log('publishStream created!', event);
               clock = 60;
-              timeLeft = function() {
+              return timeLeft = function() {
                 if (clock > 0) {
                   clock--;
                   Session.set('timer', clock);
@@ -225,15 +234,15 @@ if (Meteor.isClient) {
                   return Meteor.clearInterval(interval);
                 }
               };
-              return interval = Meteor.setInterval(timeLeft, 1000);
             },
-            streamDestroyed: function(e) {
-              log('publishStream destroyed!', e);
-              Session.set('userIsPublishing', false);
+            streamDestroyed: function(event) {
+              event.preventDefault();
+              log('publishStream destroyed!', event);
               return Session.set('timer', 60);
             }
           });
           session.publish(publisher);
+          layout();
         } else {
           log('Nope!');
         }

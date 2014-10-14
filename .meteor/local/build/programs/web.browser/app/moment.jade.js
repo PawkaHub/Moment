@@ -115,7 +115,7 @@ Template["about"] = new Template("Template.about", (function() {
 Template.__checkName("background");
 Template["background"] = new Template("Template.background", (function() {
   var view = this;
-  return HTML.Raw('<div id="video" class="bigClass"></div>');
+  return HTML.Raw('<div id="videoWrapper" class="bigClass"><div id="video"></div></div>');
 }));
 
 Template.__checkName("overlay");
