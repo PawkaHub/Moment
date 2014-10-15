@@ -1427,3 +1427,5 @@ Package['iron:router'] = {
 };
 
 })();
+
+//# sourceMappingURL=iron_router.js.map

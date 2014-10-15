@@ -15,3 +15,5 @@ Package['mjn:famous'] = {
 };
 
 })();
+
+//# sourceMappingURL=mjn_famous.js.map

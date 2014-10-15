@@ -15,6 +15,8 @@ this.Questions = new Mongo.Collection('questions');
 
 this.openTokApiKey = '45020262';
 
+this.momentTimer = 60;
+
 this.log = function() {
   log.history = log.history || [];
   log.history.push(arguments);
@@ -84,7 +86,7 @@ if (Meteor.isClient) {
     Session.setDefault('canSubscribeToStream', false);
     Session.setDefault('userCanPublish', false);
     Session.setDefault('userIsPublishing', false);
-    Session.setDefault('timer', 60);
+    Session.setDefault('timer', momentTimer);
     Template.about.helpers({
       backgroundStyles: function() {
         var styles;
@@ -221,24 +223,38 @@ if (Meteor.isClient) {
           });
           publisher.on({
             streamCreated: function(event) {
-              var clock, timeLeft;
               log('publishStream created!', event);
-              clock = 60;
-              return timeLeft = function() {
-                if (clock > 0) {
-                  clock--;
-                  Session.set('timer', clock);
-                  return console.log(clock);
+              return Meteor.call('createMoment', function(err, result) {
+                var clock, interval, timeLeft;
+                if (err) {
+                  return log('createMoment err', err);
                 } else {
-                  console.log("That's All Folks");
-                  return Meteor.clearInterval(interval);
+                  log('createMoment result', result);
+                  clock = momentTimer;
+                  timeLeft = function() {
+                    if (clock > 0) {
+                      clock--;
+                      Session.set('timer', clock);
+                      log(clock);
+                      if (clock === 0) {
+                        log("That's All Folks, let's cancel this clientside session");
+                        return session.unpublish(publisher);
+                      }
+                    } else {
+                      log("Uhhh else");
+                      return Meteor.clearInterval(interval);
+                    }
+                  };
+                  return interval = Meteor.setInterval(timeLeft, 1000);
                 }
-              };
+              });
             },
             streamDestroyed: function(event) {
               event.preventDefault();
               log('publishStream destroyed!', event);
-              return Session.set('timer', 60);
+              return Meteor.setTimeout(function() {
+                return Session.set('timer', momentTimer);
+              }, 1000);
             }
           });
           session.publish(publisher);
@@ -342,18 +358,48 @@ if (Meteor.isServer) {
         token: token
       };
       return payload;
+    },
+    createMoment: function() {
+      var archive, clock, interval, openTokArchiveOptions, timeLeft;
+      log('Server createMoment called!');
+      openTokArchiveOptions = {
+        name: 'moment:' + Meteor.userId()
+      };
+      archive = openTokClient.startArchive(openTokSession, openTokArchiveOptions);
+      clock = momentTimer;
+      timeLeft = function() {
+        if (clock > 1) {
+          clock--;
+          log(clock);
+          if (clock === 1) {
+            if (archive.status !== 'stopped') {
+              archive = openTokClient.stopArchive(archive.id);
+            }
+            log('That\'s All Folks, let\'s cancel this server session archive', archive);
+            return Meteor.clearInterval(interval);
+          }
+        } else {
+          return log('Other stuff');
+        }
+      };
+      interval = Meteor.setInterval(timeLeft, 1000);
+      log('Sigh archive', archive);
+      return archive;
+    },
+    stopMoment: function(archiveId) {
+      var archive;
+      log('Server stopMoment called!');
+      log('archive?', archiveId);
+      archive = openTokClient.stopArchive(archiveId);
+      return archive;
     }
   });
   Meteor.startup(function() {
     var openTokOptions;
     log('Server!');
     Accounts.removeOldGuests();
-    Meteor.setInterval(function() {
-      return log('Change User!');
-    }, 60000);
     this.openTokSecret = 'ce949e452e117eef38d2661e9e1824f8faddff40';
     this.openTokClient = new OpenTokClient(openTokApiKey, openTokSecret);
-    log('openTokClient', openTokClient);
     log('createOpenTokSession!');
     openTokOptions = {
       mediaMode: 'routed',

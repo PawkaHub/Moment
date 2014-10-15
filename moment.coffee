@@ -10,6 +10,7 @@ Router.map ->
 
 # API Keys
 @openTokApiKey = '45020262'
+@momentTimer = 60
 
 @log = ->
 	log.history = log.history or [] # store logs to an array for reference
@@ -84,7 +85,7 @@ if Meteor.isClient
 		Session.setDefault 'canSubscribeToStream', false
 		Session.setDefault 'userCanPublish', false
 		Session.setDefault 'userIsPublishing', false
-		Session.setDefault 'timer', 60
+		Session.setDefault 'timer', momentTimer
 
 		Template.about.helpers
 			backgroundStyles: ->
@@ -201,25 +202,35 @@ if Meteor.isClient
 					publisher.on
 						streamCreated: (event) ->
 							log 'publishStream created!',event
-
-							#Start the timer!
-							clock = 60
-							timeLeft = ->
-								if clock > 0
-									clock--
-									Session.set 'timer', clock
-									console.log clock
+							Meteor.call('createMoment', (err,result)->
+								if err
+									log 'createMoment err',err
 								else
-									console.log "That's All Folks"
-									#session.unpublish publisher
-									Meteor.clearInterval interval
-
-							#interval = Meteor.setInterval(timeLeft, 1000)
+									log 'createMoment result',result
+									#Start the timer once we get a result back from the server and know an archive is going!
+									clock = momentTimer
+									timeLeft = ->
+										if clock > 0
+											clock--
+											Session.set 'timer',clock
+											log clock
+											if clock is 0
+												log "That's All Folks, let's cancel this clientside session"
+												session.unpublish publisher
+												#Meteor.clearInterval interval
+										else
+											log "Uhhh else"
+											#session.unpublish publisher
+											Meteor.clearInterval interval
+									interval = Meteor.setInterval(timeLeft, 1000)
+							)
 						streamDestroyed: (event) ->
 							event.preventDefault()
 							log 'publishStream destroyed!',event
 							#Session.set 'userIsPublishing',false
-							Session.set 'timer', 60
+							Meteor.setTimeout(->
+								Session.set 'timer', momentTimer
+							,1000)
 					#if window.subscriber then session.unsubscribe window.subscriber
 					session.publish publisher
 					layout()
@@ -304,6 +315,39 @@ if Meteor.isServer
 				session: openTokSession
 				token: token
 			payload
+		createMoment: () ->
+			log 'Server createMoment called!'
+
+			#Create an archive!
+			openTokArchiveOptions =
+				name: 'moment:' + Meteor.userId()
+
+			archive = openTokClient.startArchive openTokSession, openTokArchiveOptions
+
+			#Start the timer!
+			clock = momentTimer
+			timeLeft = ->
+				if clock > 1
+					clock--
+					log clock
+					#We've hit ten seconds, wrap it up gentlemen.
+					if clock is 1
+						unless archive.status is 'stopped'
+							archive = openTokClient.stopArchive archive.id
+
+						log 'That\'s All Folks, let\'s cancel this server session archive',archive
+						Meteor.clearInterval interval
+				else
+					log 'Other stuff'
+			interval = Meteor.setInterval(timeLeft, 1000)
+
+			log 'Sigh archive',archive
+			archive
+		stopMoment: (archiveId) ->
+			log 'Server stopMoment called!'
+			log 'archive?',archiveId
+			archive = openTokClient.stopArchive archiveId
+			archive
 
 	Meteor.startup ->
 		log 'Server!'
@@ -311,15 +355,11 @@ if Meteor.isServer
 		# Wipe all guest accounts that are more than 24 hours old, this way people can say something once a day
 		Accounts.removeOldGuests();
 
-		# Change user tokens and active user every minute
-		Meteor.setInterval ->
-			log 'Change User!'
-		, 60000
-
 		# Initialize OpenTokClient
 		@openTokSecret = 'ce949e452e117eef38d2661e9e1824f8faddff40'
 		@openTokClient = new OpenTokClient openTokApiKey, openTokSecret
-		log 'openTokClient',openTokClient
+		#@openTok = new OpenTok openTokApiKey, openTokSecret
+		#log 'openTokClient',openTokClient
 
 		log 'createOpenTokSession!'
 		openTokOptions =

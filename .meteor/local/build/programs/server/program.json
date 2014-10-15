@@ -313,10 +313,10 @@
       "path": "packages/wenape_accounts-guest.js"
     },
     {
-      "node_modules": "npm/carlodicelico:tokbox/node_modules",
-      "sourceMap": "packages/carlodicelico_tokbox.js.map",
+      "node_modules": "npm/mrt:tokbox/node_modules",
+      "sourceMap": "packages/mrt_tokbox.js.map",
       "sourceMapRoot": "packages",
-      "path": "packages/carlodicelico_tokbox.js"
+      "path": "packages/mrt_tokbox.js"
     },
     {
       "sourceMap": "packages/session.js.map",
