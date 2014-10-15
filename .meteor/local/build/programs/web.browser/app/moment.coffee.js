@@ -378,8 +378,6 @@ if (Meteor.isServer) {
             log('That\'s All Folks, let\'s cancel this server session archive', archive);
             return Meteor.clearInterval(interval);
           }
-        } else {
-          return log('Other stuff');
         }
       };
       interval = Meteor.setInterval(timeLeft, 1000);

@@ -337,8 +337,8 @@ if Meteor.isServer
 
 						log 'That\'s All Folks, let\'s cancel this server session archive',archive
 						Meteor.clearInterval interval
-				else
-					log 'Other stuff'
+				#else
+				#	log 'Other stuff'
 			interval = Meteor.setInterval(timeLeft, 1000)
 
 			log 'Sigh archive',archive
