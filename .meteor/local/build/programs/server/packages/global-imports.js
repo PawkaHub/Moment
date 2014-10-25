@@ -7,6 +7,7 @@ famous = Package['mjn:famous'].famous;
 Accounts = Package['accounts-base'].Accounts;
 OpenTok = Package['mrt:tokbox'].OpenTok;
 OpenTokClient = Package['mrt:tokbox'].OpenTokClient;
+moment = Package['mrt:moment'].moment;
 Meteor = Package.meteor.Meteor;
 WebApp = Package.webapp.WebApp;
 main = Package.webapp.main;

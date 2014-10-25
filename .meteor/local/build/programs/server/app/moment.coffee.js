@@ -13,6 +13,10 @@ this.Publisher = new Mongo.Collection('publisher');
 
 this.Questions = new Mongo.Collection('questions');
 
+this.Moments = new Mongo.Collection('moments');
+
+this.Seconds = new Mongo.Collection('seconds');
+
 this.openTokApiKey = '45020262';
 
 this.momentTimer = 60;
@@ -83,10 +87,72 @@ if (Meteor.isClient) {
     Session.setDefault('ppLogoTranslation', -10);
     Session.setDefault('timerTranslation', 300);
     Session.setDefault('questionTranslation', -200);
+    Session.setDefault('timelineToggleTranslation', -10);
     Session.setDefault('canSubscribeToStream', false);
     Session.setDefault('userCanPublish', false);
     Session.setDefault('userIsPublishing', false);
     Session.setDefault('timer', momentTimer);
+    Session.setDefault('now', TimeSync.serverTime());
+    Template.registerHelper('minutes', function() {
+      var epoch, minute, minutes, minutesInADay;
+      epoch = Session.get('epoch');
+      minutesInADay = 1440;
+      minutes = [];
+      while (minutes.length < minutesInADay) {
+        minute = moment(epoch);
+        minute.set('minute', minutes.length);
+        minutes.push(minute.format('h:mm A'));
+      }
+      log('minutes', minutes);
+      return minutes;
+    });
+    Template.registerHelper('days', function() {
+      var currentDay, day, days, daysInAMonth, epoch;
+      epoch = Session.get('epoch');
+      day = moment(epoch);
+      currentDay = day.day();
+      daysInAMonth = 31;
+      days = [];
+      while (days.length < daysInAMonth) {
+        log('currentDay', currentDay);
+        day.set('day', currentDay--);
+        log('day', day);
+        days.push(day.format('dddd'));
+      }
+      return days;
+    });
+    Template.registerHelper('months', function() {
+      var currentMonth, epoch, month, months, monthsInAYear;
+      epoch = Session.get('epoch');
+      month = moment(epoch);
+      currentMonth = month.month();
+      monthsInAYear = 12;
+      months = [];
+      while (months.length < monthsInAYear) {
+        log('currentMonth', currentMonth);
+        month.set('month', currentMonth--);
+        log('month', month);
+        months.push(month.format('MMMM'));
+      }
+      log('months', months);
+      return months;
+    });
+    Template.registerHelper('years', function() {
+      var currentYear, epoch, year, years, yearsSinceEpoch;
+      epoch = Session.get('epoch');
+      year = moment(epoch);
+      currentYear = year.year();
+      years = [];
+      yearsSinceEpoch = 10;
+      while (years.length < yearsSinceEpoch) {
+        log('currentYear', currentYear);
+        year.set('year', currentYear--);
+        log('year', year);
+        years.push(year.format('YYYY'));
+      }
+      log('years', years);
+      return years;
+    });
     Template.about.helpers({
       backgroundStyles: function() {
         var styles;
@@ -101,7 +167,7 @@ if (Meteor.isClient) {
       overlayStyles: function() {
         var styles;
         return styles = {
-          backgroundColor: 'rgba(0,0,0,0.4)'
+          backgroundColor: '#000000'
         };
       },
       introStyles: function() {
@@ -116,7 +182,7 @@ if (Meteor.isClient) {
         return styles = {
           border: '1px solid #ffffff',
           textAlign: 'center',
-          color: '#fff',
+          color: '#ffffff',
           lineHeight: '40px'
         };
       },
@@ -133,6 +199,33 @@ if (Meteor.isClient) {
       questionStyles: function() {
         return {
           textAlign: 'center',
+          color: '#ffffff'
+        };
+      },
+      timelineToggleStyles: function() {
+        return {
+          backgroundColor: '#ffffff',
+          borderRadius: '50%'
+        };
+      },
+      timelineMomentStyles: function() {
+        return {
+          textAlign: 'center',
+          color: '#ffffff'
+        };
+      },
+      timelineDayStyles: function() {
+        return {
+          color: '#ffffff'
+        };
+      },
+      timelineMonthStyles: function() {
+        return {
+          color: '#ffffff'
+        };
+      },
+      timelineYearStyles: function() {
+        return {
           color: '#ffffff'
         };
       }
@@ -318,7 +411,7 @@ if (Meteor.isClient) {
         return Session.get('timer');
       }
     });
-    return Template.question.rendered = function() {
+    Template.question.rendered = function() {
       var fview, target;
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
@@ -337,6 +430,155 @@ if (Meteor.isClient) {
         });
       });
     };
+    Template.timelineToggle.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      return target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        if (Session.equals('timelineToggleTranslation', -10)) {
+          Session.set('timelineToggleTranslation', -100);
+        } else {
+          Session.set('timelineToggleTranslation', -10);
+        }
+        fview.modifier.halt();
+        return fview.modifier.setTransform(Transform.translate(Session.get('timelineToggleTranslation'), 10), {
+          method: 'spring',
+          period: 1000,
+          dampingRatio: 0.3
+        });
+      });
+    };
+    Session.setDefault('currentSecond', 0);
+    Session.setDefault('currentMinute', 0);
+    Session.setDefault('currentHour', 0);
+    Session.setDefault('currentDay', 0);
+    Session.setDefault('currentMonth', 0);
+    Session.setDefault('currentYear', 0);
+    Session.setDefault('epoch', '2010-01-01 00:00');
+    Session.setDefault('epochSecond', moment(Session.get('epoch')).second());
+    Session.setDefault('epochMinute', moment(Session.get('epoch')).minute());
+    Session.setDefault('epochHour', moment(Session.get('epoch')).hour());
+    Session.setDefault('epochDay', moment(Session.get('epoch')).day());
+    Session.setDefault('epochMonth', moment(Session.get('epoch')).month());
+    Session.setDefault('epochYear', moment(Session.get('epoch')).year());
+    Template.timelineMoment.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      return target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        fview.modifier.halt();
+        return fview.modifier.setTransform(Transform.translate(10, 10), {
+          method: 'spring',
+          period: 1000,
+          dampingRatio: 0.3
+        });
+      });
+    };
+    Template.timelineMoment.helpers({
+      second: function() {
+        var index, instance;
+        instance = Template.instance();
+        index = instance.data;
+        if (typeof index === 'object') {
+          return 0;
+        } else {
+          return index;
+        }
+      },
+      minute: function() {
+        return this;
+      },
+      hour: function() {
+        var index, instance;
+        instance = Template.instance();
+        index = instance.data;
+        if (typeof index === 'object') {
+          return 0;
+        } else {
+          return index;
+        }
+      }
+    });
+    Template.timelineDay.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      return target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        fview.modifier.halt();
+        return fview.modifier.setTransform(Transform.translate(10, 10), {
+          method: 'spring',
+          period: 1000,
+          dampingRatio: 0.3
+        });
+      });
+    };
+    Template.timelineDay.helpers({
+      day: function() {
+        var index, instance;
+        instance = Template.instance();
+        index = instance.data;
+        if (typeof index === 'object') {
+          return 0;
+        } else {
+          return index;
+        }
+      }
+    });
+    Template.timelineMonth.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      return target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        fview.modifier.halt();
+        return fview.modifier.setTransform(Transform.translate(10, 10), {
+          method: 'spring',
+          period: 1000,
+          dampingRatio: 0.3
+        });
+      });
+    };
+    Template.timelineMonth.helpers({
+      month: function() {
+        var index, instance;
+        instance = Template.instance();
+        index = instance.data;
+        if (typeof index === 'object') {
+          return 0;
+        } else {
+          return index;
+        }
+      }
+    });
+    Template.timelineYear.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      return target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        fview.modifier.halt();
+        return fview.modifier.setTransform(Transform.translate(10, 10), {
+          method: 'spring',
+          period: 1000,
+          dampingRatio: 0.3
+        });
+      });
+    };
+    return Template.timelineYear.helpers({
+      year: function() {
+        var index, instance;
+        instance = Template.instance();
+        index = instance.data;
+        if (typeof index === 'object') {
+          return 0;
+        } else {
+          return index;
+        }
+      }
+    });
   });
 }
 
@@ -393,7 +635,7 @@ if (Meteor.isServer) {
     }
   });
   Meteor.startup(function() {
-    var openTokOptions;
+    var epoch, now, openTokOptions;
     log('Server!');
     Accounts.removeOldGuests();
     this.openTokSecret = 'ce949e452e117eef38d2661e9e1824f8faddff40';
@@ -404,7 +646,11 @@ if (Meteor.isServer) {
       location: '127.0.0.1'
     };
     this.openTokSession = openTokClient.createSession(openTokOptions);
-    return log('openTokSession', openTokSession);
+    log('openTokSession', openTokSession);
+    epoch = moment('2010-01-01 00:00');
+    log('Server epoch!', epoch);
+    now = moment();
+    return log('Server now!', now);
   });
 }
 

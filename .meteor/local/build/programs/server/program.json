@@ -319,6 +319,16 @@
       "path": "packages/mrt_tokbox.js"
     },
     {
+      "sourceMap": "packages/mrt_moment.js.map",
+      "sourceMapRoot": "packages",
+      "path": "packages/mrt_moment.js"
+    },
+    {
+      "sourceMap": "packages/mizzao_timesync.js.map",
+      "sourceMapRoot": "packages",
+      "path": "packages/mizzao_timesync.js"
+    },
+    {
       "sourceMap": "packages/session.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/session.js"

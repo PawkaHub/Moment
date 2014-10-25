@@ -7,6 +7,8 @@ Router.map ->
 
 @Publisher = new Mongo.Collection 'publisher'
 @Questions = new Mongo.Collection 'questions'
+@Moments = new Mongo.Collection 'moments'
+@Seconds = new Mongo.Collection 'seconds'
 
 # API Keys
 @openTokApiKey = '45020262'
@@ -82,10 +84,64 @@ if Meteor.isClient
 		Session.setDefault 'ppLogoTranslation', -10
 		Session.setDefault 'timerTranslation', 300
 		Session.setDefault 'questionTranslation', -200
+		Session.setDefault 'timelineToggleTranslation', -10
 		Session.setDefault 'canSubscribeToStream', false
 		Session.setDefault 'userCanPublish', false
 		Session.setDefault 'userIsPublishing', false
 		Session.setDefault 'timer', momentTimer
+		Session.setDefault 'now', TimeSync.serverTime()
+
+		#Global Template Helpers
+		Template.registerHelper 'minutes', ->
+			#Create all the minutes in a day
+			epoch = Session.get 'epoch'
+			minutesInADay = 1440
+			minutes = []
+			while minutes.length < minutesInADay
+				minute = moment(epoch)
+				#Subtract minutes
+				minute.set('minute',minutes.length)
+				minutes.push(minute.format('h:mm A'))
+			log 'minutes',minutes
+			minutes
+		Template.registerHelper 'days', ->
+			epoch = Session.get 'epoch'
+			day = moment(epoch)
+			currentDay = day.day()
+			daysInAMonth = 31
+			days = []
+			while days.length < daysInAMonth
+				log 'currentDay',currentDay
+				day.set('day',currentDay--)
+				log 'day',day
+				days.push(day.format('dddd'))
+			days
+		Template.registerHelper 'months', ->
+			epoch = Session.get 'epoch'
+			month = moment(epoch)
+			currentMonth = month.month()
+			monthsInAYear = 12
+			months = []
+			while months.length < monthsInAYear
+				log 'currentMonth',currentMonth
+				month.set('month',currentMonth--)
+				log 'month',month
+				months.push(month.format('MMMM'))
+			log 'months',months
+			months
+		Template.registerHelper 'years', ->
+			epoch = Session.get 'epoch'
+			year = moment(epoch)
+			currentYear = year.year()
+			years = []
+			yearsSinceEpoch = 10
+			while years.length < yearsSinceEpoch
+				log 'currentYear',currentYear
+				year.set('year',currentYear--)
+				log 'year',year
+				years.push(year.format('YYYY'))
+			log 'years',years
+			years
 
 		Template.about.helpers
 			backgroundStyles: ->
@@ -97,7 +153,7 @@ if Meteor.isClient
 					backgroundSize: 'cover'
 			overlayStyles: ->
 				styles =
-					backgroundColor: 'rgba(0,0,0,0.4)'
+					backgroundColor: '#000000'
 			introStyles: ->
 				styles =
 					#backgroundColor: '#e5e5e5'
@@ -107,7 +163,7 @@ if Meteor.isClient
 				styles =
 					border: '1px solid #ffffff'
 					textAlign: 'center'
-					color: '#fff'
+					color: '#ffffff'
 					lineHeight: '40px'
 			ppLogoStyles: ->
 				styles = {}
@@ -118,6 +174,22 @@ if Meteor.isClient
 			questionStyles: ->
 				#backgroundColor: '#666666'
 				textAlign: 'center'
+				color: '#ffffff'
+			timelineToggleStyles: ->
+				backgroundColor: '#ffffff'
+				borderRadius: '50%'
+			timelineMomentStyles: ->
+				#backgroundColor: '#000000'
+				textAlign: 'center'
+				color: '#ffffff'
+			timelineDayStyles: ->
+				#backgroundColor: '#000000'
+				color: '#ffffff'
+			timelineMonthStyles: ->
+				#backgroundColor: '#000000'
+				color: '#ffffff'
+			timelineYearStyles: ->
+				#backgroundColor: '#000000'
 				color: '#ffffff'
 
 		Template.background.rendered = ->
@@ -298,6 +370,159 @@ if Meteor.isClient
 					dampingRatio: 0.3
 			)
 
+		Template.timelineToggle.rendered = ->
+			fview = FView.from(this)
+
+			target = fview.surface || fview.view._eventInput
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+
+				if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
+
+				fview.modifier.halt()
+				fview.modifier.setTransform Transform.translate(Session.get('timelineToggleTranslation'), 10),
+					method: 'spring'
+					period: 1000
+					dampingRatio: 0.3
+			)
+
+		#Timeline code
+		Session.setDefault 'currentSecond',0
+		Session.setDefault 'currentMinute',0
+		Session.setDefault 'currentHour',0
+		Session.setDefault 'currentDay',0
+		Session.setDefault 'currentMonth',0
+		Session.setDefault 'currentYear',0
+
+		Session.setDefault 'epoch','2010-01-01 00:00'
+		Session.setDefault 'epochSecond',moment(Session.get('epoch')).second()
+		Session.setDefault 'epochMinute',moment(Session.get('epoch')).minute()
+		Session.setDefault 'epochHour', moment(Session.get('epoch')).hour()
+		Session.setDefault 'epochDay', moment(Session.get('epoch')).day()
+		Session.setDefault 'epochMonth', moment(Session.get('epoch')).month()
+		Session.setDefault 'epochYear', moment(Session.get('epoch')).year()
+
+		Template.timelineMoment.rendered = ->
+			fview = FView.from(this)
+
+			target = fview.surface || fview.view._eventInput
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+
+				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
+
+				fview.modifier.halt()
+				fview.modifier.setTransform Transform.translate(10, 10),
+					method: 'spring'
+					period: 1000
+					dampingRatio: 0.3
+			)
+
+		Template.timelineMoment.helpers
+			second: ->
+				instance = Template.instance()
+				index = instance.data
+				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
+				if typeof index is 'object'
+					0
+				else
+					index
+			minute: ->
+				#instance = Template.instance()
+				#log 'instance',instance
+				#data = instance.data
+				#if typeof index is 'object'
+				#0
+				#else
+				#	index
+				this
+			hour: ->
+				instance = Template.instance()
+				index = instance.data
+				if typeof index is 'object'
+					0
+				else
+					index
+
+		Template.timelineDay.rendered = ->
+			fview = FView.from(this)
+
+			target = fview.surface || fview.view._eventInput
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+
+				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
+
+				fview.modifier.halt()
+				fview.modifier.setTransform Transform.translate(10, 10),
+					method: 'spring'
+					period: 1000
+					dampingRatio: 0.3
+			)
+
+		Template.timelineDay.helpers
+			day: ->
+				instance = Template.instance()
+				index = instance.data
+				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
+				if typeof index is 'object'
+					0
+				else
+					index
+
+		Template.timelineMonth.rendered = ->
+			fview = FView.from(this)
+
+			target = fview.surface || fview.view._eventInput
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+
+				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
+
+				fview.modifier.halt()
+				fview.modifier.setTransform Transform.translate(10, 10),
+					method: 'spring'
+					period: 1000
+					dampingRatio: 0.3
+			)
+
+		Template.timelineMonth.helpers
+			month: ->
+				instance = Template.instance()
+				index = instance.data
+				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
+				if typeof index is 'object'
+					0
+				else
+					index
+
+		Template.timelineYear.rendered = ->
+			fview = FView.from(this)
+
+			target = fview.surface || fview.view._eventInput
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+
+				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
+
+				fview.modifier.halt()
+				fview.modifier.setTransform Transform.translate(10, 10),
+					method: 'spring'
+					period: 1000
+					dampingRatio: 0.3
+			)
+
+		Template.timelineYear.helpers
+			year: ->
+				instance = Template.instance()
+				index = instance.data
+				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
+				if typeof index is 'object'
+					0
+				else
+					index
+
+
 if Meteor.isServer
 	Meteor.methods
 		createOpenTokSession: () ->
@@ -368,3 +593,9 @@ if Meteor.isServer
 
 		@openTokSession = openTokClient.createSession openTokOptions
 		log 'openTokSession',openTokSession
+
+		# Create a reverse timeline
+		epoch = moment '2010-01-01 00:00'
+		log 'Server epoch!',epoch
+		now = moment()
+		log 'Server now!',now
