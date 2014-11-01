@@ -5,7 +5,6 @@ Route = Package['iron:router'].Route;
 Router = Package['iron:router'].Router;
 IronLocation = Package['iron:router'].IronLocation;
 famous = Package['mjn:famous'].famous;
-famousCmp = Package['gadicohen:famous-views'].famousCmp;
 FView = Package['gadicohen:famous-views'].FView;
 Accounts = Package['accounts-base'].Accounts;
 Guests = Package['wenape:accounts-guest'].Guests;
@@ -31,5 +30,6 @@ $ = Package.jquery.$;
 jQuery = Package.jquery.jQuery;
 Random = Package.random.Random;
 EJSON = Package.ejson.EJSON;
+LaunchScreen = Package['launch-screen'].LaunchScreen;
 HTML = Package.htmljs.HTML;
 

@@ -15,11 +15,13 @@ this.Questions = new Mongo.Collection('questions');
 
 this.Moments = new Mongo.Collection('moments');
 
+this.Archives = new Mongo.Collection('archives');
+
 this.Seconds = new Mongo.Collection('seconds');
 
 this.openTokApiKey = '45020262';
 
-this.momentTimer = 60;
+this.momentTimer = 5;
 
 this.log = function() {
   log.history = log.history || [];
@@ -31,6 +33,7 @@ this.log = function() {
 
 if (Meteor.isClient) {
   Meteor.startup(function() {
+    Logger.setLevel('famous-views', 'info');
     Guests.add();
     Meteor.call('createOpenTokSession', function(err, result) {
       if (err) {
@@ -94,14 +97,19 @@ if (Meteor.isClient) {
     Session.setDefault('timer', momentTimer);
     Session.setDefault('now', TimeSync.serverTime());
     Template.registerHelper('minutes', function() {
-      var epoch, minute, minutes, minutesInADay;
+      var epoch, minute, minutes, minutesInADay, momentMinute;
       epoch = Session.get('epoch');
       minutesInADay = 1440;
       minutes = [];
       while (minutes.length < minutesInADay) {
-        minute = moment(epoch);
-        minute.set('minute', minutes.length);
-        minutes.push(minute.format('h:mm A'));
+        momentMinute = moment(epoch);
+        minute = {
+          index: minutes.length,
+          momentMinute: momentMinute
+        };
+        minute.momentMinute.set('minute', minutes.length);
+        minute.formattedMinute = minute.momentMinute.format('h:mm A');
+        minutes.push(minute);
       }
       log('minutes', minutes);
       return minutes;
@@ -114,9 +122,7 @@ if (Meteor.isClient) {
       daysInAMonth = 31;
       days = [];
       while (days.length < daysInAMonth) {
-        log('currentDay', currentDay);
         day.set('day', currentDay--);
-        log('day', day);
         days.push(day.format('dddd'));
       }
       return days;
@@ -129,12 +135,9 @@ if (Meteor.isClient) {
       monthsInAYear = 12;
       months = [];
       while (months.length < monthsInAYear) {
-        log('currentMonth', currentMonth);
         month.set('month', currentMonth--);
-        log('month', month);
         months.push(month.format('MMMM'));
       }
-      log('months', months);
       return months;
     });
     Template.registerHelper('years', function() {
@@ -145,13 +148,20 @@ if (Meteor.isClient) {
       years = [];
       yearsSinceEpoch = 10;
       while (years.length < yearsSinceEpoch) {
-        log('currentYear', currentYear);
         year.set('year', currentYear--);
-        log('year', year);
         years.push(year.format('YYYY'));
       }
       log('years', years);
       return years;
+    });
+    Template.registerHelper('timelineMoments', function() {
+      var data, instance;
+      instance = Template.instance();
+      data = instance.data;
+      return Moments.find();
+    });
+    Template.registerHelper('currentEpoch', function() {
+      return TimeSync.serverTime();
     });
     Template.about.helpers({
       backgroundStyles: function() {
@@ -205,7 +215,9 @@ if (Meteor.isClient) {
       timelineToggleStyles: function() {
         return {
           backgroundColor: '#ffffff',
-          borderRadius: '50%'
+          borderRadius: '50%',
+          textAlign: 'center',
+          color: '#ffffff'
         };
       },
       timelineMomentStyles: function() {
@@ -230,6 +242,23 @@ if (Meteor.isClient) {
         };
       }
     });
+    Template.about.rendered = function() {
+      var fview, target;
+      log('ABOUT RENDERED', this);
+      fview = FView.from(this);
+      log('ABOUT FVIEW', fview);
+      target = fview.surface || fview.view._eventInput;
+      log('ABOUT TARGET', target);
+      target.on('start', function() {
+        return log('STARTING!!!!!!');
+      });
+      target.on('update', function() {
+        return log('UPDATING!!!!');
+      });
+      return target.on('end', function() {
+        return log('ENDING!!!!!!!');
+      });
+    };
     Template.background.rendered = function() {
       var fview, target, videoWrapper;
       fview = FView.from(this);
@@ -318,11 +347,21 @@ if (Meteor.isClient) {
             streamCreated: function(event) {
               log('publishStream created!', event);
               return Meteor.call('createMoment', function(err, result) {
-                var clock, interval, timeLeft;
+                var archive, clock, interval, timeLeft;
                 if (err) {
                   return log('createMoment err', err);
                 } else {
                   log('createMoment result', result);
+                  archive = {
+                    archiveCreatedAt: result.createdAt,
+                    duration: result.duration,
+                    tokboxArchiveId: result.id,
+                    tokboxArchiveName: result.name,
+                    tokboxPartnerId: result.partnerId,
+                    tokboxSessionId: result.sessionId,
+                    archiveSize: result.size,
+                    archiveUpdatedAt: result.updatedAt
+                  };
                   clock = momentTimer;
                   timeLeft = function() {
                     if (clock > 0) {
@@ -462,21 +501,70 @@ if (Meteor.isClient) {
     Session.setDefault('epochDay', moment(Session.get('epoch')).day());
     Session.setDefault('epochMonth', moment(Session.get('epoch')).month());
     Session.setDefault('epochYear', moment(Session.get('epoch')).year());
-    Template.timelineMoment.rendered = function() {
-      var fview, target;
+    Template.timelineMinuteScroller.rendered = function() {
+      var fview, scrollView, target;
+      log('TIMELINEMINUTESSCROLLER RENDERED', this);
       fview = FView.from(this);
+      log('TIMELINEMINUTESSCROLLER FVIEW', fview);
       target = fview.surface || fview.view._eventInput;
+      log('TIMELINEMINUTESSCROLLER TARGET', target);
+      scrollView = fview.children[0].view._eventInput;
+      log('SCROLLVIEW?!', scrollView);
+      window.timelineMinuteScroller = fview.children[0].view;
+      window.timelineMinuteScroller._node._.loop = true;
+      window.timelineMinuteScroller.goToNextPage();
+      window.timelineMinuteScroller.goToPage(Session.get('currentMinute'));
+      scrollView.on('start', function(e) {
+        return log('STARTING!!!!!!', this);
+      });
+      scrollView.on('update', function(e) {
+        return log('UPDATING!!!!', this);
+      });
+      return scrollView.on('end', function(e) {
+        return log('ENDING!!!!!!!', this);
+      });
+    };
+    Template.timelineMinuteScroller.helpers({
+      timelineMinuteStyles: function() {
+        return {
+          textAlign: 'center',
+          color: '#ffffff'
+        };
+      },
+      timelineMinuteStatus: function() {
+        return log('TIMELINE MINUTE STATUS!!!');
+      }
+    });
+    Template.timelineMinute.rendered = function() {
+      var data, fview, momentMinute, self, serverMoment, target;
+      fview = FView.from(this);
+      self = this;
+      data = self.data;
+      target = fview.surface || fview.view._eventInput;
+      momentMinute = data.momentMinute;
+      serverMoment = moment(TimeSync.serverTime());
+      if (momentMinute.format('h:mm A') === serverMoment.format('h:mm A')) {
+        log('SERVER MOMENT MATCH!!!!!', momentMinute.format('h:mm A'));
+        log('SERVER MOMENT DATA', data);
+        Session.set('currentMinute', data.index);
+      }
       return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
+        var currentIndex;
+        log('TIMELINE MINUTE CLICKED', fview, target, this, self);
+        log('data.index', data.index);
+        currentIndex = window.timelineMinuteScroller.getCurrentIndex();
+        log('currentIndex', currentIndex);
+        Session.set('currentMinute', data.index);
+        window.timelineMinuteScroller.goToPage(Session.get('currentMinute'));
         fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(10, 10), {
+        return fview.modifier.setTransform(Transform.translate(30, 0), {
           method: 'spring',
           period: 1000,
           dampingRatio: 0.3
         });
       });
     };
-    Template.timelineMoment.helpers({
+    Template.timelineMinute.helpers({
       second: function() {
         var index, instance;
         instance = Template.instance();
@@ -499,6 +587,29 @@ if (Meteor.isClient) {
         } else {
           return index;
         }
+      }
+    });
+    Template.timelineMoment.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      return target.on('click', function() {
+        log('TIMELINE MOMENT CLICKED', fview, target, this);
+        fview.modifier.halt();
+        return fview.modifier.setTransform(Transform.translate(10, 10), {
+          method: 'spring',
+          period: 1000,
+          dampingRatio: 0.3
+        });
+      });
+    };
+    Template.timelineMoment.helpers({
+      moment: function() {
+        var data, instance;
+        instance = Template.instance();
+        data = instance.data;
+        data;
+        return this;
       }
     });
     Template.timelineDay.rendered = function() {
@@ -572,6 +683,7 @@ if (Meteor.isClient) {
         var index, instance;
         instance = Template.instance();
         index = instance.data;
+        log('timelineYear!!!!1', index);
         if (typeof index === 'object') {
           return 0;
         } else {
@@ -610,14 +722,29 @@ if (Meteor.isServer) {
       archive = openTokClient.startArchive(openTokSession, openTokArchiveOptions);
       clock = momentTimer;
       timeLeft = function() {
+        var storedArchive;
         if (clock > 1) {
           clock--;
           log(clock);
           if (clock === 1) {
             if (archive.status !== 'stopped') {
               archive = openTokClient.stopArchive(archive.id);
+              storedArchive = {
+                archiveCreatedAt: archive.createdAt,
+                tokboxArchiveId: archive.id,
+                tokboxArchiveName: archive.name,
+                tokboxPartnerId: archive.partnerId,
+                tokboxSessionId: archive.sessionId,
+                archiveUpdatedAt: archive.updatedAt
+              };
+              Moments.insert(storedArchive, function(error, id) {
+                if (error) {
+                  log('error');
+                }
+                return log('Moments insert callback!', id);
+              });
+              log('That\'s All Folks, let\'s cancel this server session archive', archive, storedArchive);
             }
-            log('That\'s All Folks, let\'s cancel this server session archive', archive);
             return Meteor.clearInterval(interval);
           }
         }
@@ -625,6 +752,18 @@ if (Meteor.isServer) {
       interval = Meteor.setInterval(timeLeft, 1000);
       log('Sigh archive', archive);
       return archive;
+    },
+    listArchives: function() {
+      log('listArchives called!');
+      return openTokClient.listArchives({
+        count: 50
+      }, function(error, archives, totalCount) {
+        if (error) {
+          log('listArchives error', error);
+        }
+        log('archives', archives);
+        return log('totalCount', totalCount);
+      });
     },
     stopMoment: function(archiveId) {
       var archive;
@@ -650,7 +789,8 @@ if (Meteor.isServer) {
     epoch = moment('2010-01-01 00:00');
     log('Server epoch!', epoch);
     now = moment();
-    return log('Server now!', now);
+    log('Server now!', now);
+    return log('Get archives');
   });
 }
 

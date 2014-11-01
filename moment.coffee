@@ -8,11 +8,12 @@ Router.map ->
 @Publisher = new Mongo.Collection 'publisher'
 @Questions = new Mongo.Collection 'questions'
 @Moments = new Mongo.Collection 'moments'
+@Archives = new Mongo.Collection 'archives'
 @Seconds = new Mongo.Collection 'seconds'
 
 # API Keys
 @openTokApiKey = '45020262'
-@momentTimer = 60
+@momentTimer = 5
 
 @log = ->
 	log.history = log.history or [] # store logs to an array for reference
@@ -21,6 +22,9 @@ Router.map ->
 
 if Meteor.isClient
 	Meteor.startup ->
+		#Set famous logging to be more calm
+		Logger.setLevel 'famous-views', 'info'
+
 		# Create a guest user
 		Guests.add()
 		Meteor.call('createOpenTokSession', (err,result)->
@@ -72,7 +76,7 @@ if Meteor.isClient
 		@SpringTransition = famous.transitions.SpringTransition
 		@SnapTransition = famous.transitions.SnapTransition
 
-		#Register Transitions
+		# Register Transitions
 		Transitionable.registerMethod 'spring',SpringTransition
 		Transitionable.registerMethod 'snap',SpringTransition
 
@@ -98,10 +102,16 @@ if Meteor.isClient
 			minutesInADay = 1440
 			minutes = []
 			while minutes.length < minutesInADay
-				minute = moment(epoch)
-				#Subtract minutes
-				minute.set('minute',minutes.length)
-				minutes.push(minute.format('h:mm A'))
+				momentMinute = moment(epoch)
+				#Create a minute object that stores the index for scrolling, as well as the moment minute.
+				minute =
+					index: minutes.length
+					momentMinute: momentMinute
+				#Overflow the minutes count based on the length, moment will smartly handle formatting it properly
+				minute.momentMinute.set('minute',minutes.length)
+				#Pass in the minute formatted to display as 10:00 AM, etc.
+				minute.formattedMinute = minute.momentMinute.format('h:mm A')
+				minutes.push(minute)
 			log 'minutes',minutes
 			minutes
 		Template.registerHelper 'days', ->
@@ -111,9 +121,9 @@ if Meteor.isClient
 			daysInAMonth = 31
 			days = []
 			while days.length < daysInAMonth
-				log 'currentDay',currentDay
+				#log 'currentDay',currentDay
 				day.set('day',currentDay--)
-				log 'day',day
+				#log 'day',day
 				days.push(day.format('dddd'))
 			days
 		Template.registerHelper 'months', ->
@@ -123,11 +133,11 @@ if Meteor.isClient
 			monthsInAYear = 12
 			months = []
 			while months.length < monthsInAYear
-				log 'currentMonth',currentMonth
+				#log 'currentMonth',currentMonth
 				month.set('month',currentMonth--)
-				log 'month',month
+				#log 'month',month
 				months.push(month.format('MMMM'))
-			log 'months',months
+			#log 'months',months
 			months
 		Template.registerHelper 'years', ->
 			epoch = Session.get 'epoch'
@@ -136,12 +146,20 @@ if Meteor.isClient
 			years = []
 			yearsSinceEpoch = 10
 			while years.length < yearsSinceEpoch
-				log 'currentYear',currentYear
+				#log 'currentYear',currentYear
 				year.set('year',currentYear--)
-				log 'year',year
+				#log 'year',year
 				years.push(year.format('YYYY'))
 			log 'years',years
 			years
+		Template.registerHelper 'timelineMoments', ->
+			instance = Template.instance()
+			data = instance.data
+			#moments = [1,2,3,4,5,6,7]
+			#moments
+			Moments.find()
+		Template.registerHelper 'currentEpoch', ->
+			TimeSync.serverTime()
 
 		Template.about.helpers
 			backgroundStyles: ->
@@ -178,8 +196,9 @@ if Meteor.isClient
 			timelineToggleStyles: ->
 				backgroundColor: '#ffffff'
 				borderRadius: '50%'
+				textAlign: 'center'
+				color: '#ffffff'
 			timelineMomentStyles: ->
-				#backgroundColor: '#000000'
 				textAlign: 'center'
 				color: '#ffffff'
 			timelineDayStyles: ->
@@ -191,6 +210,26 @@ if Meteor.isClient
 			timelineYearStyles: ->
 				#backgroundColor: '#000000'
 				color: '#ffffff'
+
+		#Template.views_Scrollview.rendered = ->
+		#	log 'SCROLLVIEW RENDERED'
+
+		Template.about.rendered = ->
+			log 'ABOUT RENDERED',this
+			fview = FView.from(this)
+			log 'ABOUT FVIEW',fview
+			target = fview.surface || fview.view._eventInput
+			log 'ABOUT TARGET',target
+
+			target.on('start', () ->
+				log 'STARTING!!!!!!'
+			)
+			target.on('update', () ->
+				log 'UPDATING!!!!'
+			)
+			target.on('end', () ->
+				log 'ENDING!!!!!!!'
+			)
 
 		Template.background.rendered = ->
 			fview = FView.from(this)
@@ -280,6 +319,21 @@ if Meteor.isClient
 								else
 									log 'createMoment result',result
 									#Start the timer once we get a result back from the server and know an archive is going!
+
+									#We should also insert the archive result instance back into the moments/archive collection here.
+									#(We create an archive instance here, although perhaps it might be good to either insert it upon
+									#archive completion, so that we only insert archives that are a minute long(?) or to ensure we have
+									#the right metadata.)
+									archive =
+										archiveCreatedAt: result.createdAt
+										duration: result.duration
+										tokboxArchiveId: result.id
+										tokboxArchiveName: result.name
+										tokboxPartnerId: result.partnerId
+										tokboxSessionId: result.sessionId
+										archiveSize: result.size
+										archiveUpdatedAt: result.updatedAt
+
 									clock = momentTimer
 									timeLeft = ->
 										if clock > 0
@@ -402,23 +456,121 @@ if Meteor.isClient
 		Session.setDefault 'epochMonth', moment(Session.get('epoch')).month()
 		Session.setDefault 'epochYear', moment(Session.get('epoch')).year()
 
-		Template.timelineMoment.rendered = ->
+		#Template.timelineMinuteScroller.created = ->
+			#log 'TIMELINEMINUTESSCROLLER CREATED',this
+			#fview = FView.from(this)
+			#log 'TIMELINEMINUTESSCROLLER CREATED FVIEW',fview
+			#target = fview.surface || fview.view._eventInput
+			#log 'TIMELINEMINUTESSCROLLER TARGET',target
+			#scrollView = fview.children[0].view._eventInput
+			#log 'SCROLLVIEW?!',scrollView
+			#window.timelineMinuteScroller = fview.children[0].view
+			#window.timelineMinuteScroller._node._.loop = true
+
+		Template.timelineMinuteScroller.rendered = ->
+			log 'TIMELINEMINUTESSCROLLER RENDERED',this
 			fview = FView.from(this)
+			log 'TIMELINEMINUTESSCROLLER FVIEW',fview
+			target = fview.surface || fview.view._eventInput
+			log 'TIMELINEMINUTESSCROLLER TARGET',target
+			scrollView = fview.children[0].view._eventInput
+			log 'SCROLLVIEW?!',scrollView
+			window.timelineMinuteScroller = fview.children[0].view
+			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
+			window.timelineMinuteScroller._node._.loop = true
+
+			#Set the page to 0 so that we don't get wonky overscrolling when the user clicks another option, as by default the ScrollView
+			#page index starts at the last item in the list (1439 in our case), so we want to set it to 0 by just bumping the page forward by one.
+			window.timelineMinuteScroller.goToNextPage()
+
+			#Scroll to the current minute set in the server
+			window.timelineMinuteScroller.goToPage(Session.get('currentMinute'))
+
+			scrollView.on('start', (e) ->
+				log 'STARTING!!!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('update', (e) ->
+				log 'UPDATING!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#timelineMinuteScroller.setPosition(400)
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('end', (e) ->
+				log 'ENDING!!!!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+
+		Template.timelineMinuteScroller.helpers
+			timelineMinuteStyles: ->
+				#backgroundColor: '#000000'
+				textAlign: 'center'
+				color: '#ffffff'
+			timelineMinuteStatus: ->
+				log 'TIMELINE MINUTE STATUS!!!'
+
+		Template.timelineMinute.rendered = ->
+			fview = FView.from(this)
+			self = this
+			data = self.data
 
 			target = fview.surface || fview.view._eventInput
+			#log 'TIMELINE MINUTE RENDERED!',data
+
+			momentMinute = data.momentMinute
+			#log 'MOMENT MINUTE',momentMinute.format('h:mm A')
+
+			serverMoment = moment(TimeSync.serverTime())
+			#log 'SERVER MOMENT',serverMoment.format('h:mm A'), momentMinute.format('h:mm A')
+
+			if momentMinute.format('h:mm A') is serverMoment.format('h:mm A')
+				log 'SERVER MOMENT MATCH!!!!!',momentMinute.format('h:mm A')
+				log 'SERVER MOMENT DATA',data
+				Session.set 'currentMinute',data.index
+				#window.timelineMinuteScroller.goToPage(data.index)
+
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
+				log 'TIMELINE MINUTE CLICKED',fview, target, this, self
 
 				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
 
+				log 'data.index',data.index
+				currentIndex = window.timelineMinuteScroller.getCurrentIndex()
+				log 'currentIndex',currentIndex
+				#destinationIndex = data.index - currentIndex
+				#log 'destinationIndex',destinationIndex
+
+				Session.set('currentMinute',data.index)
+				window.timelineMinuteScroller.goToPage(Session.get('currentMinute'))
+
 				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(10, 10),
+				fview.modifier.setTransform Transform.translate(30, 0),
 					method: 'spring'
 					period: 1000
 					dampingRatio: 0.3
 			)
 
-		Template.timelineMoment.helpers
+		Template.timelineMinute.helpers
 			second: ->
 				instance = Template.instance()
 				index = instance.data
@@ -443,6 +595,34 @@ if Meteor.isClient
 					0
 				else
 					index
+
+		Template.timelineMoment.rendered = ->
+			fview = FView.from(this)
+
+			target = fview.surface || fview.view._eventInput
+			target.on('click', () ->
+				log 'TIMELINE MOMENT CLICKED',fview, target, this
+
+				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
+
+				fview.modifier.halt()
+				fview.modifier.setTransform Transform.translate(10, 10),
+					method: 'spring'
+					period: 1000
+					dampingRatio: 0.3
+			)
+
+		Template.timelineMoment.helpers
+			moment: ->
+				instance = Template.instance()
+				#log 'timelineMoment instance!',instance
+				data = instance.data
+				data
+				this
+				#if typeof index is 'object'
+				#	0
+				#else
+				#	index
 
 		Template.timelineDay.rendered = ->
 			fview = FView.from(this)
@@ -472,6 +652,7 @@ if Meteor.isClient
 
 		Template.timelineMonth.rendered = ->
 			fview = FView.from(this)
+			#log 'timelineMonth!!!!',this
 
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
@@ -498,6 +679,7 @@ if Meteor.isClient
 
 		Template.timelineYear.rendered = ->
 			fview = FView.from(this)
+			#log 'timelineYear!!!!',this
 
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
@@ -516,6 +698,7 @@ if Meteor.isClient
 			year: ->
 				instance = Template.instance()
 				index = instance.data
+				log 'timelineYear!!!!1',index
 				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
 				if typeof index is 'object'
 					0
@@ -555,12 +738,25 @@ if Meteor.isServer
 				if clock > 1
 					clock--
 					log clock
-					#We've hit ten seconds, wrap it up gentlemen.
+					#We've hit our time limit, wrap it up gentlemen.
 					if clock is 1
 						unless archive.status is 'stopped'
 							archive = openTokClient.stopArchive archive.id
+							storedArchive =
+								archiveCreatedAt: archive.createdAt
+								tokboxArchiveId: archive.id
+								tokboxArchiveName: archive.name
+								tokboxPartnerId: archive.partnerId
+								tokboxSessionId: archive.sessionId
+								archiveUpdatedAt: archive.updatedAt
 
-						log 'That\'s All Folks, let\'s cancel this server session archive',archive
+							Moments.insert storedArchive
+							,
+								(error,id)->
+									log 'error' if error
+									log 'Moments insert callback!',id
+
+							log 'That\'s All Folks, let\'s cancel this server session archive',archive,storedArchive
 						Meteor.clearInterval interval
 				#else
 				#	log 'Other stuff'
@@ -568,6 +764,15 @@ if Meteor.isServer
 
 			log 'Sigh archive',archive
 			archive
+		listArchives: () ->
+			log 'listArchives called!'
+
+			openTokClient.listArchives
+				count: 50
+			, (error,archives,totalCount)->
+				log 'listArchives error',error if error
+				log 'archives',archives
+				log 'totalCount',totalCount
 		stopMoment: (archiveId) ->
 			log 'Server stopMoment called!'
 			log 'archive?',archiveId
@@ -599,3 +804,6 @@ if Meteor.isServer
 		log 'Server epoch!',epoch
 		now = moment()
 		log 'Server now!',now
+
+		log 'Get archives'
+

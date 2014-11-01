@@ -19,9 +19,6 @@
 
 /* Imports */
 var Meteor = Package.meteor.Meteor;
-var Pince = Package['jag:pince'].Pince;
-var Logger = Package['jag:pince'].Logger;
-var MicroEvent = Package['jag:pince'].MicroEvent;
 var _ = Package.underscore._;
 var $ = Package.jquery.$;
 var jQuery = Package.jquery.jQuery;
@@ -32,10 +29,13 @@ var Template = Package.templating.Template;
 var Tracker = Package.tracker.Tracker;
 var Deps = Package.tracker.Deps;
 var ObserveSequence = Package['observe-sequence'].ObserveSequence;
+var Pince = Package['jag:pince'].Pince;
+var Logger = Package['jag:pince'].Logger;
+var MicroEvent = Package['jag:pince'].MicroEvent;
 var HTML = Package.htmljs.HTML;
 
 /* Package-scope variables */
-var famousCmp, FView, log, Transform, optionString, handleOptions, options, MeteorFamousView, throwError, sequencer, parentViewName, parentTemplateName, runRenderedCallback, key;
+var FView, log, Transform, optionString, handleOptions, options, MeteorFamousView, throwError, sequencer, parentViewName, parentTemplateName, runRenderedCallback, key;
 
 (function () {
 
@@ -53,10 +53,10 @@ var isDev = ("localhost" === window.location.hostname);                         
 log = new Logger('famous-views');                                                                                // 6
 Logger.setLevel('famous-views', isDev ? 'trace' : 'info');                                                       // 7
                                                                                                                  // 8
-FView = famousCmp = {};                                                                                          // 9
+FView = {};                                                                                                      // 9
                                                                                                                  // 10
 var readyQueue = [];                                                                                             // 11
-var readyDep = new Deps.Dependency;                                                                              // 12
+var readyDep = new Tracker.Dependency;                                                                           // 12
 FView.ready = function(func) {                                                                                   // 13
 	if (func) {                                                                                                     // 14
     if (FView.isReady)                                                                                           // 15
@@ -608,331 +608,348 @@ function templateSurface(div, fview, renderedTemplate, tName, options) {        
                                                                                                                  // 69
   // If any HTML was generated, create a surface for it                                                          // 70
   if (options.view=='Surface' || div.innerHTML.trim().length) {                                                  // 71
-    var surfaceOptions = { classes: [ 't_'+tName.replace(/ /, '_') ] };                                          // 72
+    fview.surfaceClassName = 't_'+tName.replace(/ /, '_');                                                       // 72
     if (options.classes)                                                                                         // 73
-      surfaceOptions.classes = _.union(surfaceOptions.classes,                                                   // 74
-        _.isArray(options.classes) ? options.classes : options.classes.split(','));                              // 75
-    if (options.class)                                                                                           // 76
-      surfaceOptions.classes = _.union(surfaceOptions.classes,                                                   // 77
-        _.isArray(options.class) ? options.class : options.class.split(' '));                                    // 78
-                                                                                                                 // 79
-    surfaceOptions.content = div;                                                                                // 80
-    surfaceOptions.size = fview.size;                                                                            // 81
-                                                                                                                 // 82
-    fview.surface = fview.view;                                                                                  // 83
-    fview.surface.setOptions(surfaceOptions);                                                                    // 84
-                                                                                                                 // 85
-    /*                                                                                                           // 86
-    fview.surface = new famous.core.Surface(surfaceOptions);                                                     // 87
-    if (!fview.node)                                                                                             // 88
-      // nothing, i.e. Surface & no modifier                                                                     // 89
-      fview.setNode(fview.surface);                                                                              // 90
-    else if (!fview.sequencer)                                                                                   // 91
-      // add Surface as only child                                                                               // 92
-      fview.node.add(fview.surface);                                                                             // 93
-    else {                                                                                                       // 94
-      fview.sequencer.sequence.push(fview.surface);                                                              // 95
-    }                                                                                                            // 96
-    */                                                                                                           // 97
-                                                                                                                 // 98
-    var pipeChildrenTo = fview.parent.pipeChildrenTo;                                                            // 99
-    if (pipeChildrenTo)                                                                                          // 100
-      for (var i=0; i < pipeChildrenTo.length; i++)                                                              // 101
-        fview.surface.pipe(pipeChildrenTo[i]);                                                                   // 102
-                                                                                                                 // 103
-    if (autoSize) {                                                                                              // 104
-      fview.autoHeight = autoHeight;                                                                             // 105
-      fview.autoHeight();                                                                                        // 106
-    }                                                                                                            // 107
-  }                                                                                                              // 108
-}                                                                                                                // 109
-                                                                                                                 // 110
-// Used by famousEach too                                                                                        // 111
-parentViewName = function(blazeView) {                                                                           // 112
-  while (blazeView.name == "with" || blazeView.name == "(contentBlock)")                                         // 113
-    blazeView = blazeView.parentView;                                                                            // 114
-  return blazeView.name;                                                                                         // 115
-}                                                                                                                // 116
-parentTemplateName = function(blazeView) {                                                                       // 117
-  while (blazeView && !blazeView.name.match(/^Template/))                                                        // 118
-    blazeView = blazeView.parentView;                                                                            // 119
-  return blazeView.name;                                                                                         // 120
-}                                                                                                                // 121
-                                                                                                                 // 122
-// Need to fire manually at appropriate time,                                                                    // 123
-// for non-Surfaces which are never added to the DOM by meteor                                                   // 124
-runRenderedCallback = function(view) {                                                                           // 125
-//  if (view._callbacks.rendered && view._callbacks.rendered.length)                                             // 126
-  var needsRenderedCallback = true; // uh yeah, TODO :>                                                          // 127
-  view.domrange = null; // TODO, check if it's a surface / real domrange                                         // 128
-  if (needsRenderedCallback && ! view.isDestroyed &&                                                             // 129
-      view._callbacks.rendered && view._callbacks.rendered.length) {                                             // 130
-    Deps.afterFlush(function callRendered() {                                                                    // 131
-      if (needsRenderedCallback && ! view.isDestroyed) {                                                         // 132
-        needsRenderedCallback = false;                                                                           // 133
-        Blaze._fireCallbacks(view, 'rendered');                                                                  // 134
-      }                                                                                                          // 135
-    });                                                                                                          // 136
-  }                                                                                                              // 137
-}                                                                                                                // 138
-                                                                                                                 // 139
-function famousCreated() {                                                                                       // 140
-  var blazeView = this.view;                                                                                     // 141
-  var famousViewName = blazeView.name ? blazeView.name.substr(7) : "";                                           // 142
-                                                                                                                 // 143
-  this.data = this.data || {};                                                                                   // 144
-  var dataContext = this.data.data                                                                               // 145
-    || Blaze._parentData(1) && Blaze._parentData(1, true)                                                        // 146
-    || Blaze._parentData(0) && Blaze._parentData(0, true)                                                        // 147
-    || {};                                                                                                       // 148
-                                                                                                                 // 149
-  // deprecate                                                                                                   // 150
-  if (!this.data.view && famousViewName === "")                                                                  // 151
-    this.data.view = 'SequentialLayout';                                                                         // 152
-  if (!this.data.view) this.data.view = famousViewName;                                                          // 153
-  else if (!famousViewName) {                                                                                    // 154
-    famousViewName = this.data.view;                                                                             // 155
-    blazeView.viewName = 'Famous.' + famousViewName;                                                             // 156
-  }                                                                                                              // 157
-                                                                                                                 // 158
-  // Deprecated 2014-08-17                                                                                       // 159
-  if (this.data.size && _.isString(this.data.size) && this.data.size.substr(0,1) != '[')                         // 160
-    throw new Error('[famous-views] size="' + this.data.size + '" is deprecated, please use '                    // 161
-      + 'size="['+ this.data.size + ']" instead');                                                               // 162
-                                                                                                                 // 163
-  // See attribute parsing notes in README                                                                       // 164
-  var options = handleOptions(this.data);                                                                        // 165
-                                                                                                                 // 166
-  // These require special handling (but should still be moved elsewhere)                                        // 167
-  if (this.data.direction)                                                                                       // 168
-    options.direction = this.data.direction == "Y"                                                               // 169
-      ? famous.utilities.Utility.Direction.Y                                                                     // 170
-      : famous.utilities.Utility.Direction.X;                                                                    // 171
-  if (options.translate) {                                                                                       // 172
-    options.transform =                                                                                          // 173
-      Transform.translate.apply(null, options.translate);                                                        // 174
-    delete options.translate;                                                                                    // 175
-  }                                                                                                              // 176
-  // any other transforms added here later must act on existing transform matrix                                 // 177
-                                                                                                                 // 178
-  if (!this.data.modifier && (this.data.origin || this.data.size || this.data.translate || this.data.transform)) // 179
-    this.data.modifier = 'StateModifier';                                                                        // 180
-                                                                                                                 // 181
-  var fview = blazeView.fview = new MeteorFamousView(blazeView, options);                                        // 182
-  fview._view = FView.views[this.data.view] || { name: this.data.view };                                         // 183
-                                                                                                                 // 184
-  var pViewName = parentViewName(blazeView.parentView);                                                          // 185
-  var pTplName = parentTemplateName(blazeView.parentView);                                                       // 186
-  log.debug('New ' + famousViewName + " (#" + fview.id + ')'                                                     // 187
-    + (this.data.template                                                                                        // 188
-      ? ', content from "' + this.data.template + '"'                                                            // 189
-      : ', content from inline block')                                                                           // 190
-    + ' (parent: ' + pViewName                                                                                   // 191
-    + (pViewName == pTplName                                                                                     // 192
-      ? ''                                                                                                       // 193
-      : ', template: ' + pTplName)                                                                               // 194
-    + ')');                                                                                                      // 195
-                                                                                                                 // 196
-  /*                                                                                                             // 197
-  if (FView.viewOptions[this.data.view]                                                                          // 198
-      && FView.viewOptions[this.data.view].childUiHooks) {                                                       // 199
-    // if childUiHooks specified, store them here too                                                            // 200
-    fview.childUiHooks = FView.viewOptions[this.data.view].childUiHooks;                                         // 201
-  } else if (fview.parent.childUiHooks) {                                                                        // 202
-    if (this.data.view == 'Surface') {                                                                           // 203
-      fview.uiHooks = fview.parent.childUiHooks;                                                                 // 204
-    } else {                                                                                                     // 205
-      // Track descedents                                                                                        // 206
-    }                                                                                                            // 207
-    console.log('child ' + this.data.view);                                                                      // 208
-  }                                                                                                              // 209
-  */                                                                                                             // 210
+      throw new Error('Surface classes="x,y" is deprecated.  Use class="x y" instead.');                         // 74
+                                                                                                                 // 75
+    var surfaceOptions = {                                                                                       // 76
+      content: div,                                                                                              // 77
+      size: fview.size                                                                                           // 78
+    };                                                                                                           // 79
+                                                                                                                 // 80
+    fview.surface = fview.view;                                                                                  // 81
+    fview.surface.setOptions(surfaceOptions);                                                                    // 82
+                                                                                                                 // 83
+    /*                                                                                                           // 84
+    fview.surface = new famous.core.Surface(surfaceOptions);                                                     // 85
+    if (!fview.node)                                                                                             // 86
+      // nothing, i.e. Surface & no modifier                                                                     // 87
+      fview.setNode(fview.surface);                                                                              // 88
+    else if (!fview.sequencer)                                                                                   // 89
+      // add Surface as only child                                                                               // 90
+      fview.node.add(fview.surface);                                                                             // 91
+    else {                                                                                                       // 92
+      fview.sequencer.sequence.push(fview.surface);                                                              // 93
+    }                                                                                                            // 94
+    */                                                                                                           // 95
+                                                                                                                 // 96
+    var pipeChildrenTo = fview.parent.pipeChildrenTo;                                                            // 97
+    if (pipeChildrenTo)                                                                                          // 98
+      for (var i=0; i < pipeChildrenTo.length; i++)                                                              // 99
+        fview.surface.pipe(pipeChildrenTo[i]);                                                                   // 100
+                                                                                                                 // 101
+    if (autoSize) {                                                                                              // 102
+      fview.autoHeight = autoHeight;                                                                             // 103
+      fview.autoHeight();                                                                                        // 104
+    }                                                                                                            // 105
+  }                                                                                                              // 106
+}                                                                                                                // 107
+                                                                                                                 // 108
+// Used by famousEach too                                                                                        // 109
+parentViewName = function(blazeView) {                                                                           // 110
+  while (blazeView.name == "with" || blazeView.name == "(contentBlock)")                                         // 111
+    blazeView = blazeView.parentView;                                                                            // 112
+  return blazeView.name;                                                                                         // 113
+}                                                                                                                // 114
+parentTemplateName = function(blazeView) {                                                                       // 115
+  while (blazeView && !blazeView.name.match(/^Template/))                                                        // 116
+    blazeView = blazeView.parentView;                                                                            // 117
+  return blazeView.name;                                                                                         // 118
+}                                                                                                                // 119
+                                                                                                                 // 120
+// Need to fire manually at appropriate time,                                                                    // 121
+// for non-Surfaces which are never added to the DOM by meteor                                                   // 122
+runRenderedCallback = function(view) {                                                                           // 123
+//  if (view._callbacks.rendered && view._callbacks.rendered.length)                                             // 124
+  var needsRenderedCallback = true; // uh yeah, TODO :>                                                          // 125
+  view.domrange = null; // TODO, check if it's a surface / real domrange                                         // 126
+  if (needsRenderedCallback && ! view.isDestroyed &&                                                             // 127
+      view._callbacks.rendered && view._callbacks.rendered.length) {                                             // 128
+    Tracker.afterFlush(function callRendered() {                                                                 // 129
+      if (needsRenderedCallback && ! view.isDestroyed) {                                                         // 130
+        needsRenderedCallback = false;                                                                           // 131
+        Blaze._fireCallbacks(view, 'rendered');                                                                  // 132
+      }                                                                                                          // 133
+    });                                                                                                          // 134
+  }                                                                                                              // 135
+}                                                                                                                // 136
+                                                                                                                 // 137
+function famousCreated() {                                                                                       // 138
+  var blazeView = this.view;                                                                                     // 139
+  var famousViewName = blazeView.name ? blazeView.name.substr(7) : "";                                           // 140
+                                                                                                                 // 141
+  this.data = this.data || {};                                                                                   // 142
+  var dataContext = this.data.data                                                                               // 143
+    || Blaze._parentData(1) && Blaze._parentData(1, true)                                                        // 144
+    || Blaze._parentData(0) && Blaze._parentData(0, true)                                                        // 145
+    || {};                                                                                                       // 146
+                                                                                                                 // 147
+  // deprecate                                                                                                   // 148
+  if (!this.data.view && famousViewName === "")                                                                  // 149
+    this.data.view = 'SequentialLayout';                                                                         // 150
+  if (!this.data.view) this.data.view = famousViewName;                                                          // 151
+  else if (!famousViewName) {                                                                                    // 152
+    famousViewName = this.data.view;                                                                             // 153
+    blazeView.viewName = 'Famous.' + famousViewName;                                                             // 154
+  }                                                                                                              // 155
+                                                                                                                 // 156
+  // Deprecated 2014-08-17                                                                                       // 157
+  if (this.data.size && _.isString(this.data.size) && this.data.size.substr(0,1) != '[')                         // 158
+    throw new Error('[famous-views] size="' + this.data.size + '" is deprecated, please use '                    // 159
+      + 'size="['+ this.data.size + ']" instead');                                                               // 160
+                                                                                                                 // 161
+  // See attribute parsing notes in README                                                                       // 162
+  var options = handleOptions(this.data);                                                                        // 163
+                                                                                                                 // 164
+  // These require special handling (but should still be moved elsewhere)                                        // 165
+  if (this.data.direction)                                                                                       // 166
+    options.direction = this.data.direction == "Y"                                                               // 167
+      ? famous.utilities.Utility.Direction.Y                                                                     // 168
+      : famous.utilities.Utility.Direction.X;                                                                    // 169
+  if (options.translate) {                                                                                       // 170
+    options.transform =                                                                                          // 171
+      Transform.translate.apply(null, options.translate);                                                        // 172
+    delete options.translate;                                                                                    // 173
+  }                                                                                                              // 174
+  // any other transforms added here later must act on existing transform matrix                                 // 175
+                                                                                                                 // 176
+  if (!this.data.modifier && (this.data.origin || this.data.size || this.data.translate || this.data.transform)) // 177
+    this.data.modifier = 'StateModifier';                                                                        // 178
+                                                                                                                 // 179
+  var fview = blazeView.fview = new MeteorFamousView(blazeView, options);                                        // 180
+  fview._view = FView.views[this.data.view] || { name: this.data.view };                                         // 181
+                                                                                                                 // 182
+  var pViewName = parentViewName(blazeView.parentView);                                                          // 183
+  var pTplName = parentTemplateName(blazeView.parentView);                                                       // 184
+  log.debug('New ' + famousViewName + " (#" + fview.id + ')'                                                     // 185
+    + (this.data.template                                                                                        // 186
+      ? ', content from "' + this.data.template + '"'                                                            // 187
+      : ', content from inline block')                                                                           // 188
+    + ' (parent: ' + pViewName                                                                                   // 189
+    + (pViewName == pTplName                                                                                     // 190
+      ? ''                                                                                                       // 191
+      : ', template: ' + pTplName)                                                                               // 192
+    + ')');                                                                                                      // 193
+                                                                                                                 // 194
+  /*                                                                                                             // 195
+  if (FView.viewOptions[this.data.view]                                                                          // 196
+      && FView.viewOptions[this.data.view].childUiHooks) {                                                       // 197
+    // if childUiHooks specified, store them here too                                                            // 198
+    fview.childUiHooks = FView.viewOptions[this.data.view].childUiHooks;                                         // 199
+  } else if (fview.parent.childUiHooks) {                                                                        // 200
+    if (this.data.view == 'Surface') {                                                                           // 201
+      fview.uiHooks = fview.parent.childUiHooks;                                                                 // 202
+    } else {                                                                                                     // 203
+      // Track descedents                                                                                        // 204
+    }                                                                                                            // 205
+    console.log('child ' + this.data.view);                                                                      // 206
+  }                                                                                                              // 207
+  */                                                                                                             // 208
+                                                                                                                 // 209
+  var view, node;                                                                                                // 210
                                                                                                                  // 211
-  var view, node;                                                                                                // 212
+  if (this.data.view /* != 'Surface' */) {                                                                       // 212
                                                                                                                  // 213
-  if (this.data.view /* != 'Surface' */) {                                                                       // 214
-                                                                                                                 // 215
-    view = FView.getView(this.data.view);                                                                        // 216
-    node = new view(options);                                                                                    // 217
-                                                                                                                 // 218
-    if (node.sequenceFrom) {                                                                                     // 219
-      fview.sequence = new sequencer();                                                                          // 220
-      node.sequenceFrom(fview.sequence._sequence);                                                               // 221
-    }                                                                                                            // 222
+    view = FView.getView(this.data.view);                                                                        // 214
+    node = new view(options);                                                                                    // 215
+                                                                                                                 // 216
+    if (node.sequenceFrom) {                                                                                     // 217
+      fview.sequence = new sequencer();                                                                          // 218
+      node.sequenceFrom(fview.sequence._sequence);                                                               // 219
+    }                                                                                                            // 220
+                                                                                                                 // 221
+  }                                                                                                              // 222
                                                                                                                  // 223
-  }                                                                                                              // 224
+  if (this.data.modifier) {                                                                                      // 224
                                                                                                                  // 225
-  if (this.data.modifier) {                                                                                      // 226
-                                                                                                                 // 227
-    fview._modifier = FView.modifiers[this.data.modifier];                                                       // 228
-    fview.modifier = fview._modifier.create.call(fview, options);                                                // 229
-                                                                                                                 // 230
-    if (node) {                                                                                                  // 231
-      fview.setNode(fview.modifier).add(node);                                                                   // 232
-      fview.view = node;                                                                                         // 233
-    } else                                                                                                       // 234
-      fview.setNode(fview.modifier);                                                                             // 235
-                                                                                                                 // 236
-    if (fview._modifier.postRender)                                                                              // 237
-      fview._modifier.postRender();                                                                              // 238
+    fview._modifier = FView.modifiers[this.data.modifier];                                                       // 226
+    fview.modifier = fview._modifier.create.call(fview, options);                                                // 227
+                                                                                                                 // 228
+    if (node) {                                                                                                  // 229
+      fview.setNode(fview.modifier).add(node);                                                                   // 230
+      fview.view = node;                                                                                         // 231
+    } else                                                                                                       // 232
+      fview.setNode(fview.modifier);                                                                             // 233
+                                                                                                                 // 234
+    if (fview._modifier.postRender)                                                                              // 235
+      fview._modifier.postRender();                                                                              // 236
+                                                                                                                 // 237
+  } else if (node) {                                                                                             // 238
                                                                                                                  // 239
-  } else if (node) {                                                                                             // 240
-                                                                                                                 // 241
-    fview.setNode(node);                                                                                         // 242
-    fview.view = node;                                                                                           // 243
+    fview.setNode(node);                                                                                         // 240
+    fview.view = node;                                                                                           // 241
+                                                                                                                 // 242
+  }                                                                                                              // 243
                                                                                                                  // 244
-  }                                                                                                              // 245
-                                                                                                                 // 246
-  // could do pipe=1 in template helper?                                                                         // 247
-  if (fview.parent.pipeChildrenTo)                                                                               // 248
-    fview.pipeChildrenTo = fview.parent.pipeChildrenTo;                                                          // 249
-                                                                                                                 // 250
-  // think about what else this needs                                                                            // 251
-  if (fview._view && fview._view.famousCreatedPost)                                                              // 252
-    fview._view.famousCreatedPost.call(fview);                                                                   // 253
-                                                                                                                 // 254
-                                                                                                                 // 255
-  // Render contents (and children)                                                                              // 256
-  var newBlazeView, template, scopedView;                                                                        // 257
-  if (blazeView.templateContentBlock) {                                                                          // 258
-    if (this.data.template)                                                                                      // 259
-      throw new Error("A block helper {{#View}} cannot also specify template=X");                                // 260
-    // Called like {{#famous}}inlineContents{{/famous}}                                                          // 261
-    template = blazeView.templateContentBlock;                                                                   // 262
-  } else if (this.data.template) {                                                                               // 263
-    template = Template[this.data.template];                                                                     // 264
-    if (!template)                                                                                               // 265
-      throw new Error('Famous called with template="' + this.data.template                                       // 266
-        + '" but no such template exists');                                                                      // 267
-  } else {                                                                                                       // 268
-    // Called with inclusion operator but not template {{>famous}}                                               // 269
-    throw new Error("No template='' specified");                                                                 // 270
-  }                                                                                                              // 271
-                                                                                                                 // 272
-  /*                                                                                                             // 273
-  newBlazeView = template.constructView();                                                                       // 274
-  scopedView = Blaze.With(dataContext, function() { return newBlazeView; });                                     // 275
-  Blaze.materializeView(scopedView, blazeView);                                                                  // 276
-  */                                                                                                             // 277
-                                                                                                                 // 278
-  var div = document.createElement('div');                                                                       // 279
-  /*                                                                                                             // 280
-  newBlazeView = Blaze.render(function() {                                                                       // 281
-    Blaze.With(dataContext, function() { return template.constructView(); })                                     // 282
-  }, div, null, blazeView);                                                                                      // 283
-  */                                                                                                             // 284
-  newBlazeView = Blaze.renderWithData(template, dataContext, div, null, blazeView);                              // 285
-  setupEvents(fview, template);                                                                                  // 286
-                                                                                                                 // 287
-  if (this.data.view == 'Surface') {                                                                             // 288
-    templateSurface(div, fview, scopedView,                                                                      // 289
-      this.data.template || parentTemplateName(blazeView.parentView).substr(9) + '_inline',                      // 290
-      options);                                                                                                  // 291
-  } else {                                                                                                       // 292
-    // no longer necessary since we're forced to render to a div now                                             // 293
-    // runRenderedCallback(newBlazeView);                                                                        // 294
-  }                                                                                                              // 295
-                                                                                                                 // 296
-  /*                                                                                                             // 297
-  var template = options.template;                                                                               // 298
-  if (template && Template[template].beforeAdd)                                                                  // 299
-  	Template[template].beforeAdd.call(this);                                                                      // 300
-  */                                                                                                             // 301
-                                                                                                                 // 302
-  /* This is the final step where the fview is added to Famous Render Tree */                                    // 303
-  /* By deferring the actual add we can prevent a little flicker */                                              // 304
-                                                                                                                 // 305
-  var parent = fview.parent;                                                                                     // 306
-//  _.defer(function() {                                                                                         // 307
-    if (parent._view && parent._view.add)                                                                        // 308
-      // views can explicitly handle how their children should be added                                          // 309
-      parent._view.add.call(parent, fview, options);                                                             // 310
-    else if (parent.sequence)                                                                                    // 311
-      // 'sequence' can be an array, sequencer or childSequencer, it doesn't matter                              // 312
-      parent.sequence.push(fview);                                                                               // 313
-    else if (!parent.node || (parent.node._object && parent.node._object.isDestroyed))                           // 314
-      // compView->compView.  long part above is temp hack for template rerender #2010                           // 315
-      parent.setNode(fview);                                                                                     // 316
-    else                                                                                                         // 317
-      // default case, just use the add method                                                                   // 318
-      parent.node.add(fview);                                                                                    // 319
- // });                                                                                                          // 320
-}                                                                                                                // 321
-                                                                                                                 // 322
-/*                                                                                                               // 323
- * This is called by Blaze when the View/Template is destroyed,                                                  // 324
- * e.g. {{#if 0}}{{#Scrollview}}{{/if}}.  When this happens we need to:                                          // 325
- *                                                                                                               // 326
- * 1) Destroy children (Blaze won't do it since it's not in the DOM),                                            // 327
- *    and any "eaches" that may have been added from a famousEach.                                               // 328
- * 2) Call fview.destroy() which handles cleanup w.r.t. famous,                                                  // 329
- *    which lives in meteorFamousView.js.                                                                        // 330
- *                                                                                                               // 331
- * It's possible we want to have the "template" destroyed but not the                                            // 332
- * fview in the render tree to do a graceful exit animation, etc.                                                // 333
- */                                                                                                              // 334
-function famousDestroyed() {                                                                                     // 335
-  this.view.fview.destroy(true);                                                                                 // 336
-}                                                                                                                // 337
-                                                                                                                 // 338
-// Keep this at the bottom; Firefox doesn't do function hoisting                                                 // 339
-                                                                                                                 // 340
-FView.famousView = new Template(                                                                                 // 341
-  'famous',           // viewName: "famous"                                                                      // 342
-  function() {        // Blaze.View "renderFunc"                                                                 // 343
-    var blazeView = this;                                                                                        // 344
-    var data = Blaze.getData(blazeView);                                                                         // 345
-    var tpl = blazeView._templateInstance;                                                                       // 346
-    var fview = blazeView.fview;                                                                                 // 347
-                                                                                                                 // 348
-    var changed = {};                                                                                            // 349
-    var orig = {};                                                                                               // 350
-    for (var key in data) {                                                                                      // 351
-      var value = data[key];                                                                                     // 352
-      if (typeof value === "string")                                                                             // 353
-        value = optionString(value);                                                                             // 354
-      if (!EJSON.equals(value, tpl.data[key]) || !blazeView.hasRendered) {                                       // 355
-        orig[key] = blazeView.hasRendered ? tpl.data[key] : null;                                                // 356
-        changed[key] = tpl.data[key] = value;                                                                    // 357
-      }                                                                                                          // 358
-    }                                                                                                            // 359
-                                                                                                                 // 360
-    /*                                                                                                           // 361
-     * Think about:                                                                                              // 362
-     *                                                                                                           // 363
-     * 1) Should the function get the old value or all old data too?                                             // 364
-     * 2) Should the function get all the new data, but translated?                                              // 365
-     *                                                                                                           // 366
-     */                                                                                                          // 367
-                                                                                                                 // 368
-    _.each(['modifier', 'view'], function(node) {                                                                // 369
-                                                                                                                 // 370
-      // If the fview has a modifier or view                                                                     // 371
-      var what = '_' + node;                                                                                     // 372
-      if (fview[what]) {                                                                                         // 373
-        if (fview[what].attrUpdate) {                                                                            // 374
-          // If that mod/view wants to finely handle reactive updates                                            // 375
-          for (var key in changed)                                                                               // 376
-            fview[what].attrUpdate.call(fview,                                                                   // 377
-              key, changed[key], orig[key], tpl.data, !blazeView.hasRendered);                                   // 378
-        } else if (fview[node].setOptions && blazeView.hasRendered) {                                            // 379
-          // Otherwise if it has a setOptions                                                                    // 380
-          fview[node].setOptions(tpl.data);                                                                      // 381
-        }                                                                                                        // 382
-      }                                                                                                          // 383
-                                                                                                                 // 384
-    });                                                                                                          // 385
-                                                                                                                 // 386
-//    console.log(view);                                                                                         // 387
-    blazeView.hasRendered = true;                                                                                // 388
-    return null;                                                                                                 // 389
-  }                                                                                                              // 390
-);                                                                                                               // 391
-                                                                                                                 // 392
-Blaze.registerHelper('famous', FView.famousView);                                                                // 393
-FView.famousView.created = famousCreated;                                                                        // 394
-FView.famousView.destroyed = famousDestroyed;                                                                    // 395
-                                                                                                                 // 396
+  // could do pipe=1 in template helper?                                                                         // 245
+  if (fview.parent.pipeChildrenTo)                                                                               // 246
+    fview.pipeChildrenTo = fview.parent.pipeChildrenTo;                                                          // 247
+                                                                                                                 // 248
+  // think about what else this needs                                                                            // 249
+  if (fview._view && fview._view.famousCreatedPost)                                                              // 250
+    fview._view.famousCreatedPost.call(fview);                                                                   // 251
+                                                                                                                 // 252
+                                                                                                                 // 253
+  // Render contents (and children)                                                                              // 254
+  var newBlazeView, template, scopedView;                                                                        // 255
+  if (blazeView.templateContentBlock) {                                                                          // 256
+    if (this.data.template)                                                                                      // 257
+      throw new Error("A block helper {{#View}} cannot also specify template=X");                                // 258
+    // Called like {{#famous}}inlineContents{{/famous}}                                                          // 259
+    template = blazeView.templateContentBlock;                                                                   // 260
+  } else if (this.data.template) {                                                                               // 261
+    template = Template[this.data.template];                                                                     // 262
+    if (!template)                                                                                               // 263
+      throw new Error('Famous called with template="' + this.data.template                                       // 264
+        + '" but no such template exists');                                                                      // 265
+  } else {                                                                                                       // 266
+    // Called with inclusion operator but not template {{>famous}}                                               // 267
+    throw new Error("No template='' specified");                                                                 // 268
+  }                                                                                                              // 269
+                                                                                                                 // 270
+  /*                                                                                                             // 271
+  newBlazeView = template.constructView();                                                                       // 272
+  scopedView = Blaze.With(dataContext, function() { return newBlazeView; });                                     // 273
+  Blaze.materializeView(scopedView, blazeView);                                                                  // 274
+  */                                                                                                             // 275
+                                                                                                                 // 276
+  /*                                                                                                             // 277
+  newBlazeView = Blaze.render(function() {                                                                       // 278
+    Blaze.With(dataContext, function() { return template.constructView(); })                                     // 279
+  }, div, null, blazeView);                                                                                      // 280
+  */                                                                                                             // 281
+                                                                                                                 // 282
+  // Avoid Blaze running rendered() before it's actually on the DOM                                              // 283
+  // Delete must happen before Blaze.render() called.                                                            // 284
+  /*                                                                                                             // 285
+  var onRendered = this.data.view == 'Surface' && template.rendered;                                             // 286
+  if (onRendered)                                                                                                // 287
+    delete template.rendered;                                                                                    // 288
+  */                                                                                                             // 289
+                                                                                                                 // 290
+  var div = document.createElement('div');                                                                       // 291
+  newBlazeView = Blaze.renderWithData(template, dataContext, div, null, blazeView);                              // 292
+  setupEvents(fview, template);                                                                                  // 293
+                                                                                                                 // 294
+  if (this.data.view == 'Surface') {                                                                             // 295
+    templateSurface(div, fview, scopedView,                                                                      // 296
+      this.data.template || parentTemplateName(blazeView.parentView).substr(9) + '_inline',                      // 297
+      options);                                                                                                  // 298
+  } else {                                                                                                       // 299
+    // no longer necessary since we're forced to render to a div now                                             // 300
+    // runRenderedCallback(newBlazeView);                                                                        // 301
+  }                                                                                                              // 302
+                                                                                                                 // 303
+  /*                                                                                                             // 304
+  var template = options.template;                                                                               // 305
+  if (template && Template[template].beforeAdd)                                                                  // 306
+  	Template[template].beforeAdd.call(this);                                                                      // 307
+  */                                                                                                             // 308
+                                                                                                                 // 309
+  /* This is the final step where the fview is added to Famous Render Tree */                                    // 310
+  /* By deferring the actual add we can prevent a little flicker */                                              // 311
+                                                                                                                 // 312
+  var parent = fview.parent;                                                                                     // 313
+//  _.defer(function() {                                                                                         // 314
+    if (parent._view && parent._view.add)                                                                        // 315
+      // views can explicitly handle how their children should be added                                          // 316
+      parent._view.add.call(parent, fview, options);                                                             // 317
+    else if (parent.sequence)                                                                                    // 318
+      // 'sequence' can be an array, sequencer or childSequencer, it doesn't matter                              // 319
+      parent.sequence.push(fview);                                                                               // 320
+    else if (!parent.node || (parent.node._object && parent.node._object.isDestroyed))                           // 321
+      // compView->compView.  long part above is temp hack for template rerender #2010                           // 322
+      parent.setNode(fview);                                                                                     // 323
+    else                                                                                                         // 324
+      // default case, just use the add method                                                                   // 325
+      parent.node.add(fview);                                                                                    // 326
+ // });                                                                                                          // 327
+                                                                                                                 // 328
+  /*                                                                                                             // 329
+   * Now that the Template has been rendered to the Famous Render Tree (and                                      // 330
+   * also to the DOM in the case of a Surface), let's run any rendered()                                         // 331
+   * callback that may have been defined.                                                                        // 332
+   */                                                                                                            // 333
+  /*                                                                                                             // 334
+  if (onRendered)                                                                                                // 335
+    onRendered.call(fview.blazeView._templateInstance);                                                          // 336
+  */                                                                                                             // 337
+}                                                                                                                // 338
+                                                                                                                 // 339
+/*                                                                                                               // 340
+ * This is called by Blaze when the View/Template is destroyed,                                                  // 341
+ * e.g. {{#if 0}}{{#Scrollview}}{{/if}}.  When this happens we need to:                                          // 342
+ *                                                                                                               // 343
+ * 1) Destroy children (Blaze won't do it since it's not in the DOM),                                            // 344
+ *    and any "eaches" that may have been added from a famousEach.                                               // 345
+ * 2) Call fview.destroy() which handles cleanup w.r.t. famous,                                                  // 346
+ *    which lives in meteorFamousView.js.                                                                        // 347
+ *                                                                                                               // 348
+ * It's possible we want to have the "template" destroyed but not the                                            // 349
+ * fview in the render tree to do a graceful exit animation, etc.                                                // 350
+ */                                                                                                              // 351
+function famousDestroyed() {                                                                                     // 352
+  this.view.fview.destroy(true);                                                                                 // 353
+}                                                                                                                // 354
+                                                                                                                 // 355
+// Keep this at the bottom; Firefox doesn't do function hoisting                                                 // 356
+                                                                                                                 // 357
+FView.famousView = new Template(                                                                                 // 358
+  'famous',           // viewName: "famous"                                                                      // 359
+  function() {        // Blaze.View "renderFunc"                                                                 // 360
+    var blazeView = this;                                                                                        // 361
+    var data = Blaze.getData(blazeView);                                                                         // 362
+    var tpl = blazeView._templateInstance;                                                                       // 363
+    var fview = blazeView.fview;                                                                                 // 364
+                                                                                                                 // 365
+    var changed = {};                                                                                            // 366
+    var orig = {};                                                                                               // 367
+    for (var key in data) {                                                                                      // 368
+      var value = data[key];                                                                                     // 369
+      if (typeof value === "string")                                                                             // 370
+        value = optionString(value);                                                                             // 371
+      if (!EJSON.equals(value, tpl.data[key]) || !blazeView.hasRendered) {                                       // 372
+        orig[key] = blazeView.hasRendered ? tpl.data[key] : null;                                                // 373
+        changed[key] = tpl.data[key] = value;                                                                    // 374
+      }                                                                                                          // 375
+    }                                                                                                            // 376
+                                                                                                                 // 377
+    /*                                                                                                           // 378
+     * Think about:                                                                                              // 379
+     *                                                                                                           // 380
+     * 1) Should the function get the old value or all old data too?                                             // 381
+     * 2) Should the function get all the new data, but translated?                                              // 382
+     *                                                                                                           // 383
+     */                                                                                                          // 384
+                                                                                                                 // 385
+    _.each(['modifier', 'view'], function(node) {                                                                // 386
+                                                                                                                 // 387
+      // If the fview has a modifier or view                                                                     // 388
+      var what = '_' + node;                                                                                     // 389
+      if (fview[what]) {                                                                                         // 390
+        if (fview[what].attrUpdate) {                                                                            // 391
+          // If that mod/view wants to finely handle reactive updates                                            // 392
+          for (var key in changed)                                                                               // 393
+            fview[what].attrUpdate.call(fview,                                                                   // 394
+              key, changed[key], orig[key], tpl.data, !blazeView.hasRendered);                                   // 395
+        } else if (fview[node].setOptions && blazeView.hasRendered) {                                            // 396
+          // Otherwise if it has a setOptions                                                                    // 397
+          fview[node].setOptions(tpl.data);                                                                      // 398
+        }                                                                                                        // 399
+      }                                                                                                          // 400
+                                                                                                                 // 401
+    });                                                                                                          // 402
+                                                                                                                 // 403
+//    console.log(view);                                                                                         // 404
+    blazeView.hasRendered = true;                                                                                // 405
+    return null;                                                                                                 // 406
+  }                                                                                                              // 407
+);                                                                                                               // 408
+                                                                                                                 // 409
+Blaze.registerHelper('famous', FView.famousView);                                                                // 410
+FView.famousView.created = famousCreated;                                                                        // 411
+FView.famousView.destroyed = famousDestroyed;                                                                    // 412
+                                                                                                                 // 413
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
@@ -965,7 +982,7 @@ function famousEachRender(eachView, template, argFunc) {                        
       return eachView.argVar.get();                                                                              // 13
     }, {                                                                                                         // 14
       addedAt: function (id, item, index) {                                                                      // 15
-        Deps.nonreactive(function () {                                                                           // 16
+        Tracker.nonreactive(function () {                                                                        // 16
           var newItemView = Blaze.With(item, function() {                                                        // 17
             return template.constructView();                                                                     // 18
           });                                                                                                    // 19
@@ -998,12 +1015,12 @@ function famousEachRender(eachView, template, argFunc) {                        
         children.splice(index, 1);                                                                               // 46
       },                                                                                                         // 47
       changedAt: function (id, newItem, oldItem, index) {                                                        // 48
-        Deps.nonreactive(function () {                                                                           // 49
+        Tracker.nonreactive(function () {                                                                        // 49
           children[index].blazeView.dataVar.set(newItem);                                                        // 50
         });                                                                                                      // 51
       },                                                                                                         // 52
       movedTo: function (id, doc, fromIndex, toIndex) {                                                          // 53
-        Deps.nonreactive(function () {                                                                           // 54
+        Tracker.nonreactive(function () {                                                                        // 54
           var item = sequence.splice(fromIndex, 1)[0];                                                           // 55
           sequence.splice(toIndex, 0, item);                                                                     // 56
                                                                                                                  // 57
@@ -1152,6 +1169,56 @@ Blaze.registerHelper('famousIf', FView.famousIfView);                           
 FView.famousIfView.created = famousIfCreated;                                                                    // 63
 FView.famousIfView.destroyed = famousIfDestroyed;                                                                // 64
                                                                                                                  // 65
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}).call(this);
+
+
+
+
+
+
+(function () {
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                               //
+// packages/gadicohen:famous-views/lib/famousContext.js                                                          //
+//                                                                                                               //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                 //
+Template.famousContext                                                                                           // 1
+	= Template.FamousContext                                                                                        // 2
+	= new Template('Template.FamousContext', function() {                                                           // 3
+	  var blazeView = this;                                                                                         // 4
+                                                                                                                 // 5
+		var children = [];                                                                                             // 6
+		var sequence = [];                                                                                             // 7
+                                                                                                                 // 8
+		// Since all Surfaces are created in a .created callback, the expect to find a fview field on some parent.     // 9
+		// Fake here one, and later link to real Context                                                               // 10
+		Blaze.getView().fview = {                                                                                      // 11
+			sequence : sequence,                                                                                          // 12
+			children : children                                                                                           // 13
+		};                                                                                                             // 14
+                                                                                                                 // 15
+		var templateContentBlock = this.templateContentBlock;                                                          // 16
+                                                                                                                 // 17
+		blazeView.onViewReady(function () {                                                                            // 18
+			var firstNode = $(this.templateInstance().firstNode);                                                         // 19
+			var parent = firstNode.parent();                                                                              // 20
+                                                                                                                 // 21
+			var context = famous.core.Engine.createContext(parent[0]);                                                    // 22
+                                                                                                                 // 23
+			_.each(children, function (c) {                                                                               // 24
+				context.add(c);                                                                                              // 25
+			});                                                                                                           // 26
+		});                                                                                                            // 27
+                                                                                                                 // 28
+		return Blaze.View('famousContext', function () {                                                               // 29
+			return templateContentBlock;                                                                                  // 30
+		})                                                                                                             // 31
+	});                                                                                                             // 32
+                                                                                                                 // 33
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
@@ -1674,15 +1741,29 @@ FView.ready(function(require) {                                                 
     			// Long term, rather specify modifierSize and surfaceSize args?                                           // 21
     			if (this._modifier.name == 'StateModifier')                                                               // 22
 						this.surface.setSize([undefined,undefined]);                                                               // 23
-    			else                                                                                                      // 24
-  					this.surface.setSize(value);                                                                              // 25
-    			break;                                                                                                    // 26
-    	}                                                                                                           // 27
-    }                                                                                                            // 28
-                                                                                                                 // 29
-	});                                                                                                             // 30
-});                                                                                                              // 31
-                                                                                                                 // 32
+    			else {                                                                                                    // 24
+            this.surface.setSize(value);                                                                         // 25
+          }                                                                                                      // 26
+    			break;                                                                                                    // 27
+                                                                                                                 // 28
+        case 'class' :                                                                                           // 29
+          if (Match.test(value, String))                                                                         // 30
+            value = value.split(" ");                                                                            // 31
+          else if (!Match.test(value, [String]))                                                                 // 32
+            throw new Error('Surface class= expects string or array of strings');                                // 33
+          value.push(this.surfaceClassName);                                                                     // 34
+          this.view.setClasses(value);                                                                           // 35
+          break;                                                                                                 // 36
+                                                                                                                 // 37
+        case 'properties' :                                                                                      // 38
+          this.view.setProperties(value);                                                                        // 39
+          break;                                                                                                 // 40
+    	}                                                                                                           // 41
+    }                                                                                                            // 42
+                                                                                                                 // 43
+	});                                                                                                             // 44
+});                                                                                                              // 45
+                                                                                                                 // 46
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
@@ -1691,7 +1772,6 @@ FView.ready(function(require) {                                                 
 /* Exports */
 if (typeof Package === 'undefined') Package = {};
 Package['gadicohen:famous-views'] = {
-  famousCmp: famousCmp,
   FView: FView
 };
 

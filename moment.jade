@@ -2,7 +2,7 @@ head
 	title Moment
 	meta(name='apple-mobile-web-app-capable' content='yes')
 	meta(name='apple-mobile-web-app-status-bar-style' content='black-translucent')
-	meta(name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no')
+	meta(name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,minimal-ui')
 body
 
 template(name='layout')
@@ -11,25 +11,34 @@ template(name='layout')
 
 template(name='about')
 	+View size='[undefined,undefined]'
-		+Surface template='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
-		+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='0.4' properties=overlayStyles
-		+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=introStyles
-		+Surface template='question' size='[200,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=questionStyles
-		+Surface template='momentButton' size='[200,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=momentButtonStyles
-		+Surface template='ppLogo' size='[100,100]' origin='[1,1]' align='[1,1]' translate='[-10,-10,0]' opacity='0.14' properties=ppLogoStyles
-		+Surface template='timer' size='[60,60]' origin='[0.5,1]' align='[0.5,0.5]' translate='[0,100,0]' opacity='1' properties=timerStyles
-		+Surface template='timelineToggle' size='[60,60]' origin='[1,0]' align='[1,0]' translate='[-10,10,0]' opacity='0.14' properties=timelineToggleStyles
-		+Scrollview size='[undefined,undefined]' origin='[0,1]' align='[0,1]' translate='[0,0,0]'
+		+timelineMinuteScroller
+		//-+Surface template='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
+		//-+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='0.4' properties=overlayStyles
+		//-+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=introStyles
+		//-+Surface template='question' size='[200,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=questionStyles
+		//-+Surface template='momentButton' size='[200,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=momentButtonStyles
+		//-+Surface template='ppLogo' size='[100,100]' origin='[1,1]' align='[1,1]' translate='[-10,-10,0]' opacity='0.14' properties=ppLogoStyles
+		//-+Surface template='timer' size='[60,60]' origin='[0.5,1]' align='[0.5,0.5]' translate='[0,100,0]' opacity='1' properties=timerStyles
+		//-+Surface template='timelineToggle' size='[60,60]' origin='[1,0]' align='[1,0]' translate='[-10,10,0]' opacity='0.14' properties=timelineToggleStyles
+		//-+Scrollview size='[undefined,undefined]' origin='[0,1]' align='[0,1]' translate='[0,0,0]'
 			+famousEach minutes
-				+Surface template='timelineMoment' size='[undefined,60]' properties=timelineMomentStyles
-		+Scrollview size='[140,undefined]' origin='[1,1]' align='[1,1]' translate='[-50,0,0]'
+				+Surface template='timelineMinute' size='[undefined,60]' properties=timelineMinuteStyles
+				//-+famousEach timelineMoments
+					+Surface template='timelineMoment' size='[undefined,60]' properties=timelineMomentStyles
+		//-+Scrollview size='[140,undefined]' origin='[1,1]' align='[1,1]' translate='[-50,0,0]'
 			+famousEach days
 				+Surface template='timelineDay' size='[undefined,60]' properties=timelineDayStyles
-		+Scrollview size='[40,undefined]' origin='[1,1]' align='[1,1]' translate='[-10,0,0]'
+		//-+Scrollview size='[40,undefined]' origin='[1,1]' align='[1,1]' translate='[-10,0,0]'
 			+famousEach years
 				+Surface template='timelineYear' size='[undefined,60]' properties=timelineYearStyles
 				+famousEach months
 					+Surface template='timelineMonth' size='[undefined,60]' properties=timelineMonthStyles
+
+template(name='timelineMinuteScroller')
+	//-+Scrollview size='[undefined,undefined]' origin='[0,1]' align='[0,1]' translate='[0,0,0]'
+	+Scrollview size='[undefined,undefined]' origin='[0,1]' align='[0,1]' translate='[0,0,0]'
+		+famousEach minutes
+			+Surface template='timelineMinute' size='[undefined,60]' properties=timelineMinuteStyles
 
 template(name='background')
 	//-This is the background for cycling of images
@@ -51,10 +60,23 @@ template(name='timer')
 template(name='question')
 	| Question of the Day
 
+template(name='timelineScroller')
+	| timelineScroller
+
 template(name='timelineToggle')
+	= currentEpoch
+
+template(name='timelineMinute')
+	p= minute.formattedMinute
 
 template(name='timelineMoment')
-	= minute
+	ul
+		li= moment.archiveCreatedAt
+		li= moment.tokboxArchiveId
+		li= moment.tokboxArchiveName
+		//-li= moment.tokboxPartnerId
+		//-li= moment.tokboxSessionId
+		//-li= moment.archiveUpdatedAt
 
 template(name='timelineDay')
 	= day
