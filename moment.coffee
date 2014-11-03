@@ -456,17 +456,6 @@ if Meteor.isClient
 		Session.setDefault 'epochMonth', moment(Session.get('epoch')).month()
 		Session.setDefault 'epochYear', moment(Session.get('epoch')).year()
 
-		#Template.timelineMinuteScroller.created = ->
-			#log 'TIMELINEMINUTESSCROLLER CREATED',this
-			#fview = FView.from(this)
-			#log 'TIMELINEMINUTESSCROLLER CREATED FVIEW',fview
-			#target = fview.surface || fview.view._eventInput
-			#log 'TIMELINEMINUTESSCROLLER TARGET',target
-			#scrollView = fview.children[0].view._eventInput
-			#log 'SCROLLVIEW?!',scrollView
-			#window.timelineMinuteScroller = fview.children[0].view
-			#window.timelineMinuteScroller._node._.loop = true
-
 		Template.timelineMinuteScroller.rendered = ->
 			log 'TIMELINEMINUTESSCROLLER RENDERED',this
 			fview = FView.from(this)
@@ -482,9 +471,6 @@ if Meteor.isClient
 			#Set the page to 0 so that we don't get wonky overscrolling when the user clicks another option, as by default the ScrollView
 			#page index starts at the last item in the list (1439 in our case), so we want to set it to 0 by just bumping the page forward by one.
 			window.timelineMinuteScroller.goToNextPage()
-
-			#Scroll to the current minute set in the server
-			window.timelineMinuteScroller.goToPage(Session.get('currentMinute'))
 
 			scrollView.on('start', (e) ->
 				log 'STARTING!!!!!!',this
@@ -520,6 +506,17 @@ if Meteor.isClient
 				#log 'slip',e.slip
 				#log 'velocity',e.velocity
 			)
+			@autorun((computation)->
+				currentMinute = Session.get('currentMinute')
+				#Check that the timelineMinuteScroller has been rendered in the DOM
+				#if window.timelineMinuteScroller
+				log 'timelineMinuteScroller AUTORUN!!!!',currentMinute
+				window.timelineMinuteScroller.goToPage currentMinute
+
+				#Get the Template instance
+				instance = Template.instance()
+				log 'AUTORUN INSTANCE',instance
+			)
 
 		Template.timelineMinuteScroller.helpers
 			timelineMinuteStyles: ->
@@ -547,27 +544,31 @@ if Meteor.isClient
 				log 'SERVER MOMENT MATCH!!!!!',momentMinute.format('h:mm A')
 				log 'SERVER MOMENT DATA',data
 				Session.set 'currentMinute',data.index
-				#window.timelineMinuteScroller.goToPage(data.index)
 
 			target.on('click', () ->
 				log 'TIMELINE MINUTE CLICKED',fview, target, this, self
-
-				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
-
-				log 'data.index',data.index
 				currentIndex = window.timelineMinuteScroller.getCurrentIndex()
-				log 'currentIndex',currentIndex
-				#destinationIndex = data.index - currentIndex
-				#log 'destinationIndex',destinationIndex
-
+				log 'Index currentIndex',currentIndex,data.index
 				Session.set('currentMinute',data.index)
-				window.timelineMinuteScroller.goToPage(Session.get('currentMinute'))
+			)
 
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(30, 0),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+			@autorun((computation)->
+				currentMinute = Session.get('currentMinute')
+				#Get the Template instance
+				instance = Template.instance()
+				data = instance.data
+				if currentMinute is data.index
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(30, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(0, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
 			)
 
 		Template.timelineMinute.helpers

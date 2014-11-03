@@ -513,15 +513,22 @@ if (Meteor.isClient) {
       window.timelineMinuteScroller = fview.children[0].view;
       window.timelineMinuteScroller._node._.loop = true;
       window.timelineMinuteScroller.goToNextPage();
-      window.timelineMinuteScroller.goToPage(Session.get('currentMinute'));
       scrollView.on('start', function(e) {
         return log('STARTING!!!!!!', this);
       });
       scrollView.on('update', function(e) {
         return log('UPDATING!!!!', this);
       });
-      return scrollView.on('end', function(e) {
+      scrollView.on('end', function(e) {
         return log('ENDING!!!!!!!', this);
+      });
+      return this.autorun(function(computation) {
+        var currentMinute, instance;
+        currentMinute = Session.get('currentMinute');
+        log('timelineMinuteScroller AUTORUN!!!!', currentMinute);
+        window.timelineMinuteScroller.goToPage(currentMinute);
+        instance = Template.instance();
+        return log('AUTORUN INSTANCE', instance);
       });
     };
     Template.timelineMinuteScroller.helpers({
@@ -548,20 +555,33 @@ if (Meteor.isClient) {
         log('SERVER MOMENT DATA', data);
         Session.set('currentMinute', data.index);
       }
-      return target.on('click', function() {
+      target.on('click', function() {
         var currentIndex;
         log('TIMELINE MINUTE CLICKED', fview, target, this, self);
-        log('data.index', data.index);
         currentIndex = window.timelineMinuteScroller.getCurrentIndex();
-        log('currentIndex', currentIndex);
-        Session.set('currentMinute', data.index);
-        window.timelineMinuteScroller.goToPage(Session.get('currentMinute'));
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(30, 0), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
+        log('Index currentIndex', currentIndex, data.index);
+        return Session.set('currentMinute', data.index);
+      });
+      return this.autorun(function(computation) {
+        var currentMinute, instance;
+        currentMinute = Session.get('currentMinute');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentMinute === data.index) {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(30, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        } else {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        }
       });
     };
     Template.timelineMinute.helpers({
