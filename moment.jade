@@ -35,10 +35,10 @@ template(name='about')
 					+Surface template='timelineMonth' size='[undefined,60]' properties=timelineMonthStyles
 
 template(name='timelineMinuteScroller')
-	//-+Scrollview size='[undefined,undefined]' origin='[0,1]' align='[0,1]' translate='[0,0,0]'
-	+Scrollview size='[undefined,undefined]' origin='[0,1]' align='[0,1]' translate='[0,0,0]'
+	//-TODO: Handle midnight scroll edgecase
+	+Scrollview size='[undefined,undefined]' origin='[0,0]' align='[0,0.5]' translate='[0,0,0]'
 		+famousEach minutes
-			+Surface template='timelineMinute' size='[undefined,60]' properties=timelineMinuteStyles
+			+Surface template='timelineMinute' size='[undefined,100]' properties=timelineMinuteStyles
 
 template(name='background')
 	//-This is the background for cycling of images

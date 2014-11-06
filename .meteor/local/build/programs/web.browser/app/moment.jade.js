@@ -40,8 +40,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
   return [ Blaze._TemplateWith(function() {
     return {
       size: Spacebars.call("[undefined,undefined]"),
-      origin: Spacebars.call("[0,1]"),
-      align: Spacebars.call("[0,1]"),
+      origin: Spacebars.call("[0,0]"),
+      align: Spacebars.call("[0,0.5]"),
       translate: Spacebars.call("[0,0,0]")
     };
   }, function() {
@@ -53,7 +53,7 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
           return Blaze._TemplateWith(function() {
             return {
               template: Spacebars.call("timelineMinute"),
-              size: Spacebars.call("[undefined,60]"),
+              size: Spacebars.call("[undefined,100]"),
               properties: Spacebars.call(view.lookup("timelineMinuteStyles"))
             };
           }, function() {

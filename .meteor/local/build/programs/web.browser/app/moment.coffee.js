@@ -511,24 +511,17 @@ if (Meteor.isClient) {
       scrollView = fview.children[0].view._eventInput;
       log('SCROLLVIEW?!', scrollView);
       window.timelineMinuteScroller = fview.children[0].view;
-      window.timelineMinuteScroller._node._.loop = true;
+      window.timelineMinuteSequence = timelineMinuteScroller._node;
+      window.timelineMinuteSequence._.loop = true;
       window.timelineMinuteScroller.goToNextPage();
-      scrollView.on('start', function(e) {
-        return log('STARTING!!!!!!', this);
-      });
-      scrollView.on('update', function(e) {
-        return log('UPDATING!!!!', this);
-      });
-      scrollView.on('end', function(e) {
-        return log('ENDING!!!!!!!', this);
-      });
+      scrollView.on('start', function(e) {});
+      scrollView.on('update', function(e) {});
+      scrollView.on('end', function(e) {});
       return this.autorun(function(computation) {
         var currentMinute, instance;
         currentMinute = Session.get('currentMinute');
-        log('timelineMinuteScroller AUTORUN!!!!', currentMinute);
         window.timelineMinuteScroller.goToPage(currentMinute);
-        instance = Template.instance();
-        return log('AUTORUN INSTANCE', instance);
+        return instance = Template.instance();
       });
     };
     Template.timelineMinuteScroller.helpers({
@@ -557,9 +550,16 @@ if (Meteor.isClient) {
       }
       target.on('click', function() {
         var currentIndex;
-        log('TIMELINE MINUTE CLICKED', fview, target, this, self);
         currentIndex = window.timelineMinuteScroller.getCurrentIndex();
         log('Index currentIndex', currentIndex, data.index);
+        if (currentIndex === 0 && data.index === 1439) {
+          log('OVERLAPPING BACKWARDS IN TIME LOOP');
+          window.timelineMinuteScroller.goToPreviousPage();
+        }
+        if (currentIndex === 1439 && data.index === 0) {
+          log('OVERLAPPING FORWARDS IN TIME LOOP');
+          window.timelineMinuteScroller.goToNextPage();
+        }
         return Session.set('currentMinute', data.index);
       });
       return this.autorun(function(computation) {

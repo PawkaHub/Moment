@@ -466,14 +466,15 @@ if Meteor.isClient
 			log 'SCROLLVIEW?!',scrollView
 			window.timelineMinuteScroller = fview.children[0].view
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
-			window.timelineMinuteScroller._node._.loop = true
+			window.timelineMinuteSequence = timelineMinuteScroller._node
+			window.timelineMinuteSequence._.loop = true
 
 			#Set the page to 0 so that we don't get wonky overscrolling when the user clicks another option, as by default the ScrollView
 			#page index starts at the last item in the list (1439 in our case), so we want to set it to 0 by just bumping the page forward by one.
 			window.timelineMinuteScroller.goToNextPage()
 
 			scrollView.on('start', (e) ->
-				log 'STARTING!!!!!!',this
+				#log 'STARTING!!!!!!',this
 				#log 'clientX',e.clientX
 				#log 'clientY',e.clientY
 				#log 'delta',e.delta
@@ -484,7 +485,7 @@ if Meteor.isClient
 				#log 'velocity',e.velocity
 			)
 			scrollView.on('update', (e) ->
-				log 'UPDATING!!!!',this
+				#log 'UPDATING!!!!',this
 				#log 'clientX',e.clientX
 				#log 'clientY',e.clientY
 				#log 'delta',e.delta
@@ -496,7 +497,7 @@ if Meteor.isClient
 				#log 'velocity',e.velocity
 			)
 			scrollView.on('end', (e) ->
-				log 'ENDING!!!!!!!',this
+				#log 'ENDING!!!!!!!',this, this._cachedIndex
 				#log 'clientX',e.clientX
 				#log 'clientY',e.clientY
 				#log 'delta',e.delta
@@ -510,12 +511,12 @@ if Meteor.isClient
 				currentMinute = Session.get('currentMinute')
 				#Check that the timelineMinuteScroller has been rendered in the DOM
 				#if window.timelineMinuteScroller
-				log 'timelineMinuteScroller AUTORUN!!!!',currentMinute
+				#log 'timelineMinuteScroller AUTORUN!!!!',currentMinute
 				window.timelineMinuteScroller.goToPage currentMinute
 
 				#Get the Template instance
 				instance = Template.instance()
-				log 'AUTORUN INSTANCE',instance
+				#log 'AUTORUN INSTANCE',instance
 			)
 
 		Template.timelineMinuteScroller.helpers
@@ -546,9 +547,16 @@ if Meteor.isClient
 				Session.set 'currentMinute',data.index
 
 			target.on('click', () ->
-				log 'TIMELINE MINUTE CLICKED',fview, target, this, self
+				#log 'TIMELINE MINUTE CLICKED',fview, target, this, self
+				#Get the current index at point of click
 				currentIndex = window.timelineMinuteScroller.getCurrentIndex()
 				log 'Index currentIndex',currentIndex,data.index
+				if currentIndex is 0 and data.index is 1439
+					log 'OVERLAPPING BACKWARDS IN TIME LOOP'
+					window.timelineMinuteScroller.goToPreviousPage()
+				if currentIndex is 1439 and data.index is 0
+					log 'OVERLAPPING FORWARDS IN TIME LOOP'
+					window.timelineMinuteScroller.goToNextPage()
 				Session.set('currentMinute',data.index)
 			)
 
