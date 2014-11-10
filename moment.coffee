@@ -32,9 +32,9 @@ if Meteor.isClient
 				log 'createOpenTokSession err',err
 			else
 				# Initialize the session
-				log 'createOpenTokSession result',result
+				#log 'createOpenTokSession result',result
 				@session = OT.initSession result.apiKey, result.session
-				log 'session',session
+				#log 'session',session
 
 				session.on 'streamCreated', (event) ->
 					log 'Another streamCreated!',event
@@ -61,9 +61,9 @@ if Meteor.isClient
 					if err
 						log 'session connect err',err
 					else
-						log 'Connected to session!'
+						#log 'Connected to session!'
 						if session.capabilities.publish is 1
-							log 'User is capable of publishing!',session.capabilities
+							#log 'User is capable of publishing!',session.capabilities
 						else
 							log 'You are not able to publish a stream'
 		)
@@ -112,7 +112,7 @@ if Meteor.isClient
 				#Pass in the minute formatted to display as 10:00 AM, etc.
 				minute.formattedMinute = minute.momentMinute.format('h:mm A')
 				minutes.push(minute)
-			log 'minutes',minutes
+			#log 'minutes',minutes
 			minutes
 		Template.registerHelper 'days', ->
 			epoch = Session.get 'epoch'
@@ -215,11 +215,11 @@ if Meteor.isClient
 		#	log 'SCROLLVIEW RENDERED'
 
 		Template.about.rendered = ->
-			log 'ABOUT RENDERED',this
+			#log 'ABOUT RENDERED',this
 			fview = FView.from(this)
-			log 'ABOUT FVIEW',fview
+			#log 'ABOUT FVIEW',fview
 			target = fview.surface || fview.view._eventInput
-			log 'ABOUT TARGET',target
+			#log 'ABOUT TARGET',target
 
 			target.on('start', () ->
 				log 'STARTING!!!!!!'
@@ -457,13 +457,13 @@ if Meteor.isClient
 		Session.setDefault 'epochYear', moment(Session.get('epoch')).year()
 
 		Template.timelineMinuteScroller.rendered = ->
-			log 'TIMELINEMINUTESSCROLLER RENDERED',this
+			#log 'TIMELINEMINUTESSCROLLER RENDERED',this
 			fview = FView.from(this)
-			log 'TIMELINEMINUTESSCROLLER FVIEW',fview
+			#log 'TIMELINEMINUTESSCROLLER FVIEW',fview
 			target = fview.surface || fview.view._eventInput
-			log 'TIMELINEMINUTESSCROLLER TARGET',target
+			#log 'TIMELINEMINUTESSCROLLER TARGET',target
 			scrollView = fview.children[0].view._eventInput
-			log 'SCROLLVIEW?!',scrollView
+			#log 'SCROLLVIEW?!',scrollView
 			window.timelineMinuteScroller = fview.children[0].view
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
 			window.timelineMinuteSequence = timelineMinuteScroller._node
@@ -509,10 +509,49 @@ if Meteor.isClient
 			)
 			@autorun((computation)->
 				currentMinute = Session.get('currentMinute')
-				#Check that the timelineMinuteScroller has been rendered in the DOM
-				#if window.timelineMinuteScroller
-				#log 'timelineMinuteScroller AUTORUN!!!!',currentMinute
-				window.timelineMinuteScroller.goToPage currentMinute
+				previousMinute = window.timelineMinuteScroller.getCurrentIndex()
+				totalAmount = window.timelineMinuteScroller._node._.array.length
+				amountMidPoint = totalAmount / 2
+
+				log '====================================================================='
+
+				#What is the previousMinute?
+				log 'previousMinute',previousMinute
+				#What is the currentMinute?
+				log 'currentMinute',currentMinute
+
+				scrollStart = 0
+				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
+
+				if previousMinute > amountMidPoint and currentMinute < amountMidPoint
+					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					#Calculate the forwards sroll distance
+					scrollDistance = totalAmount + currentMinute - previousMinute
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '##############currentMinute distance from previousMinute##############',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineMinuteScroller.goToNextPage()
+				else if previousMinute < amountMidPoint and currentMinute > amountMidPoint
+					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					#Calculate the backwards scroll distance
+					scrollDistance = totalAmount + previousMinute - currentMinute
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineMinuteScroller.goToPreviousPage()
+				else
+					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
+					#log 'Just scroll as normal!'
+					scrollDistance = previousMinute - currentMinute
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					if previousMinute < currentMinute
+						#log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineMinuteScroller.goToNextPage()
+					else
+						#log '!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineMinuteScroller.goToPreviousPage()
 
 				#Get the Template instance
 				instance = Template.instance()
@@ -542,21 +581,14 @@ if Meteor.isClient
 			#log 'SERVER MOMENT',serverMoment.format('h:mm A'), momentMinute.format('h:mm A')
 
 			if momentMinute.format('h:mm A') is serverMoment.format('h:mm A')
-				log 'SERVER MOMENT MATCH!!!!!',momentMinute.format('h:mm A')
-				log 'SERVER MOMENT DATA',data
+				#log 'SERVER MOMENT MATCH!!!!!',momentMinute.format('h:mm A')
+				#log 'SERVER MOMENT DATA',data
 				Session.set 'currentMinute',data.index
 
 			target.on('click', () ->
 				#log 'TIMELINE MINUTE CLICKED',fview, target, this, self
 				#Get the current index at point of click
 				currentIndex = window.timelineMinuteScroller.getCurrentIndex()
-				log 'Index currentIndex',currentIndex,data.index
-				if currentIndex is 0 and data.index is 1439
-					log 'OVERLAPPING BACKWARDS IN TIME LOOP'
-					window.timelineMinuteScroller.goToPreviousPage()
-				if currentIndex is 1439 and data.index is 0
-					log 'OVERLAPPING FORWARDS IN TIME LOOP'
-					window.timelineMinuteScroller.goToNextPage()
 				Session.set('currentMinute',data.index)
 			)
 

@@ -120,9 +120,9 @@ Template["timelineToggle"] = new Template("Template.timelineToggle", (function()
 Template.__checkName("timelineMinute");
 Template["timelineMinute"] = new Template("Template.timelineMinute", (function() {
   var view = this;
-  return HTML.P(Blaze.View(function() {
+  return [ HTML.P(Blaze.View(function() {
     return Spacebars.mustache(Spacebars.dot(view.lookup("minute"), "formattedMinute"));
-  }));
+  })) ];
 }));
 
 Template.__checkName("timelineMoment");

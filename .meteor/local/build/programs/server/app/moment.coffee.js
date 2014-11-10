@@ -39,9 +39,7 @@ if (Meteor.isClient) {
       if (err) {
         return log('createOpenTokSession err', err);
       } else {
-        log('createOpenTokSession result', result);
         this.session = OT.initSession(result.apiKey, result.session);
-        log('session', session);
         session.on('streamCreated', function(event) {
           log('Another streamCreated!', event);
           if (window.publisher) {
@@ -67,9 +65,8 @@ if (Meteor.isClient) {
           if (err) {
             return log('session connect err', err);
           } else {
-            log('Connected to session!');
             if (session.capabilities.publish === 1) {
-              return log('User is capable of publishing!', session.capabilities);
+
             } else {
               return log('You are not able to publish a stream');
             }
@@ -111,7 +108,6 @@ if (Meteor.isClient) {
         minute.formattedMinute = minute.momentMinute.format('h:mm A');
         minutes.push(minute);
       }
-      log('minutes', minutes);
       return minutes;
     });
     Template.registerHelper('days', function() {
@@ -244,11 +240,8 @@ if (Meteor.isClient) {
     });
     Template.about.rendered = function() {
       var fview, target;
-      log('ABOUT RENDERED', this);
       fview = FView.from(this);
-      log('ABOUT FVIEW', fview);
       target = fview.surface || fview.view._eventInput;
-      log('ABOUT TARGET', target);
       target.on('start', function() {
         return log('STARTING!!!!!!');
       });
@@ -503,13 +496,9 @@ if (Meteor.isClient) {
     Session.setDefault('epochYear', moment(Session.get('epoch')).year());
     Template.timelineMinuteScroller.rendered = function() {
       var fview, scrollView, target;
-      log('TIMELINEMINUTESSCROLLER RENDERED', this);
       fview = FView.from(this);
-      log('TIMELINEMINUTESSCROLLER FVIEW', fview);
       target = fview.surface || fview.view._eventInput;
-      log('TIMELINEMINUTESSCROLLER TARGET', target);
       scrollView = fview.children[0].view._eventInput;
-      log('SCROLLVIEW?!', scrollView);
       window.timelineMinuteScroller = fview.children[0].view;
       window.timelineMinuteSequence = timelineMinuteScroller._node;
       window.timelineMinuteSequence._.loop = true;
@@ -518,9 +507,46 @@ if (Meteor.isClient) {
       scrollView.on('update', function(e) {});
       scrollView.on('end', function(e) {});
       return this.autorun(function(computation) {
-        var currentMinute, instance;
+        var amountMidPoint, currentMinute, i, instance, previousMinute, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
         currentMinute = Session.get('currentMinute');
-        window.timelineMinuteScroller.goToPage(currentMinute);
+        previousMinute = window.timelineMinuteScroller.getCurrentIndex();
+        totalAmount = window.timelineMinuteScroller._node._.array.length;
+        amountMidPoint = totalAmount / 2;
+        log('=====================================================================');
+        log('previousMinute', previousMinute);
+        log('currentMinute', currentMinute);
+        scrollStart = 0;
+        if (previousMinute > amountMidPoint && currentMinute < amountMidPoint) {
+          scrollDistance = totalAmount + currentMinute - previousMinute;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+            window.timelineMinuteScroller.goToNextPage();
+          }
+        } else if (previousMinute < amountMidPoint && currentMinute > amountMidPoint) {
+          scrollDistance = totalAmount + previousMinute - currentMinute;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+            window.timelineMinuteScroller.goToPreviousPage();
+          }
+        } else {
+          scrollDistance = previousMinute - currentMinute;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          if (previousMinute < currentMinute) {
+            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+              window.timelineMinuteScroller.goToNextPage();
+            }
+          } else {
+            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+              window.timelineMinuteScroller.goToPreviousPage();
+            }
+          }
+        }
         return instance = Template.instance();
       });
     };
@@ -544,22 +570,11 @@ if (Meteor.isClient) {
       momentMinute = data.momentMinute;
       serverMoment = moment(TimeSync.serverTime());
       if (momentMinute.format('h:mm A') === serverMoment.format('h:mm A')) {
-        log('SERVER MOMENT MATCH!!!!!', momentMinute.format('h:mm A'));
-        log('SERVER MOMENT DATA', data);
         Session.set('currentMinute', data.index);
       }
       target.on('click', function() {
         var currentIndex;
         currentIndex = window.timelineMinuteScroller.getCurrentIndex();
-        log('Index currentIndex', currentIndex, data.index);
-        if (currentIndex === 0 && data.index === 1439) {
-          log('OVERLAPPING BACKWARDS IN TIME LOOP');
-          window.timelineMinuteScroller.goToPreviousPage();
-        }
-        if (currentIndex === 1439 && data.index === 0) {
-          log('OVERLAPPING FORWARDS IN TIME LOOP');
-          window.timelineMinuteScroller.goToNextPage();
-        }
         return Session.set('currentMinute', data.index);
       });
       return this.autorun(function(computation) {
