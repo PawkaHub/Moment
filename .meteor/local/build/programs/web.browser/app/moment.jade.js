@@ -29,7 +29,7 @@ Template["about"] = new Template("Template.about", (function() {
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("View"), function() {
-      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null ];
+      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineDayScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineMonthScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineYearScroller")), "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null ];
     });
   });
 }));
@@ -37,12 +37,12 @@ Template["about"] = new Template("Template.about", (function() {
 Template.__checkName("timelineMinuteScroller");
 Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroller", (function() {
   var view = this;
-  return [ Blaze._TemplateWith(function() {
+  return Blaze._TemplateWith(function() {
     return {
       size: Spacebars.call("[undefined,undefined]"),
       origin: Spacebars.call("[0,0]"),
       align: Spacebars.call("[0,0.5]"),
-      translate: Spacebars.call("[0,0,0]")
+      translate: Spacebars.call("[0,0,1]")
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("Scrollview"), function() {
@@ -62,7 +62,100 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
         });
       });
     });
-  }) ];
+  });
+}));
+
+Template.__checkName("timelineDayScroller");
+Template["timelineDayScroller"] = new Template("Template.timelineDayScroller", (function() {
+  var view = this;
+  return Blaze._TemplateWith(function() {
+    return {
+      size: Spacebars.call("[380,undefined]"),
+      origin: Spacebars.call("[1,0]"),
+      align: Spacebars.call("[1,0.5]"),
+      translate: Spacebars.call("[0,0,1]")
+    };
+  }, function() {
+    return Spacebars.include(view.lookupTemplate("Scrollview"), function() {
+      return Blaze._TemplateWith(function() {
+        return Spacebars.call(view.lookup("days"));
+      }, function() {
+        return Spacebars.include(view.lookupTemplate("famousEach"), function() {
+          return Blaze._TemplateWith(function() {
+            return {
+              template: Spacebars.call("timelineDay"),
+              size: Spacebars.call("[undefined,100]"),
+              properties: Spacebars.call(view.lookup("timelineDayStyles"))
+            };
+          }, function() {
+            return Spacebars.include(view.lookupTemplate("Surface"));
+          });
+        });
+      });
+    });
+  });
+}));
+
+Template.__checkName("timelineMonthScroller");
+Template["timelineMonthScroller"] = new Template("Template.timelineMonthScroller", (function() {
+  var view = this;
+  return Blaze._TemplateWith(function() {
+    return {
+      size: Spacebars.call("[240,undefined]"),
+      origin: Spacebars.call("[1,0]"),
+      align: Spacebars.call("[1,0.5]"),
+      translate: Spacebars.call("[0,0,1]")
+    };
+  }, function() {
+    return Spacebars.include(view.lookupTemplate("Scrollview"), function() {
+      return Blaze._TemplateWith(function() {
+        return Spacebars.call(view.lookup("months"));
+      }, function() {
+        return Spacebars.include(view.lookupTemplate("famousEach"), function() {
+          return Blaze._TemplateWith(function() {
+            return {
+              template: Spacebars.call("timelineMonth"),
+              size: Spacebars.call("[undefined,100]"),
+              properties: Spacebars.call(view.lookup("timelineMonthStyles"))
+            };
+          }, function() {
+            return Spacebars.include(view.lookupTemplate("Surface"));
+          });
+        });
+      });
+    });
+  });
+}));
+
+Template.__checkName("timelineYearScroller");
+Template["timelineYearScroller"] = new Template("Template.timelineYearScroller", (function() {
+  var view = this;
+  return Blaze._TemplateWith(function() {
+    return {
+      size: Spacebars.call("[100,undefined]"),
+      origin: Spacebars.call("[1,0]"),
+      align: Spacebars.call("[1,0.5]"),
+      translate: Spacebars.call("[0,0,1]")
+    };
+  }, function() {
+    return Spacebars.include(view.lookupTemplate("Scrollview"), function() {
+      return Blaze._TemplateWith(function() {
+        return Spacebars.call(view.lookup("years"));
+      }, function() {
+        return Spacebars.include(view.lookupTemplate("famousEach"), function() {
+          return Blaze._TemplateWith(function() {
+            return {
+              template: Spacebars.call("timelineYear"),
+              size: Spacebars.call("[undefined,100]"),
+              properties: Spacebars.call(view.lookup("timelineYearStyles"))
+            };
+          }, function() {
+            return Spacebars.include(view.lookupTemplate("Surface"));
+          });
+        });
+      });
+    });
+  });
 }));
 
 Template.__checkName("background");
@@ -140,25 +233,25 @@ Template["timelineMoment"] = new Template("Template.timelineMoment", (function()
 Template.__checkName("timelineDay");
 Template["timelineDay"] = new Template("Template.timelineDay", (function() {
   var view = this;
-  return Blaze.View(function() {
-    return Spacebars.mustache(view.lookup("day"));
-  });
+  return [ HTML.P(Blaze.View(function() {
+    return Spacebars.mustache(Spacebars.dot(view.lookup("day"), "formattedDay"));
+  })) ];
 }));
 
 Template.__checkName("timelineMonth");
 Template["timelineMonth"] = new Template("Template.timelineMonth", (function() {
   var view = this;
-  return Blaze.View(function() {
-    return Spacebars.mustache(view.lookup("month"));
-  });
+  return HTML.P(Blaze.View(function() {
+    return Spacebars.mustache(Spacebars.dot(view.lookup("month"), "formattedMonth"));
+  }));
 }));
 
 Template.__checkName("timelineYear");
 Template["timelineYear"] = new Template("Template.timelineYear", (function() {
   var view = this;
-  return Blaze.View(function() {
-    return Spacebars.mustache(view.lookup("year"));
-  });
+  return HTML.P(Blaze.View(function() {
+    return Spacebars.mustache(Spacebars.dot(view.lookup("year"), "formattedYear"));
+  }));
 }));
 
 Template.__checkName("ppLogo");

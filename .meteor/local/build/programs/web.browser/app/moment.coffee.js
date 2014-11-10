@@ -95,7 +95,7 @@ if (Meteor.isClient) {
     Session.setDefault('now', TimeSync.serverTime());
     Template.registerHelper('minutes', function() {
       var epoch, minute, minutes, minutesInADay, momentMinute;
-      epoch = Session.get('epoch');
+      epoch = TimeSync.serverTime();
       minutesInADay = 1440;
       minutes = [];
       while (minutes.length < minutesInADay) {
@@ -111,43 +111,60 @@ if (Meteor.isClient) {
       return minutes;
     });
     Template.registerHelper('days', function() {
-      var currentDay, day, days, daysInAMonth, epoch;
-      epoch = Session.get('epoch');
+      var currentDay, day, days, daysInAMonth, epoch, momentDay;
+      epoch = TimeSync.serverTime();
       day = moment(epoch);
       currentDay = day.day();
       daysInAMonth = 31;
       days = [];
       while (days.length < daysInAMonth) {
-        day.set('day', currentDay--);
-        days.push(day.format('dddd'));
+        momentDay = moment(epoch);
+        day = {
+          index: days.length,
+          momentDay: momentDay
+        };
+        day.momentDay.set('day', currentDay--);
+        day.formattedDay = day.momentDay.format('dddd');
+        days.push(day);
       }
       return days;
     });
     Template.registerHelper('months', function() {
-      var currentMonth, epoch, month, months, monthsInAYear;
-      epoch = Session.get('epoch');
+      var currentMonth, epoch, momentMonth, month, months, monthsInAYear;
+      epoch = TimeSync.serverTime();
       month = moment(epoch);
       currentMonth = month.month();
-      monthsInAYear = 12;
+      monthsInAYear = 40;
       months = [];
       while (months.length < monthsInAYear) {
-        month.set('month', currentMonth--);
-        months.push(month.format('MMMM'));
+        momentMonth = moment(epoch);
+        month = {
+          index: months.length,
+          momentMonth: momentMonth
+        };
+        month.momentMonth.set('month', currentMonth--);
+        month.formattedMonth = month.momentMonth.format('MMMM');
+        months.push(month);
       }
       return months;
     });
     Template.registerHelper('years', function() {
-      var currentYear, epoch, year, years, yearsSinceEpoch;
-      epoch = Session.get('epoch');
+      var currentYear, epoch, momentYear, year, years, yearsSinceEpoch;
+      epoch = TimeSync.serverTime();
       year = moment(epoch);
       currentYear = year.year();
       years = [];
-      yearsSinceEpoch = 10;
+      yearsSinceEpoch = 40;
       while (years.length < yearsSinceEpoch) {
-        year.set('year', currentYear--);
-        years.push(year.format('YYYY'));
+        momentYear = moment(epoch);
+        year = {
+          index: years.length,
+          momentYear: momentYear
+        };
+        year.momentYear.set('year', currentYear--);
+        year.formattedYear = year.momentYear.format('YYYY');
+        years.push(year);
       }
-      log('years', years);
       return years;
     });
     Template.registerHelper('timelineMoments', function() {
@@ -219,21 +236,6 @@ if (Meteor.isClient) {
       timelineMomentStyles: function() {
         return {
           textAlign: 'center',
-          color: '#ffffff'
-        };
-      },
-      timelineDayStyles: function() {
-        return {
-          color: '#ffffff'
-        };
-      },
-      timelineMonthStyles: function() {
-        return {
-          color: '#ffffff'
-        };
-      },
-      timelineYearStyles: function() {
-        return {
           color: '#ffffff'
         };
       }
@@ -500,9 +502,8 @@ if (Meteor.isClient) {
       target = fview.surface || fview.view._eventInput;
       scrollView = fview.children[0].view._eventInput;
       window.timelineMinuteScroller = fview.children[0].view;
-      window.timelineMinuteSequence = timelineMinuteScroller._node;
+      window.timelineMinuteSequence = window.timelineMinuteScroller._node;
       window.timelineMinuteSequence._.loop = true;
-      window.timelineMinuteScroller.goToNextPage();
       scrollView.on('start', function(e) {});
       scrollView.on('update', function(e) {});
       scrollView.on('end', function(e) {});
@@ -556,9 +557,6 @@ if (Meteor.isClient) {
           textAlign: 'center',
           color: '#ffffff'
         };
-      },
-      timelineMinuteStatus: function() {
-        return log('TIMELINE MINUTE STATUS!!!');
       }
     });
     Template.timelineMinute.rendered = function() {
@@ -572,11 +570,7 @@ if (Meteor.isClient) {
       if (momentMinute.format('h:mm A') === serverMoment.format('h:mm A')) {
         Session.set('currentMinute', data.index);
       }
-      target.on('click', function() {
-        var currentIndex;
-        currentIndex = window.timelineMinuteScroller.getCurrentIndex();
-        return Session.set('currentMinute', data.index);
-      });
+      target.on('click', function() {});
       return this.autorun(function(computation) {
         var currentMinute, instance;
         currentMinute = Session.get('currentMinute');
@@ -600,28 +594,321 @@ if (Meteor.isClient) {
       });
     };
     Template.timelineMinute.helpers({
-      second: function() {
-        var index, instance;
-        instance = Template.instance();
-        index = instance.data;
-        if (typeof index === 'object') {
-          return 0;
-        } else {
-          return index;
-        }
-      },
       minute: function() {
         return this;
-      },
-      hour: function() {
-        var index, instance;
-        instance = Template.instance();
-        index = instance.data;
-        if (typeof index === 'object') {
-          return 0;
+      }
+    });
+    Template.timelineDayScroller.rendered = function() {
+      var fview, scrollView, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      scrollView = fview.children[1].view._eventInput;
+      window.timelineDayScroller = fview.children[1].view;
+      window.timelineDaySequence = window.timelineDayScroller._node;
+      window.timelineDaySequence._.loop = true;
+      scrollView.on('start', function(e) {});
+      scrollView.on('update', function(e) {});
+      scrollView.on('end', function(e) {});
+      return this.autorun(function(computation) {
+        var amountMidPoint, currentDay, i, instance, previousDay, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
+        currentDay = Session.get('currentDay');
+        previousDay = window.timelineDayScroller.getCurrentIndex();
+        totalAmount = window.timelineDayScroller._node._.array.length;
+        amountMidPoint = totalAmount / 2;
+        log('*********************************************************************');
+        log('previousDay', previousDay);
+        log('currentDay', currentDay);
+        scrollStart = 0;
+        if (previousDay > amountMidPoint && currentDay < amountMidPoint) {
+          scrollDistance = totalAmount + currentDay - previousDay;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+            window.timelineDayScroller.goToNextPage();
+          }
+        } else if (previousDay < amountMidPoint && currentDay > amountMidPoint) {
+          scrollDistance = totalAmount + previousDay - currentDay;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+            window.timelineDayScroller.goToPreviousPage();
+          }
         } else {
-          return index;
+          scrollDistance = previousDay - currentDay;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          if (previousDay < currentDay) {
+            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+              window.timelineDayScroller.goToNextPage();
+            }
+          } else {
+            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+              window.timelineDayScroller.goToPreviousPage();
+            }
+          }
         }
+        return instance = Template.instance();
+      });
+    };
+    Template.timelineDayScroller.helpers({
+      timelineDayStyles: function() {
+        return {
+          color: '#ffffff'
+        };
+      }
+    });
+    Template.timelineDay.rendered = function() {
+      var data, fview, momentDay, self, serverMoment, target;
+      fview = FView.from(this);
+      self = this;
+      data = self.data;
+      target = fview.surface || fview.view._eventInput;
+      momentDay = data.momentDay;
+      serverMoment = moment(TimeSync.serverTime());
+      if (momentDay.format('D') === serverMoment.format('D')) {
+        Session.set('currentDay', data.index);
+      }
+      target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        return Session.set('currentDay', data.index);
+      });
+      return this.autorun(function(computation) {
+        var currentDay, instance;
+        currentDay = Session.get('currentDay');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentDay === data.index) {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(30, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        } else {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        }
+      });
+    };
+    Template.timelineDay.helpers({
+      day: function() {
+        return this;
+      }
+    });
+    Template.timelineMonthScroller.rendered = function() {
+      var fview, scrollView, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      scrollView = fview.children[2].view._eventInput;
+      window.timelineMonthScroller = fview.children[2].view;
+      window.timelineMonthSequence = window.timelineMonthScroller._node;
+      window.timelineMonthSequence._.loop = true;
+      scrollView.on('start', function(e) {});
+      scrollView.on('update', function(e) {});
+      scrollView.on('end', function(e) {});
+      return this.autorun(function(computation) {
+        var amountMidPoint, currentMonth, i, instance, previousMonth, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
+        currentMonth = Session.get('currentMonth');
+        previousMonth = window.timelineMonthScroller.getCurrentIndex();
+        totalAmount = window.timelineMonthScroller._node._.array.length;
+        amountMidPoint = totalAmount / 2;
+        log('*********************************************************************');
+        log('previousMonth', previousMonth);
+        log('currentMonth', currentMonth);
+        scrollStart = 0;
+        if (previousMonth > amountMidPoint && currentMonth < amountMidPoint) {
+          scrollDistance = totalAmount + currentMonth - previousMonth;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+            window.timelineMonthScroller.goToNextPage();
+          }
+        } else if (previousMonth < amountMidPoint && currentMonth > amountMidPoint) {
+          scrollDistance = totalAmount + previousMonth - currentMonth;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+            window.timelineMonthScroller.goToPreviousPage();
+          }
+        } else {
+          scrollDistance = previousMonth - currentMonth;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          if (previousMonth < currentMonth) {
+            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+              window.timelineMonthScroller.goToNextPage();
+            }
+          } else {
+            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+              window.timelineMonthScroller.goToPreviousPage();
+            }
+          }
+        }
+        return instance = Template.instance();
+      });
+    };
+    Template.timelineMonthScroller.helpers({
+      timelineMonthStyles: function() {
+        return {
+          color: '#ffffff'
+        };
+      }
+    });
+    Template.timelineMonth.rendered = function() {
+      var data, fview, momentMonth, self, serverMoment, target;
+      fview = FView.from(this);
+      self = this;
+      data = self.data;
+      target = fview.surface || fview.view._eventInput;
+      momentMonth = data.momentMonth;
+      serverMoment = moment(TimeSync.serverTime());
+      if (momentMonth.format('M') === serverMoment.format('M')) {
+        log('SERVER MOMENT MONTH MATCH!!!!!', serverMoment.format('M'), momentMonth.format('M'));
+        Session.set('currentMonth', data.index);
+      }
+      target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        return Session.set('currentMonth', data.index);
+      });
+      return this.autorun(function(computation) {
+        var currentMonth, instance;
+        currentMonth = Session.get('currentMonth');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentMonth === data.index) {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(30, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        } else {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        }
+      });
+    };
+    Template.timelineMonth.helpers({
+      month: function() {
+        return this;
+      }
+    });
+    Template.timelineYearScroller.rendered = function() {
+      var fview, scrollView, target;
+      fview = FView.from(this);
+      target = fview.surface || fview.view._eventInput;
+      scrollView = fview.children[3].view._eventInput;
+      window.timelineYearScroller = fview.children[3].view;
+      window.timelineYearSequence = window.timelineYearScroller._node;
+      window.timelineYearSequence._.loop = true;
+      scrollView.on('start', function(e) {});
+      scrollView.on('update', function(e) {});
+      scrollView.on('end', function(e) {});
+      return this.autorun(function(computation) {
+        var amountMidPoint, currentYear, i, instance, previousYear, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
+        currentYear = Session.get('currentYear');
+        previousYear = window.timelineYearScroller.getCurrentIndex();
+        totalAmount = window.timelineYearScroller._node._.array.length;
+        amountMidPoint = totalAmount / 2;
+        log('*********************************************************************');
+        log('previousYear', previousYear);
+        log('currentYear', currentYear);
+        scrollStart = 0;
+        if (previousYear > amountMidPoint && currentYear < amountMidPoint) {
+          scrollDistance = totalAmount + currentYear - previousYear;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+            window.timelineYearScroller.goToNextPage();
+          }
+        } else if (previousYear < amountMidPoint && currentYear > amountMidPoint) {
+          scrollDistance = totalAmount + previousYear - currentYear;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+            window.timelineYearScroller.goToPreviousPage();
+          }
+        } else {
+          scrollDistance = previousYear - currentYear;
+          if (scrollDistance < 0) {
+            scrollDistance = scrollDistance * -1;
+          }
+          if (previousYear < currentYear) {
+            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+              window.timelineYearScroller.goToNextPage();
+            }
+          } else {
+            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+              window.timelineYearScroller.goToPreviousPage();
+            }
+          }
+        }
+        return instance = Template.instance();
+      });
+    };
+    Template.timelineYearScroller.helpers({
+      timelineYearStyles: function() {
+        return {
+          color: '#ffffff'
+        };
+      }
+    });
+    Template.timelineYear.rendered = function() {
+      var data, fview, momentYear, self, serverMoment, target;
+      fview = FView.from(this);
+      self = this;
+      data = self.data;
+      target = fview.surface || fview.view._eventInput;
+      momentYear = data.momentYear;
+      serverMoment = moment(TimeSync.serverTime());
+      if (momentYear.format('YYYY') === serverMoment.format('YYYY')) {
+        Session.set('currentYear', data.index);
+      }
+      target.on('click', function() {
+        log('TARGET CLICKED', fview, target);
+        return Session.set('currentYear', data.index);
+      });
+      return this.autorun(function(computation) {
+        var currentYear, instance;
+        currentYear = Session.get('currentYear');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentYear === data.index) {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(30, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        } else {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.translate(0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.3
+          });
+        }
+      });
+    };
+    Template.timelineYear.helpers({
+      year: function() {
+        return this;
       }
     });
     Template.timelineMoment.rendered = function() {
@@ -638,92 +925,13 @@ if (Meteor.isClient) {
         });
       });
     };
-    Template.timelineMoment.helpers({
+    return Template.timelineMoment.helpers({
       moment: function() {
         var data, instance;
         instance = Template.instance();
         data = instance.data;
         data;
         return this;
-      }
-    });
-    Template.timelineDay.rendered = function() {
-      var fview, target;
-      fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(10, 10), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
-      });
-    };
-    Template.timelineDay.helpers({
-      day: function() {
-        var index, instance;
-        instance = Template.instance();
-        index = instance.data;
-        if (typeof index === 'object') {
-          return 0;
-        } else {
-          return index;
-        }
-      }
-    });
-    Template.timelineMonth.rendered = function() {
-      var fview, target;
-      fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(10, 10), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
-      });
-    };
-    Template.timelineMonth.helpers({
-      month: function() {
-        var index, instance;
-        instance = Template.instance();
-        index = instance.data;
-        if (typeof index === 'object') {
-          return 0;
-        } else {
-          return index;
-        }
-      }
-    });
-    Template.timelineYear.rendered = function() {
-      var fview, target;
-      fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(10, 10), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
-      });
-    };
-    return Template.timelineYear.helpers({
-      year: function() {
-        var index, instance;
-        instance = Template.instance();
-        index = instance.data;
-        log('timelineYear!!!!1', index);
-        if (typeof index === 'object') {
-          return 0;
-        } else {
-          return index;
-        }
       }
     });
   });

@@ -98,7 +98,7 @@ if Meteor.isClient
 		#Global Template Helpers
 		Template.registerHelper 'minutes', ->
 			#Create all the minutes in a day
-			epoch = Session.get 'epoch'
+			epoch = TimeSync.serverTime()
 			minutesInADay = 1440
 			minutes = []
 			while minutes.length < minutesInADay
@@ -115,42 +115,57 @@ if Meteor.isClient
 			#log 'minutes',minutes
 			minutes
 		Template.registerHelper 'days', ->
-			epoch = Session.get 'epoch'
+			epoch = TimeSync.serverTime()
 			day = moment(epoch)
 			currentDay = day.day()
 			daysInAMonth = 31
 			days = []
 			while days.length < daysInAMonth
 				#log 'currentDay',currentDay
-				day.set('day',currentDay--)
+				momentDay = moment(epoch)
+				day =
+					index: days.length
+					momentDay: momentDay
+				day.momentDay.set('day',currentDay--)
 				#log 'day',day
-				days.push(day.format('dddd'))
+				day.formattedDay = day.momentDay.format('dddd')
+				days.push(day)
 			days
 		Template.registerHelper 'months', ->
-			epoch = Session.get 'epoch'
+			epoch = TimeSync.serverTime()
 			month = moment(epoch)
 			currentMonth = month.month()
-			monthsInAYear = 12
+			monthsInAYear = 40
 			months = []
 			while months.length < monthsInAYear
+				momentMonth = moment(epoch)
+				month =
+					index: months.length
+					momentMonth: momentMonth
 				#log 'currentMonth',currentMonth
-				month.set('month',currentMonth--)
+				month.momentMonth.set('month',currentMonth--)
 				#log 'month',month
-				months.push(month.format('MMMM'))
+				month.formattedMonth = month.momentMonth.format('MMMM')
+				months.push(month)
 			#log 'months',months
 			months
 		Template.registerHelper 'years', ->
-			epoch = Session.get 'epoch'
+			epoch = TimeSync.serverTime()
 			year = moment(epoch)
 			currentYear = year.year()
 			years = []
-			yearsSinceEpoch = 10
+			yearsSinceEpoch = 40
 			while years.length < yearsSinceEpoch
 				#log 'currentYear',currentYear
-				year.set('year',currentYear--)
+				momentYear = moment(epoch)
+				year =
+					index: years.length
+					momentYear: momentYear
+				year.momentYear.set('year',currentYear--)
 				#log 'year',year
-				years.push(year.format('YYYY'))
-			log 'years',years
+				year.formattedYear = year.momentYear.format('YYYY')
+				years.push(year)
+			#log 'years',years
 			years
 		Template.registerHelper 'timelineMoments', ->
 			instance = Template.instance()
@@ -200,15 +215,6 @@ if Meteor.isClient
 				color: '#ffffff'
 			timelineMomentStyles: ->
 				textAlign: 'center'
-				color: '#ffffff'
-			timelineDayStyles: ->
-				#backgroundColor: '#000000'
-				color: '#ffffff'
-			timelineMonthStyles: ->
-				#backgroundColor: '#000000'
-				color: '#ffffff'
-			timelineYearStyles: ->
-				#backgroundColor: '#000000'
 				color: '#ffffff'
 
 		#Template.views_Scrollview.rendered = ->
@@ -466,12 +472,8 @@ if Meteor.isClient
 			#log 'SCROLLVIEW?!',scrollView
 			window.timelineMinuteScroller = fview.children[0].view
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
-			window.timelineMinuteSequence = timelineMinuteScroller._node
+			window.timelineMinuteSequence = window.timelineMinuteScroller._node
 			window.timelineMinuteSequence._.loop = true
-
-			#Set the page to 0 so that we don't get wonky overscrolling when the user clicks another option, as by default the ScrollView
-			#page index starts at the last item in the list (1439 in our case), so we want to set it to 0 by just bumping the page forward by one.
-			window.timelineMinuteScroller.goToNextPage()
 
 			scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
@@ -563,8 +565,6 @@ if Meteor.isClient
 				#backgroundColor: '#000000'
 				textAlign: 'center'
 				color: '#ffffff'
-			timelineMinuteStatus: ->
-				log 'TIMELINE MINUTE STATUS!!!'
 
 		Template.timelineMinute.rendered = ->
 			fview = FView.from(this)
@@ -588,8 +588,7 @@ if Meteor.isClient
 			target.on('click', () ->
 				#log 'TIMELINE MINUTE CLICKED',fview, target, this, self
 				#Get the current index at point of click
-				currentIndex = window.timelineMinuteScroller.getCurrentIndex()
-				Session.set('currentMinute',data.index)
+				#Session.set('currentMinute',data.index)
 			)
 
 			@autorun((computation)->
@@ -612,30 +611,458 @@ if Meteor.isClient
 			)
 
 		Template.timelineMinute.helpers
-			second: ->
-				instance = Template.instance()
-				index = instance.data
-				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
-				if typeof index is 'object'
-					0
-				else
-					index
 			minute: ->
-				#instance = Template.instance()
-				#log 'instance',instance
-				#data = instance.data
-				#if typeof index is 'object'
-				#0
-				#else
-				#	index
 				this
-			hour: ->
-				instance = Template.instance()
-				index = instance.data
-				if typeof index is 'object'
-					0
+
+		Template.timelineDayScroller.rendered = ->
+			#log 'TIMELINEDAYSCROLLER RENDERED',this
+			fview = FView.from(this)
+			#log 'TIMELINEDAYSCROLLER FVIEW',fview
+			target = fview.surface || fview.view._eventInput
+			#log 'TIMELINEDAYSCROLLER TARGET',target
+			scrollView = fview.children[1].view._eventInput
+			#log 'SCROLLVIEW?!',scrollView
+			window.timelineDayScroller = fview.children[1].view
+			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
+			window.timelineDaySequence = window.timelineDayScroller._node
+			window.timelineDaySequence._.loop = true
+
+			scrollView.on('start', (e) ->
+				#log 'STARTING!!!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('update', (e) ->
+				#log 'UPDATING!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#timelineDayScroller.setPosition(400)
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('end', (e) ->
+				#log 'ENDING!!!!!!!',this, this._cachedIndex
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			@autorun((computation)->
+				currentDay = Session.get('currentDay')
+				previousDay = window.timelineDayScroller.getCurrentIndex()
+				totalAmount = window.timelineDayScroller._node._.array.length
+				amountMidPoint = totalAmount / 2
+
+				log '*********************************************************************'
+
+				#What is the previousDay?
+				log 'previousDay',previousDay
+				#What is the currentDay?
+				log 'currentDay',currentDay
+
+				scrollStart = 0
+				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
+
+				if previousDay > amountMidPoint and currentDay < amountMidPoint
+					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					#Calculate the forwards sroll distance
+					scrollDistance = totalAmount + currentDay - previousDay
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '##############currentDay distance from previousDay##############',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineDayScroller.goToNextPage()
+				else if previousDay < amountMidPoint and currentDay > amountMidPoint
+					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					#Calculate the backwards scroll distance
+					scrollDistance = totalAmount + previousDay - currentDay
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '@@@@@@@@@@@@@@currentDay distance from previousDay@@@@@@@@@@@@@@',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineDayScroller.goToPreviousPage()
 				else
-					index
+					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
+					#log 'Just scroll as normal!'
+					scrollDistance = previousDay - currentDay
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					if previousDay < currentDay
+						#log '!!!!!!!!!!!!!currentDay distance from previousDay!(forwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineDayScroller.goToNextPage()
+					else
+						#log '!!!!!!!!!!!!currentDay distance from previousDay!(backwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineDayScroller.goToPreviousPage()
+
+				#Get the Template instance
+				instance = Template.instance()
+				#log 'AUTORUN INSTANCE',instance
+			)
+
+		Template.timelineDayScroller.helpers
+			timelineDayStyles: ->
+				#backgroundColor: '#000000'
+				color: '#ffffff'
+
+		Template.timelineDay.rendered = ->
+			fview = FView.from(this)
+			self = this
+			data = self.data
+
+			target = fview.surface || fview.view._eventInput
+			#log 'TIMELINE DAY RENDERED!',data
+
+			momentDay = data.momentDay
+			#log 'MOMENT DAY',momentDay.format('D')
+
+			serverMoment = moment(TimeSync.serverTime())
+			#log 'SERVER MOMENT',serverMoment.format('D'), momentDay.format('D')
+
+			if momentDay.format('D') is serverMoment.format('D')
+				#log 'SERVER MOMENT DAY MATCH!!!!!',serverMoment.format('M D'),momentDay.format('M D')
+				#log 'SERVER MOMENT DAY DATA',data
+				Session.set 'currentDay',data.index
+
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+				Session.set('currentDay',data.index)
+			)
+
+			@autorun((computation)->
+				currentDay = Session.get('currentDay')
+				#Get the Template instance
+				instance = Template.instance()
+				data = instance.data
+				if currentDay is data.index
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(30, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(0, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
+			)
+
+		Template.timelineDay.helpers
+			day: ->
+				this
+
+		Template.timelineMonthScroller.rendered = ->
+			#log 'timelineMonthScroller RENDERED',this
+			fview = FView.from(this)
+			#log 'timelineMonthScroller FVIEW',fview
+			target = fview.surface || fview.view._eventInput
+			#log 'timelineMonthScroller TARGET',target
+			scrollView = fview.children[2].view._eventInput
+			#log 'SCROLLVIEW?!',scrollView
+			window.timelineMonthScroller = fview.children[2].view
+			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
+			window.timelineMonthSequence = window.timelineMonthScroller._node
+			window.timelineMonthSequence._.loop = true
+
+			scrollView.on('start', (e) ->
+				#log 'STARTING!!!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('update', (e) ->
+				#log 'UPDATING!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#timelineMonthScroller.setPosition(400)
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('end', (e) ->
+				#log 'ENDING!!!!!!!',this, this._cachedIndex
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			@autorun((computation)->
+				currentMonth = Session.get('currentMonth')
+				previousMonth = window.timelineMonthScroller.getCurrentIndex()
+				totalAmount = window.timelineMonthScroller._node._.array.length
+				amountMidPoint = totalAmount / 2
+
+				log '*********************************************************************'
+
+				#What is the previousMonth?
+				log 'previousMonth',previousMonth
+				#What is the currentMonth?
+				log 'currentMonth',currentMonth
+
+				scrollStart = 0
+				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
+
+				if previousMonth > amountMidPoint and currentMonth < amountMidPoint
+					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					#Calculate the forwards sroll distance
+					scrollDistance = totalAmount + currentMonth - previousMonth
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '##############currentMonth distance from previousMonth##############',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineMonthScroller.goToNextPage()
+				else if previousMonth < amountMidPoint and currentMonth > amountMidPoint
+					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					#Calculate the backwards scroll distance
+					scrollDistance = totalAmount + previousMonth - currentMonth
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '@@@@@@@@@@@@@@currentMonth distance from previousMonth@@@@@@@@@@@@@@',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineMonthScroller.goToPreviousPage()
+				else
+					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
+					#log 'Just scroll as normal!'
+					scrollDistance = previousMonth - currentMonth
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					if previousMonth < currentMonth
+						#log '!!!!!!!!!!!!!currentMonth distance from previousMonth!(forwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineMonthScroller.goToNextPage()
+					else
+						#log '!!!!!!!!!!!!currentMonth distance from previousMonth!(backwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineMonthScroller.goToPreviousPage()
+
+				#Get the Template instance
+				instance = Template.instance()
+				#log 'AUTORUN INSTANCE',instance
+			)
+
+		Template.timelineMonthScroller.helpers
+			timelineMonthStyles: ->
+				#backgroundColor: '#000000'
+				color: '#ffffff'
+
+		Template.timelineMonth.rendered = ->
+			fview = FView.from(this)
+			self = this
+			data = self.data
+
+			target = fview.surface || fview.view._eventInput
+			#log 'TIMELINE MONTH RENDERED!',data
+
+			momentMonth = data.momentMonth
+			#log 'MOMENT MONTH',momentMonth.format('M')
+
+			serverMoment = moment(TimeSync.serverTime())
+			#log 'SERVER MOMENT',serverMoment.format('M'), momentMonth.format('M')
+
+			if momentMonth.format('M') is serverMoment.format('M')
+				log 'SERVER MOMENT MONTH MATCH!!!!!',serverMoment.format('M'),momentMonth.format('M')
+				#log 'SERVER MOMENT MONTH DATA',data
+				Session.set 'currentMonth',data.index
+
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+				Session.set('currentMonth',data.index)
+			)
+
+			@autorun((computation)->
+				currentMonth = Session.get('currentMonth')
+				#Get the Template instance
+				instance = Template.instance()
+				data = instance.data
+				if currentMonth is data.index
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(30, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(0, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
+			)
+
+		Template.timelineMonth.helpers
+			month: ->
+				this
+
+		Template.timelineYearScroller.rendered = ->
+			#log 'timelineYearSCROLLER RENDERED',this
+			fview = FView.from(this)
+			#log 'timelineYearSCROLLER FVIEW',fview
+			target = fview.surface || fview.view._eventInput
+			#log 'timelineYearSCROLLER TARGET',target
+			scrollView = fview.children[3].view._eventInput
+			#log 'SCROLLVIEW?!',scrollView
+			window.timelineYearScroller = fview.children[3].view
+			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
+			window.timelineYearSequence = window.timelineYearScroller._node
+			window.timelineYearSequence._.loop = true
+
+			scrollView.on('start', (e) ->
+				#log 'STARTING!!!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('update', (e) ->
+				#log 'UPDATING!!!!',this
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#timelineYearScroller.setPosition(400)
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			scrollView.on('end', (e) ->
+				#log 'ENDING!!!!!!!',this, this._cachedIndex
+				#log 'clientX',e.clientX
+				#log 'clientY',e.clientY
+				#log 'delta',e.delta
+				#log 'offsetX',e.offsetX
+				#log 'offsetY',e.offsetY
+				#log 'position',e.position
+				#log 'slip',e.slip
+				#log 'velocity',e.velocity
+			)
+			@autorun((computation)->
+				currentYear = Session.get('currentYear')
+				previousYear = window.timelineYearScroller.getCurrentIndex()
+				totalAmount = window.timelineYearScroller._node._.array.length
+				amountMidPoint = totalAmount / 2
+
+				log '*********************************************************************'
+
+				#What is the previousYear?
+				log 'previousYear',previousYear
+				#What is the currentYear?
+				log 'currentYear',currentYear
+
+				scrollStart = 0
+				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
+
+				if previousYear > amountMidPoint and currentYear < amountMidPoint
+					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					#Calculate the forwards sroll distance
+					scrollDistance = totalAmount + currentYear - previousYear
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '##############currentYear distance from previousYear##############',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineYearScroller.goToNextPage()
+				else if previousYear < amountMidPoint and currentYear > amountMidPoint
+					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					#Calculate the backwards scroll distance
+					scrollDistance = totalAmount + previousYear - currentYear
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					#log '@@@@@@@@@@@@@@currentYear distance from previousYear@@@@@@@@@@@@@@',scrollDistance
+					for i in [0..scrollDistance]
+						window.timelineYearScroller.goToPreviousPage()
+				else
+					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
+					#log 'Just scroll as normal!'
+					scrollDistance = previousYear - currentYear
+					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+					if previousYear < currentYear
+						#log '!!!!!!!!!!!!!currentYear distance from previousYear!(forwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineYearScroller.goToNextPage()
+					else
+						#log '!!!!!!!!!!!!currentYear distance from previousYear!(backwards)!!!!',scrollDistance
+						for i in [0..scrollDistance]
+							window.timelineYearScroller.goToPreviousPage()
+
+				#Get the Template instance
+				instance = Template.instance()
+				#log 'AUTORUN INSTANCE',instance
+			)
+
+		Template.timelineYearScroller.helpers
+			timelineYearStyles: ->
+				#backgroundColor: '#000000'
+				color: '#ffffff'
+
+		Template.timelineYear.rendered = ->
+			fview = FView.from(this)
+			self = this
+			data = self.data
+
+			target = fview.surface || fview.view._eventInput
+			#log 'TIMELINE YEAR RENDERED!',data
+
+			momentYear = data.momentYear
+			#log 'MOMENT YEAR',momentYear.format('YYYY')
+
+			serverMoment = moment(TimeSync.serverTime())
+			#log 'SERVER MOMENT',serverMoment.format('YYYY'), momentYear.format('YYYY')
+
+			if momentYear.format('YYYY') is serverMoment.format('YYYY')
+				#log 'SERVER MOMENT YEAR MATCH!!!!!',serverMoment.format('YYYY'),momentYear.format('YYYY')
+				#log 'SERVER MOMENT YEAR DATA',data
+				Session.set 'currentYear',data.index
+
+			target.on('click', () ->
+				log 'TARGET CLICKED',fview, target
+				Session.set('currentYear',data.index)
+			)
+
+			@autorun((computation)->
+				currentYear = Session.get('currentYear')
+				#Get the Template instance
+				instance = Template.instance()
+				data = instance.data
+				if currentYear is data.index
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(30, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.translate(0, 0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.3
+			)
+
+		Template.timelineYear.helpers
+			year: ->
+				this
 
 		Template.timelineMoment.rendered = ->
 			fview = FView.from(this)
@@ -664,88 +1091,6 @@ if Meteor.isClient
 				#	0
 				#else
 				#	index
-
-		Template.timelineDay.rendered = ->
-			fview = FView.from(this)
-
-			target = fview.surface || fview.view._eventInput
-			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
-				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(10, 10),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
-			)
-
-		Template.timelineDay.helpers
-			day: ->
-				instance = Template.instance()
-				index = instance.data
-				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
-				if typeof index is 'object'
-					0
-				else
-					index
-
-		Template.timelineMonth.rendered = ->
-			fview = FView.from(this)
-			#log 'timelineMonth!!!!',this
-
-			target = fview.surface || fview.view._eventInput
-			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
-				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(10, 10),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
-			)
-
-		Template.timelineMonth.helpers
-			month: ->
-				instance = Template.instance()
-				index = instance.data
-				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
-				if typeof index is 'object'
-					0
-				else
-					index
-
-		Template.timelineYear.rendered = ->
-			fview = FView.from(this)
-			#log 'timelineYear!!!!',this
-
-			target = fview.surface || fview.view._eventInput
-			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
-				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(10, 10),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
-			)
-
-		Template.timelineYear.helpers
-			year: ->
-				instance = Template.instance()
-				index = instance.data
-				log 'timelineYear!!!!1',index
-				#We have to use this as a workaround because the first result returned from an array is an object, not a 0.
-				if typeof index is 'object'
-					0
-				else
-					index
-
 
 if Meteor.isServer
 	Meteor.methods
