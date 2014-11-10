@@ -96,7 +96,7 @@ if (Meteor.isClient) {
     Template.registerHelper('minutes', function() {
       var epoch, minute, minutes, minutesInADay, momentMinute;
       epoch = TimeSync.serverTime();
-      minutesInADay = 1440;
+      minutesInADay = 40;
       minutes = [];
       while (minutes.length < minutesInADay) {
         momentMinute = moment(epoch);
@@ -115,7 +115,7 @@ if (Meteor.isClient) {
       epoch = TimeSync.serverTime();
       day = moment(epoch);
       currentDay = day.day();
-      daysInAMonth = 31;
+      daysInAMonth = 40;
       days = [];
       while (days.length < daysInAMonth) {
         momentDay = moment(epoch);
@@ -237,6 +237,11 @@ if (Meteor.isClient) {
         return {
           textAlign: 'center',
           color: '#ffffff'
+        };
+      },
+      timelineOverlayStyles: function() {
+        return {
+          backgroundColor: '#000000'
         };
       }
     });
@@ -570,7 +575,9 @@ if (Meteor.isClient) {
       if (momentMinute.format('h:mm A') === serverMoment.format('h:mm A')) {
         Session.set('currentMinute', data.index);
       }
-      target.on('click', function() {});
+      target.on('click', function() {
+        return Session.set('currentMinute', data.index);
+      });
       return this.autorun(function(computation) {
         var currentMinute, instance;
         currentMinute = Session.get('currentMinute');

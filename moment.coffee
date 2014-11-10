@@ -99,7 +99,7 @@ if Meteor.isClient
 		Template.registerHelper 'minutes', ->
 			#Create all the minutes in a day
 			epoch = TimeSync.serverTime()
-			minutesInADay = 1440
+			minutesInADay = 40
 			minutes = []
 			while minutes.length < minutesInADay
 				momentMinute = moment(epoch)
@@ -118,7 +118,7 @@ if Meteor.isClient
 			epoch = TimeSync.serverTime()
 			day = moment(epoch)
 			currentDay = day.day()
-			daysInAMonth = 31
+			daysInAMonth = 40
 			days = []
 			while days.length < daysInAMonth
 				#log 'currentDay',currentDay
@@ -216,6 +216,8 @@ if Meteor.isClient
 			timelineMomentStyles: ->
 				textAlign: 'center'
 				color: '#ffffff'
+			timelineOverlayStyles: ->
+				backgroundColor: '#000000'
 
 		#Template.views_Scrollview.rendered = ->
 		#	log 'SCROLLVIEW RENDERED'
@@ -588,7 +590,7 @@ if Meteor.isClient
 			target.on('click', () ->
 				#log 'TIMELINE MINUTE CLICKED',fview, target, this, self
 				#Get the current index at point of click
-				#Session.set('currentMinute',data.index)
+				Session.set('currentMinute',data.index)
 			)
 
 			@autorun((computation)->

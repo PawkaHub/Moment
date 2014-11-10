@@ -653,20 +653,20 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?402765a23a4d03c4da0bcacc045f3944df3e6124",
-      "size": 12019,
-      "hash": "402765a23a4d03c4da0bcacc045f3944df3e6124"
+      "url": "/moment.jade.js?75f07773e3eb0fee900b09b42758e2b3017f23ed",
+      "size": 16709,
+      "hash": "75f07773e3eb0fee900b09b42758e2b3017f23ed"
     },
     {
       "path": "app/moment.coffee.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?0aa7563c1a7f586406b248adfa8f54e044020b33",
+      "url": "/moment.coffee.js?5a8a06204593d4547609fdd754cc1f7d7a73fb0d",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/0aa7563c1a7f586406b248adfa8f54e044020b33.map",
-      "size": 38637,
-      "hash": "0aa7563c1a7f586406b248adfa8f54e044020b33"
+      "sourceMapUrl": "/5a8a06204593d4547609fdd754cc1f7d7a73fb0d.map",
+      "size": 38815,
+      "hash": "5a8a06204593d4547609fdd754cc1f7d7a73fb0d"
     },
     {
       "path": "packages/service-configuration.js",
