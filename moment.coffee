@@ -223,9 +223,9 @@ if Meteor.isClient
 		#	log 'SCROLLVIEW RENDERED'
 
 		Template.about.rendered = ->
-			#log 'ABOUT RENDERED',this
 			fview = FView.from(this)
-			#log 'ABOUT FVIEW',fview
+			log 'ABOUT FVIEW',fview
+			window.mainContext = fview
 			target = fview.surface || fview.view._eventInput
 			#log 'ABOUT TARGET',target
 
@@ -479,6 +479,7 @@ if Meteor.isClient
 
 			scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
+				#log 'getCurrentIndex',this.getCurrentIndex()
 				#log 'clientX',e.clientX
 				#log 'clientY',e.clientY
 				#log 'delta',e.delta
@@ -489,7 +490,8 @@ if Meteor.isClient
 				#log 'velocity',e.velocity
 			)
 			scrollView.on('update', (e) ->
-				#log 'UPDATING!!!!',this
+				#log 'UPDATING!!!!',this,e
+				#log 'getCurrentIndex',this.getCurrentIndex()
 				#log 'clientX',e.clientX
 				#log 'clientY',e.clientY
 				#log 'delta',e.delta
@@ -502,6 +504,7 @@ if Meteor.isClient
 			)
 			scrollView.on('end', (e) ->
 				#log 'ENDING!!!!!!!',this, this._cachedIndex
+				#log 'getCurrentIndex',this.getCurrentIndex()
 				#log 'clientX',e.clientX
 				#log 'clientY',e.clientY
 				#log 'delta',e.delta
@@ -528,34 +531,39 @@ if Meteor.isClient
 				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
 
 				if previousMinute > amountMidPoint and currentMinute < amountMidPoint
-					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
 					#Calculate the forwards sroll distance
 					scrollDistance = totalAmount + currentMinute - previousMinute
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '##############currentMinute distance from previousMinute##############',scrollDistance
-					for i in [0..scrollDistance]
+					log '##############currentMinute distance from previousMinute##############',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineMinuteScroller.goToNextPage()
 				else if previousMinute < amountMidPoint and currentMinute > amountMidPoint
-					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)'
 					#Calculate the backwards scroll distance
 					scrollDistance = totalAmount + previousMinute - currentMinute
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@',scrollDistance
-					for i in [0..scrollDistance]
+					log '@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineMinuteScroller.goToPreviousPage()
 				else
 					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					#log 'Just scroll as normal!'
+					log 'Just scroll as normal!'
 					scrollDistance = previousMinute - currentMinute
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
 					if previousMinute < currentMinute
-						#log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance
+						for i in [0...scrollDistance]
 							window.timelineMinuteScroller.goToNextPage()
 					else
-						#log '!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!',scrollDistance
+						#Check for an edge case where the user has clicked on a different index but it won't change to that one because of an overflow issue
+						if previousMinute is currentMinute
+							log 'Scrolling back one to cover this edgecase!'
 							window.timelineMinuteScroller.goToPreviousPage()
+						else
+							for i in [0...scrollDistance]
+								window.timelineMinuteScroller.goToPreviousPage()
 
 				#Get the Template instance
 				instance = Template.instance()
@@ -565,8 +573,17 @@ if Meteor.isClient
 		Template.timelineMinuteScroller.helpers
 			timelineMinuteStyles: ->
 				#backgroundColor: '#000000'
-				textAlign: 'center'
-				color: '#ffffff'
+				currentMinute = Session.get('currentMinute')
+				instance = Template.instance()
+				data = instance.data
+				#log 'fviewHeight',fviewHeight
+
+				if currentMinute is data.index
+					backgroundColor: 'red'
+				else
+					backgroundColor: 'blue'
+					textAlign: 'center'
+					color: '#ffffff'
 
 		Template.timelineMinute.rendered = ->
 			fview = FView.from(this)
@@ -614,6 +631,40 @@ if Meteor.isClient
 
 		Template.timelineMinute.helpers
 			minute: ->
+				#log 'window.timelineMinuteScroller.getCurrentIndex()',window.timelineMinuteScroller.getCurrentIndex()
+				#log 'Minute!',this
+				#this.momentMinute.set('minute',10)
+				#this.formattedMinute = this.momentMinute.format('h:mm A')
+
+				#Get the viewport height dimensions
+				mainCtx = FView.mainCtx
+				mainCtxSize = mainCtx.getSize()
+				mainCtxHeight = mainCtxSize[1]
+				#log 'mainCtxHeight',mainCtxHeight
+
+				#Get the famous template from this helper instance!
+				instance = Template.instance()
+				fview = FView.from(instance)
+
+				if this.index > 57 and this.index < 59
+					#log 'Index!',this.index
+					#log 'instance',instance
+					#log 'fview',fview
+					#Get the famous template height!
+					fviewSize = fview.getSize()
+					fviewHeight = fviewSize[1]
+					#log 'famous index and height!',this.index, fviewHeight
+
+					#Figure out where you are in the array
+					#log 'momentMinute',this.momentMinute
+					#log 'formattedMinute',this.formattedMinute
+				###if this.index + 1 > 59
+					log 'I am greater than 59! I\'m gonna go back to 0',this.index
+				else if this.index - 1 < 0
+					log 'I am less than 0! I\'m gonna go back to 59',this.index###
+				#else
+					#log 'I am in between 0 and 59!',this.index
+
 				this
 
 		Template.timelineDayScroller.rendered = ->

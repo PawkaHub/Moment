@@ -248,6 +248,8 @@ if (Meteor.isClient) {
     Template.about.rendered = function() {
       var fview, target;
       fview = FView.from(this);
+      log('ABOUT FVIEW', fview);
+      window.mainContext = fview;
       target = fview.surface || fview.view._eventInput;
       target.on('start', function() {
         return log('STARTING!!!!!!');
@@ -523,33 +525,45 @@ if (Meteor.isClient) {
         log('currentMinute', currentMinute);
         scrollStart = 0;
         if (previousMinute > amountMidPoint && currentMinute < amountMidPoint) {
+          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
           scrollDistance = totalAmount + currentMinute - previousMinute;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+          log('##############currentMinute distance from previousMinute##############', scrollDistance);
+          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
             window.timelineMinuteScroller.goToNextPage();
           }
         } else if (previousMinute < amountMidPoint && currentMinute > amountMidPoint) {
+          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)');
           scrollDistance = totalAmount + previousMinute - currentMinute;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+          log('@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@', scrollDistance);
+          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
             window.timelineMinuteScroller.goToPreviousPage();
           }
         } else {
+          log('Just scroll as normal!');
           scrollDistance = previousMinute - currentMinute;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
           if (previousMinute < currentMinute) {
-            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+            log('!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!', scrollDistance);
+            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
               window.timelineMinuteScroller.goToNextPage();
             }
           } else {
-            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+            log('!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!', scrollDistance);
+            if (previousMinute === currentMinute) {
+              log('Scrolling back one to cover this edgecase!');
               window.timelineMinuteScroller.goToPreviousPage();
+            } else {
+              for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+                window.timelineMinuteScroller.goToPreviousPage();
+              }
             }
           }
         }
@@ -558,10 +572,21 @@ if (Meteor.isClient) {
     };
     Template.timelineMinuteScroller.helpers({
       timelineMinuteStyles: function() {
-        return {
-          textAlign: 'center',
-          color: '#ffffff'
-        };
+        var currentMinute, data, instance;
+        currentMinute = Session.get('currentMinute');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentMinute === data.index) {
+          return {
+            backgroundColor: 'red'
+          };
+        } else {
+          return {
+            backgroundColor: 'blue',
+            textAlign: 'center',
+            color: '#ffffff'
+          };
+        }
       }
     });
     Template.timelineMinute.rendered = function() {
@@ -602,6 +627,22 @@ if (Meteor.isClient) {
     };
     Template.timelineMinute.helpers({
       minute: function() {
+        var fview, fviewHeight, fviewSize, instance, mainCtx, mainCtxHeight, mainCtxSize;
+        mainCtx = FView.mainCtx;
+        mainCtxSize = mainCtx.getSize();
+        mainCtxHeight = mainCtxSize[1];
+        instance = Template.instance();
+        fview = FView.from(instance);
+        if (this.index > 57 && this.index < 59) {
+          fviewSize = fview.getSize();
+          fviewHeight = fviewSize[1];
+        }
+
+        /*if this.index + 1 > 59
+        					log 'I am greater than 59! I\'m gonna go back to 0',this.index
+        				else if this.index - 1 < 0
+        					log 'I am less than 0! I\'m gonna go back to 59',this.index
+         */
         return this;
       }
     });

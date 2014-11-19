@@ -26,9 +26,9 @@ template(name='about')
 		+Surface template='timelineOverlay' size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,0]' opacity='0.85' properties=timelineOverlayStyles
 
 template(name='timelineMinuteScroller')
-	+Scrollview size='[undefined,undefined]' origin='[0,0]' align='[0,0.5]' translate='[0,0,1]'
+	+Scrollview size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,1]'
 		+famousEach minutes
-			+Surface template='timelineMinute' size='[undefined,100]' properties=timelineMinuteStyles
+			+Surface template='timelineMinute' size='[undefined,400]' properties=timelineMinuteStyles
 
 template(name='timelineDayScroller')
 	+Scrollview size='[380,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,1]'
@@ -88,14 +88,16 @@ template(name='timelineMoment')
 		//-li= moment.archiveUpdatedAt
 
 template(name='timelineDay')
-	p= day.formattedDay
-	//-p= day.index
+	//-p= day.formattedDay
+	p= day.index
 
 template(name='timelineMonth')
-	p= month.formattedMonth
+	//-p= month.formattedMonth
+	p= month.index
 
 template(name='timelineYear')
-	p= year.formattedYear
+	//-p= year.formattedYear
+	p= year.index
 
 template(name='ppLogo')
 	svg#ppLogo.icon(viewbox='0 0 100 100')

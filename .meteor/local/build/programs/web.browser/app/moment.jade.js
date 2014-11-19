@@ -149,7 +149,7 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
     return {
       size: Spacebars.call("[undefined,undefined]"),
       origin: Spacebars.call("[0,0]"),
-      align: Spacebars.call("[0,0.5]"),
+      align: Spacebars.call("[0,0]"),
       translate: Spacebars.call("[0,0,1]")
     };
   }, function() {
@@ -161,7 +161,7 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
           return Blaze._TemplateWith(function() {
             return {
               template: Spacebars.call("timelineMinute"),
-              size: Spacebars.call("[undefined,100]"),
+              size: Spacebars.call("[undefined,400]"),
               properties: Spacebars.call(view.lookup("timelineMinuteStyles"))
             };
           }, function() {
@@ -348,24 +348,24 @@ Template.__checkName("timelineDay");
 Template["timelineDay"] = new Template("Template.timelineDay", (function() {
   var view = this;
   return [ HTML.P(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("day"), "formattedDay"));
+    return Spacebars.mustache(Spacebars.dot(view.lookup("day"), "index"));
   })) ];
 }));
 
 Template.__checkName("timelineMonth");
 Template["timelineMonth"] = new Template("Template.timelineMonth", (function() {
   var view = this;
-  return HTML.P(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("month"), "formattedMonth"));
-  }));
+  return [ HTML.P(Blaze.View(function() {
+    return Spacebars.mustache(Spacebars.dot(view.lookup("month"), "index"));
+  })) ];
 }));
 
 Template.__checkName("timelineYear");
 Template["timelineYear"] = new Template("Template.timelineYear", (function() {
   var view = this;
-  return HTML.P(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("year"), "formattedYear"));
-  }));
+  return [ HTML.P(Blaze.View(function() {
+    return Spacebars.mustache(Spacebars.dot(view.lookup("year"), "index"));
+  })) ];
 }));
 
 Template.__checkName("ppLogo");
