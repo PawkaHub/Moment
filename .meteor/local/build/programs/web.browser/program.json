@@ -534,11 +534,11 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/packages/mrt_tokbox.js?0d45a2622416c31b895fe6827503ac26e98033ea",
+      "url": "/packages/mrt_tokbox.js?2ed5ff2e91ea6c20e3c2253faeb1b8fd3eb83035",
       "sourceMap": "packages/mrt_tokbox.js.map",
-      "sourceMapUrl": "/packages/0d45a2622416c31b895fe6827503ac26e98033ea.map",
-      "size": 222979,
-      "hash": "0d45a2622416c31b895fe6827503ac26e98033ea"
+      "sourceMapUrl": "/packages/2ed5ff2e91ea6c20e3c2253faeb1b8fd3eb83035.map",
+      "size": 2743,
+      "hash": "2ed5ff2e91ea6c20e3c2253faeb1b8fd3eb83035"
     },
     {
       "path": "packages/mrt_moment.js",

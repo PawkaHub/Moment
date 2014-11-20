@@ -313,7 +313,6 @@
       "path": "packages/wenape_accounts-guest.js"
     },
     {
-      "node_modules": "npm/mrt:tokbox/node_modules",
       "sourceMap": "packages/mrt_tokbox.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/mrt_tokbox.js"
