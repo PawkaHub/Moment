@@ -21,6 +21,13 @@ Router.map ->
 	console.log Array::slice.call(arguments)  if @console
 
 if Meteor.isClient
+	# Create Famous Views
+	FView.registerView 'InputSurface',famous.surfaces.InputSurface,
+		famousCreatedPost: ->
+			log 'INPUT SURFACE!!!!!!!1111'
+	    	# `this` or `@` is the fview for this instance
+			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+
 	Meteor.startup ->
 		#Set famous logging to be more calm
 		Logger.setLevel 'famous-views', 'info'
@@ -435,7 +442,8 @@ if Meteor.isClient
 		Template.timelineToggle.rendered = ->
 			fview = FView.from(this)
 
-			target = fview.surface || fview.view._eventInput
+			target = fview.surface || fview.view
+
 			target.on('click', () ->
 				log 'TARGET CLICKED',fview, target
 
@@ -447,6 +455,34 @@ if Meteor.isClient
 					period: 1000
 					dampingRatio: 0.3
 			)
+
+		#Timeline Search
+		Template.timelineSearchHolder.rendered = ->
+			fview = FView.from(this)
+			log 'TIMELINESEARCHHOLDER FVIEW',fview
+			target = fview.surface || fview.view._eventInput
+			log 'TIMELINESEARCHHOLDER TARGET',target
+			target.on('keyup', (e) ->
+				log 'TIMELINESEARCHHOLDER KEYUP',e
+			)
+
+		Template.timelineSearchHolder.helpers
+			timelineSearchStyles: ->
+				color: '#ffffff'
+				background: 'cadetblue'
+				padding: '0 10px 0 10px'
+				fontSize: '72px'
+
+		Template.timelineSearch.rendered = ->
+			fview = FView.from(this)
+			log 'TIMELINESEARCH FVIEW',fview
+			target = fview.surface || fview.view || fview.view._eventInput
+			log 'TIMELINESEARCH TARGET',target
+			window.timelineSearch = target
+			target.on('keyup', (e) ->
+				log 'TIMELINESEARCH KEYUP',e
+			)
+
 
 		#Timeline code
 		Session.setDefault 'currentSecond',0

@@ -32,6 +32,12 @@ this.log = function() {
 };
 
 if (Meteor.isClient) {
+  FView.registerView('InputSurface', famous.surfaces.InputSurface, {
+    famousCreatedPost: function() {
+      log('INPUT SURFACE!!!!!!!1111');
+      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+    }
+  });
   Meteor.startup(function() {
     Logger.setLevel('famous-views', 'info');
     Guests.add();
@@ -474,7 +480,7 @@ if (Meteor.isClient) {
     Template.timelineToggle.rendered = function() {
       var fview, target;
       fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
+      target = fview.surface || fview.view;
       return target.on('click', function() {
         log('TARGET CLICKED', fview, target);
         if (Session.equals('timelineToggleTranslation', -10)) {
@@ -488,6 +494,37 @@ if (Meteor.isClient) {
           period: 1000,
           dampingRatio: 0.3
         });
+      });
+    };
+    Template.timelineSearchHolder.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      log('TIMELINESEARCHHOLDER FVIEW', fview);
+      target = fview.surface || fview.view._eventInput;
+      log('TIMELINESEARCHHOLDER TARGET', target);
+      return target.on('keyup', function(e) {
+        return log('TIMELINESEARCHHOLDER KEYUP', e);
+      });
+    };
+    Template.timelineSearchHolder.helpers({
+      timelineSearchStyles: function() {
+        return {
+          color: '#ffffff',
+          background: 'cadetblue',
+          padding: '0 10px 0 10px',
+          fontSize: '72px'
+        };
+      }
+    });
+    Template.timelineSearch.rendered = function() {
+      var fview, target;
+      fview = FView.from(this);
+      log('TIMELINESEARCH FVIEW', fview);
+      target = fview.surface || fview.view || fview.view._eventInput;
+      log('TIMELINESEARCH TARGET', target);
+      window.timelineSearch = target;
+      return target.on('keyup', function(e) {
+        return log('TIMELINESEARCH KEYUP', e);
       });
     };
     Session.setDefault('currentSecond', 0);

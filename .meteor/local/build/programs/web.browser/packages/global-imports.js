@@ -1,9 +1,7 @@
 /* Imports for global scope */
 
-RouteController = Package['iron:router'].RouteController;
-Route = Package['iron:router'].Route;
 Router = Package['iron:router'].Router;
-IronLocation = Package['iron:router'].IronLocation;
+RouteController = Package['iron:router'].RouteController;
 famous = Package['mjn:famous'].famous;
 FView = Package['gadicohen:famous-views'].FView;
 Accounts = Package['accounts-base'].Accounts;
@@ -33,5 +31,6 @@ jQuery = Package.jquery.jQuery;
 Random = Package.random.Random;
 EJSON = Package.ejson.EJSON;
 LaunchScreen = Package['launch-screen'].LaunchScreen;
+Iron = Package['iron:core'].Iron;
 HTML = Package.htmljs.HTML;
 

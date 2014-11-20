@@ -29,7 +29,7 @@ Template["about"] = new Template("Template.about", (function() {
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("View"), function() {
-      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineDayScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineMonthScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineYearScroller")), "\n", Blaze._TemplateWith(function() {
+      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineDayScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineMonthScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineYearScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineSearchHolder")), "\n", Blaze._TemplateWith(function() {
         return {
           template: Spacebars.call("background"),
           size: Spacebars.call("[undefined,undefined]"),
@@ -140,6 +140,30 @@ Template["about"] = new Template("Template.about", (function() {
       }) ];
     });
   });
+}));
+
+Template.__checkName("timelineSearchHolder");
+Template["timelineSearchHolder"] = new Template("Template.timelineSearchHolder", (function() {
+  var view = this;
+  return Blaze._TemplateWith(function() {
+    return {
+      template: Spacebars.call("timelineSearch"),
+      size: Spacebars.call("[undefined,100]"),
+      origin: Spacebars.call("[0.5,0]"),
+      align: Spacebars.call("[0.5,0]"),
+      translate: Spacebars.call("[0,0,1]"),
+      properties: Spacebars.call(view.lookup("timelineSearchStyles")),
+      placeholder: Spacebars.call("Hello Search")
+    };
+  }, function() {
+    return Spacebars.include(view.lookupTemplate("InputSurface"));
+  });
+}));
+
+Template.__checkName("timelineSearch");
+Template["timelineSearch"] = new Template("Template.timelineSearch", (function() {
+  var view = this;
+  return "";
 }));
 
 Template.__checkName("timelineMinuteScroller");
@@ -335,7 +359,9 @@ Template["timelineOverlay"] = new Template("Template.timelineOverlay", (function
 Template.__checkName("timelineMinute");
 Template["timelineMinute"] = new Template("Template.timelineMinute", (function() {
   var view = this;
-  return [ HTML.P(Blaze.View(function() {
+  return [ HTML.DIV({
+    "class": "minute"
+  }, Blaze.View(function() {
     return Spacebars.mustache(Spacebars.dot(view.lookup("minute"), "index"));
   })) ];
 }));

@@ -101,7 +101,7 @@ Iron.utils.inherits = function (Child, Parent, props) {                         
   // copy static fields                                                                         // 47
   for (var key in Parent) {                                                                     // 48
     if (_.has(Parent, key))                                                                     // 49
-      Child[key] = Parent[key];                                                                 // 50
+      Child[key] = EJSON.clone(Parent[key]);                                                    // 50
   }                                                                                             // 51
                                                                                                 // 52
   var Middle = function () {                                                                    // 53
@@ -319,9 +319,21 @@ Iron.utils.debug = function (package) {                                         
   };                                                                                            // 265
 };                                                                                              // 266
                                                                                                 // 267
-// make sure Iron ends up in the global namespace                                               // 268
-Iron.utils.global.Iron = Iron;                                                                  // 269
-                                                                                                // 270
+/*                                                                                              // 268
+ * Meteor's version of this function is broke.                                                  // 269
+ */                                                                                             // 270
+Iron.utils.get = function (obj /*, arguments */) {                                              // 271
+  for (var i = 1; i < arguments.length; i++) {                                                  // 272
+    if (!obj || !(arguments[i] in obj))                                                         // 273
+      return undefined;                                                                         // 274
+    obj = obj[arguments[i]];                                                                    // 275
+  }                                                                                             // 276
+  return obj;                                                                                   // 277
+};                                                                                              // 278
+                                                                                                // 279
+// make sure Iron ends up in the global namespace                                               // 280
+Iron.utils.global.Iron = Iron;                                                                  // 281
+                                                                                                // 282
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);

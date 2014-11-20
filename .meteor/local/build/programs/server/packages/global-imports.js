@@ -1,12 +1,13 @@
 /* Imports for global scope */
 
-RouteController = Package['iron:router'].RouteController;
-Route = Package['iron:router'].Route;
 Router = Package['iron:router'].Router;
+RouteController = Package['iron:router'].RouteController;
 famous = Package['mjn:famous'].famous;
 Accounts = Package['accounts-base'].Accounts;
 moment = Package['mrt:moment'].moment;
 FastRender = Package['meteorhacks:fast-render'].FastRender;
+OpenTok = Package['carlodicelico:tokbox'].OpenTok;
+OpenTokClient = Package['carlodicelico:tokbox'].OpenTokClient;
 Meteor = Package.meteor.Meteor;
 WebApp = Package.webapp.WebApp;
 main = Package.webapp.main;
@@ -27,5 +28,6 @@ Match = Package.check.Match;
 _ = Package.underscore._;
 Random = Package.random.Random;
 EJSON = Package.ejson.EJSON;
+Iron = Package['iron:core'].Iron;
 HTML = Package.htmljs.HTML;
 
