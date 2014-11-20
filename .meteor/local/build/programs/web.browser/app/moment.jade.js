@@ -382,7 +382,7 @@ Template.__checkName("timelineDay");
 Template["timelineDay"] = new Template("Template.timelineDay", (function() {
   var view = this;
   return [ HTML.P(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("day"), "index"));
+    return Spacebars.mustache(Spacebars.dot(view.lookup("day"), "formattedDay"));
   })) ];
 }));
 
@@ -390,7 +390,7 @@ Template.__checkName("timelineMonth");
 Template["timelineMonth"] = new Template("Template.timelineMonth", (function() {
   var view = this;
   return [ HTML.P(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("month"), "index"));
+    return Spacebars.mustache(Spacebars.dot(view.lookup("month"), "formattedMonth"));
   })) ];
 }));
 
@@ -398,7 +398,7 @@ Template.__checkName("timelineYear");
 Template["timelineYear"] = new Template("Template.timelineYear", (function() {
   var view = this;
   return [ HTML.P(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("year"), "index"));
+    return Spacebars.mustache(Spacebars.dot(view.lookup("year"), "formattedYear"));
   })) ];
 }));
 

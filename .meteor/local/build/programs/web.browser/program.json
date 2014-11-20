@@ -719,9 +719,9 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?e0e3e6791bb3c8bdfd8f0c49bfadc4637e9bdabf",
-      "size": 17983,
-      "hash": "e0e3e6791bb3c8bdfd8f0c49bfadc4637e9bdabf"
+      "url": "/moment.jade.js?969011be8a33bf1d571c66de59079893a947b7f4",
+      "size": 18007,
+      "hash": "969011be8a33bf1d571c66de59079893a947b7f4"
     },
     {
       "path": "app/moment.coffee.js",
