@@ -553,6 +553,8 @@ if Meteor.isClient
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
 					if previousMinute < currentMinute
 						log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance
+						#We need to add a +1 here so that we'll scroll to the proper top element, because of indexes.
+						#scrollDistance = scrollDistance + 1
 						for i in [0...scrollDistance]
 							window.timelineMinuteScroller.goToNextPage()
 					else
@@ -605,7 +607,7 @@ if Meteor.isClient
 				Session.set 'currentMinute',data.index
 
 			target.on('click', () ->
-				#log 'TIMELINE MINUTE CLICKED',fview, target, this, self
+				log 'TIMELINE MINUTE CLICKED',fview, target, this, self
 				#Get the current index at point of click
 				Session.set('currentMinute',data.index)
 			)
@@ -731,34 +733,42 @@ if Meteor.isClient
 				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
 
 				if previousDay > amountMidPoint and currentDay < amountMidPoint
-					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
 					#Calculate the forwards sroll distance
 					scrollDistance = totalAmount + currentDay - previousDay
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '##############currentDay distance from previousDay##############',scrollDistance
-					for i in [0..scrollDistance]
+					log '##############currentDay distance from previousDay##############',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineDayScroller.goToNextPage()
 				else if previousDay < amountMidPoint and currentDay > amountMidPoint
-					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
 					#Calculate the backwards scroll distance
 					scrollDistance = totalAmount + previousDay - currentDay
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '@@@@@@@@@@@@@@currentDay distance from previousDay@@@@@@@@@@@@@@',scrollDistance
-					for i in [0..scrollDistance]
+					log '@@@@@@@@@@@@@@currentDay distance from previousDay@@@@@@@@@@@@@@',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineDayScroller.goToPreviousPage()
 				else
 					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					#log 'Just scroll as normal!'
+					log 'Just scroll as normal!'
 					scrollDistance = previousDay - currentDay
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
 					if previousDay < currentDay
-						#log '!!!!!!!!!!!!!currentDay distance from previousDay!(forwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!!currentDay distance from previousDay!(forwards)!!!!',scrollDistance
+						for i in [0...scrollDistance]
 							window.timelineDayScroller.goToNextPage()
 					else
-						#log '!!!!!!!!!!!!currentDay distance from previousDay!(backwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!currentDay distance from previousDay!(backwards)!!!!',scrollDistance
+						if previousDay is currentDay
+							log 'Scrolling back one to cover this edgecase!'
 							window.timelineDayScroller.goToPreviousPage()
+						else
+							log 'HURP SCROLL BACK NORMALLY'
+							for i in [0...scrollDistance]
+								window.timelineDayScroller.goToPreviousPage()
+
+						#for i in [0...scrollDistance]
+							#window.timelineDayScroller.goToPreviousPage()
 
 				#Get the Template instance
 				instance = Template.instance()
@@ -768,7 +778,16 @@ if Meteor.isClient
 		Template.timelineDayScroller.helpers
 			timelineDayStyles: ->
 				#backgroundColor: '#000000'
-				color: '#ffffff'
+				currentDay = Session.get('currentDay')
+				instance = Template.instance()
+				data = instance.data
+				#log 'fviewHeight',fviewHeight
+
+				if currentDay is data.index
+					backgroundColor: 'green'
+				else
+					backgroundColor: 'aqua'
+					color: '#ffffff'
 
 		Template.timelineDay.rendered = ->
 			fview = FView.from(this)
@@ -881,34 +900,41 @@ if Meteor.isClient
 				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
 
 				if previousMonth > amountMidPoint and currentMonth < amountMidPoint
-					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
 					#Calculate the forwards sroll distance
 					scrollDistance = totalAmount + currentMonth - previousMonth
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '##############currentMonth distance from previousMonth##############',scrollDistance
-					for i in [0..scrollDistance]
+					log '##############currentMonth distance from previousMonth##############',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineMonthScroller.goToNextPage()
 				else if previousMonth < amountMidPoint and currentMonth > amountMidPoint
-					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
 					#Calculate the backwards scroll distance
 					scrollDistance = totalAmount + previousMonth - currentMonth
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '@@@@@@@@@@@@@@currentMonth distance from previousMonth@@@@@@@@@@@@@@',scrollDistance
-					for i in [0..scrollDistance]
+					log '@@@@@@@@@@@@@@currentMonth distance from previousMonth@@@@@@@@@@@@@@',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineMonthScroller.goToPreviousPage()
 				else
 					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					#log 'Just scroll as normal!'
+					log 'Just scroll as normal!'
 					scrollDistance = previousMonth - currentMonth
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
 					if previousMonth < currentMonth
-						#log '!!!!!!!!!!!!!currentMonth distance from previousMonth!(forwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!!currentMonth distance from previousMonth!(forwards)!!!!',scrollDistance
+						for i in [0...scrollDistance]
 							window.timelineMonthScroller.goToNextPage()
 					else
-						#log '!!!!!!!!!!!!currentMonth distance from previousMonth!(backwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!currentMonth distance from previousMonth!(backwards)!!!!',scrollDistance
+						if previousMonth is currentMonth
+							log 'Scrolling back one to cover this edgecase!'
 							window.timelineMonthScroller.goToPreviousPage()
+						else
+							for i in [0...scrollDistance]
+								window.timelineMonthScroller.goToPreviousPage()
+
+						#for i in [0...scrollDistance]
+						#	window.timelineMonthScroller.goToPreviousPage()
 
 				#Get the Template instance
 				instance = Template.instance()
@@ -918,7 +944,16 @@ if Meteor.isClient
 		Template.timelineMonthScroller.helpers
 			timelineMonthStyles: ->
 				#backgroundColor: '#000000'
-				color: '#ffffff'
+				currentMonth = Session.get('currentMonth')
+				instance = Template.instance()
+				data = instance.data
+				#log 'fviewHeight',fviewHeight
+
+				if currentMonth is data.index
+					backgroundColor: 'brown'
+				else
+					backgroundColor: 'purple'
+					color: '#ffffff'
 
 		Template.timelineMonth.rendered = ->
 			fview = FView.from(this)
@@ -1031,34 +1066,41 @@ if Meteor.isClient
 				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
 
 				if previousYear > amountMidPoint and currentYear < amountMidPoint
-					#log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
 					#Calculate the forwards sroll distance
 					scrollDistance = totalAmount + currentYear - previousYear
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '##############currentYear distance from previousYear##############',scrollDistance
-					for i in [0..scrollDistance]
+					log '##############currentYear distance from previousYear##############',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineYearScroller.goToNextPage()
 				else if previousYear < amountMidPoint and currentYear > amountMidPoint
-					#log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
+					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
 					#Calculate the backwards scroll distance
 					scrollDistance = totalAmount + previousYear - currentYear
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					#log '@@@@@@@@@@@@@@currentYear distance from previousYear@@@@@@@@@@@@@@',scrollDistance
-					for i in [0..scrollDistance]
+					log '@@@@@@@@@@@@@@currentYear distance from previousYear@@@@@@@@@@@@@@',scrollDistance
+					for i in [0...scrollDistance]
 						window.timelineYearScroller.goToPreviousPage()
 				else
 					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					#log 'Just scroll as normal!'
+					log 'Just scroll as normal!'
 					scrollDistance = previousYear - currentYear
 					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
 					if previousYear < currentYear
-						#log '!!!!!!!!!!!!!currentYear distance from previousYear!(forwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!!currentYear distance from previousYear!(forwards)!!!!',scrollDistance
+						for i in [0...scrollDistance]
 							window.timelineYearScroller.goToNextPage()
 					else
-						#log '!!!!!!!!!!!!currentYear distance from previousYear!(backwards)!!!!',scrollDistance
-						for i in [0..scrollDistance]
+						log '!!!!!!!!!!!!currentYear distance from previousYear!(backwards)!!!!',scrollDistance
+						#if previousYear is currentYear
+						#	log 'Scrolling back one to cover this edgecase!'
+						#	window.timelineYearScroller.goToPreviousPage()
+						#else
+						for i in [0...scrollDistance]
 							window.timelineYearScroller.goToPreviousPage()
+
+						#for i in [0...scrollDistance]
+						#	window.timelineYearScroller.goToPreviousPage()
 
 				#Get the Template instance
 				instance = Template.instance()
@@ -1068,7 +1110,16 @@ if Meteor.isClient
 		Template.timelineYearScroller.helpers
 			timelineYearStyles: ->
 				#backgroundColor: '#000000'
-				color: '#ffffff'
+				currentYear = Session.get('currentYear')
+				instance = Template.instance()
+				data = instance.data
+				#log 'fviewHeight',fviewHeight
+
+				if currentYear is data.index
+					backgroundColor: 'gray'
+				else
+					backgroundColor: 'orange'
+					color: '#ffffff'
 
 		Template.timelineYear.rendered = ->
 			fview = FView.from(this)

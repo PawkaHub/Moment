@@ -161,6 +161,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
           return Blaze._TemplateWith(function() {
             return {
               template: Spacebars.call("timelineMinute"),
+              origin: Spacebars.call("[0,0]"),
+              align: Spacebars.call("[0,0]"),
               size: Spacebars.call("[undefined,400]"),
               properties: Spacebars.call(view.lookup("timelineMinuteStyles"))
             };
@@ -193,6 +195,8 @@ Template["timelineDayScroller"] = new Template("Template.timelineDayScroller", (
             return {
               template: Spacebars.call("timelineDay"),
               size: Spacebars.call("[undefined,100]"),
+              origin: Spacebars.call("[0,0.5]"),
+              align: Spacebars.call("[0,0]"),
               properties: Spacebars.call(view.lookup("timelineDayStyles"))
             };
           }, function() {
@@ -224,6 +228,8 @@ Template["timelineMonthScroller"] = new Template("Template.timelineMonthScroller
             return {
               template: Spacebars.call("timelineMonth"),
               size: Spacebars.call("[undefined,100]"),
+              origin: Spacebars.call("[0,0.5]"),
+              align: Spacebars.call("[0,0]"),
               properties: Spacebars.call(view.lookup("timelineMonthStyles"))
             };
           }, function() {
@@ -255,6 +261,8 @@ Template["timelineYearScroller"] = new Template("Template.timelineYearScroller",
             return {
               template: Spacebars.call("timelineYear"),
               size: Spacebars.call("[undefined,100]"),
+              origin: Spacebars.call("[0,0.5]"),
+              align: Spacebars.call("[0,0]"),
               properties: Spacebars.call(view.lookup("timelineYearStyles"))
             };
           }, function() {
@@ -328,7 +336,7 @@ Template.__checkName("timelineMinute");
 Template["timelineMinute"] = new Template("Template.timelineMinute", (function() {
   var view = this;
   return [ HTML.P(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("minute"), "formattedMinute"));
+    return Spacebars.mustache(Spacebars.dot(view.lookup("minute"), "index"));
   })) ];
 }));
 

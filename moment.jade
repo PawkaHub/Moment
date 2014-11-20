@@ -28,22 +28,22 @@ template(name='about')
 template(name='timelineMinuteScroller')
 	+Scrollview size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,1]'
 		+famousEach minutes
-			+Surface template='timelineMinute' size='[undefined,400]' properties=timelineMinuteStyles
+			+Surface template='timelineMinute' origin='[0,0]' align='[0,0]' size='[undefined,400]' properties=timelineMinuteStyles
 
 template(name='timelineDayScroller')
 	+Scrollview size='[380,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,1]'
 		+famousEach days
-			+Surface template='timelineDay' size='[undefined,100]' properties=timelineDayStyles
+			+Surface template='timelineDay' size='[undefined,100]' origin='[0,0.5]' align='[0,0]' properties=timelineDayStyles
 
 template(name='timelineMonthScroller')
 	+Scrollview size='[240,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,1]'
 		+famousEach months
-			+Surface template='timelineMonth' size='[undefined,100]' properties=timelineMonthStyles
+			+Surface template='timelineMonth' size='[undefined,100]' origin='[0,0.5]' align='[0,0]' properties=timelineMonthStyles
 
 template(name='timelineYearScroller')
 	+Scrollview size='[100,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,1]'
 		+famousEach years
-			+Surface template='timelineYear' size='[undefined,100]' properties=timelineYearStyles
+			+Surface template='timelineYear' size='[undefined,100]' origin='[0,0.5]' align='[0,0]' properties=timelineYearStyles
 
 template(name='background')
 	//-This is the background for cycling of images
@@ -75,8 +75,8 @@ template(name='timelineOverlay')
 	| timelineOverlay
 
 template(name='timelineMinute')
-	p= minute.formattedMinute
-	//-p= minute.index
+	//-p= minute.formattedMinute
+	p= minute.index
 
 template(name='timelineMoment')
 	ul

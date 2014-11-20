@@ -675,20 +675,20 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?bba65332d1d2013b8d493bef170772bc018c77a9",
-      "size": 16691,
-      "hash": "bba65332d1d2013b8d493bef170772bc018c77a9"
+      "url": "/moment.jade.js?af57dcf580680888667e73c984cd2aeaa8320914",
+      "size": 17059,
+      "hash": "af57dcf580680888667e73c984cd2aeaa8320914"
     },
     {
       "path": "app/moment.coffee.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?253b73155b1aea918d019804317557e0bbfa48a9",
+      "url": "/moment.coffee.js?f81a1e4b1b4e745cea03f91ede95eab7c4bf44f0",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/253b73155b1aea918d019804317557e0bbfa48a9.map",
-      "size": 60171,
-      "hash": "253b73155b1aea918d019804317557e0bbfa48a9"
+      "sourceMapUrl": "/f81a1e4b1b4e745cea03f91ede95eab7c4bf44f0.map",
+      "size": 63598,
+      "hash": "f81a1e4b1b4e745cea03f91ede95eab7c4bf44f0"
     },
     {
       "path": "packages/service-configuration.js",
@@ -702,15 +702,15 @@
       "hash": "262da6fb1e9c97be84333c429c9a2929c80f8e3b"
     },
     {
-      "path": "a3074c7f7a284b48beb90ab5f9ba20ddb14b1d43.css",
+      "path": "4d6faa6fa97c07ed55f22a7c9e07509e8a14bfd4.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/a3074c7f7a284b48beb90ab5f9ba20ddb14b1d43.css",
-      "sourceMap": "a3074c7f7a284b48beb90ab5f9ba20ddb14b1d43.css.map",
-      "sourceMapUrl": "/a3074c7f7a284b48beb90ab5f9ba20ddb14b1d43.map",
-      "size": 1941,
-      "hash": "a3074c7f7a284b48beb90ab5f9ba20ddb14b1d43"
+      "url": "/4d6faa6fa97c07ed55f22a7c9e07509e8a14bfd4.css",
+      "sourceMap": "4d6faa6fa97c07ed55f22a7c9e07509e8a14bfd4.css.map",
+      "sourceMapUrl": "/4d6faa6fa97c07ed55f22a7c9e07509e8a14bfd4.map",
+      "size": 2020,
+      "hash": "4d6faa6fa97c07ed55f22a7c9e07509e8a14bfd4"
     },
     {
       "path": "app/index.html",

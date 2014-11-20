@@ -601,6 +601,7 @@ if (Meteor.isClient) {
         Session.set('currentMinute', data.index);
       }
       target.on('click', function() {
+        log('TIMELINE MINUTE CLICKED', fview, target, this, self);
         return Session.set('currentMinute', data.index);
       });
       return this.autorun(function(computation) {
@@ -668,33 +669,46 @@ if (Meteor.isClient) {
         log('currentDay', currentDay);
         scrollStart = 0;
         if (previousDay > amountMidPoint && currentDay < amountMidPoint) {
+          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
           scrollDistance = totalAmount + currentDay - previousDay;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+          log('##############currentDay distance from previousDay##############', scrollDistance);
+          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
             window.timelineDayScroller.goToNextPage();
           }
         } else if (previousDay < amountMidPoint && currentDay > amountMidPoint) {
+          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)');
           scrollDistance = totalAmount + previousDay - currentDay;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+          log('@@@@@@@@@@@@@@currentDay distance from previousDay@@@@@@@@@@@@@@', scrollDistance);
+          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
             window.timelineDayScroller.goToPreviousPage();
           }
         } else {
+          log('Just scroll as normal!');
           scrollDistance = previousDay - currentDay;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
           if (previousDay < currentDay) {
-            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+            log('!!!!!!!!!!!!!currentDay distance from previousDay!(forwards)!!!!', scrollDistance);
+            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
               window.timelineDayScroller.goToNextPage();
             }
           } else {
-            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+            log('!!!!!!!!!!!!currentDay distance from previousDay!(backwards)!!!!', scrollDistance);
+            if (previousDay === currentDay) {
+              log('Scrolling back one to cover this edgecase!');
               window.timelineDayScroller.goToPreviousPage();
+            } else {
+              log('HURP SCROLL BACK NORMALLY');
+              for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+                window.timelineDayScroller.goToPreviousPage();
+              }
             }
           }
         }
@@ -703,9 +717,20 @@ if (Meteor.isClient) {
     };
     Template.timelineDayScroller.helpers({
       timelineDayStyles: function() {
-        return {
-          color: '#ffffff'
-        };
+        var currentDay, data, instance;
+        currentDay = Session.get('currentDay');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentDay === data.index) {
+          return {
+            backgroundColor: 'green'
+          };
+        } else {
+          return {
+            backgroundColor: 'aqua',
+            color: '#ffffff'
+          };
+        }
       }
     });
     Template.timelineDay.rendered = function() {
@@ -772,33 +797,45 @@ if (Meteor.isClient) {
         log('currentMonth', currentMonth);
         scrollStart = 0;
         if (previousMonth > amountMidPoint && currentMonth < amountMidPoint) {
+          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
           scrollDistance = totalAmount + currentMonth - previousMonth;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+          log('##############currentMonth distance from previousMonth##############', scrollDistance);
+          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
             window.timelineMonthScroller.goToNextPage();
           }
         } else if (previousMonth < amountMidPoint && currentMonth > amountMidPoint) {
+          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)');
           scrollDistance = totalAmount + previousMonth - currentMonth;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+          log('@@@@@@@@@@@@@@currentMonth distance from previousMonth@@@@@@@@@@@@@@', scrollDistance);
+          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
             window.timelineMonthScroller.goToPreviousPage();
           }
         } else {
+          log('Just scroll as normal!');
           scrollDistance = previousMonth - currentMonth;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
           if (previousMonth < currentMonth) {
-            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+            log('!!!!!!!!!!!!!currentMonth distance from previousMonth!(forwards)!!!!', scrollDistance);
+            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
               window.timelineMonthScroller.goToNextPage();
             }
           } else {
-            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+            log('!!!!!!!!!!!!currentMonth distance from previousMonth!(backwards)!!!!', scrollDistance);
+            if (previousMonth === currentMonth) {
+              log('Scrolling back one to cover this edgecase!');
               window.timelineMonthScroller.goToPreviousPage();
+            } else {
+              for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+                window.timelineMonthScroller.goToPreviousPage();
+              }
             }
           }
         }
@@ -807,9 +844,20 @@ if (Meteor.isClient) {
     };
     Template.timelineMonthScroller.helpers({
       timelineMonthStyles: function() {
-        return {
-          color: '#ffffff'
-        };
+        var currentMonth, data, instance;
+        currentMonth = Session.get('currentMonth');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentMonth === data.index) {
+          return {
+            backgroundColor: 'brown'
+          };
+        } else {
+          return {
+            backgroundColor: 'purple',
+            color: '#ffffff'
+          };
+        }
       }
     });
     Template.timelineMonth.rendered = function() {
@@ -877,32 +925,39 @@ if (Meteor.isClient) {
         log('currentYear', currentYear);
         scrollStart = 0;
         if (previousYear > amountMidPoint && currentYear < amountMidPoint) {
+          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
           scrollDistance = totalAmount + currentYear - previousYear;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _i = 0; 0 <= scrollDistance ? _i <= scrollDistance : _i >= scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+          log('##############currentYear distance from previousYear##############', scrollDistance);
+          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
             window.timelineYearScroller.goToNextPage();
           }
         } else if (previousYear < amountMidPoint && currentYear > amountMidPoint) {
+          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)');
           scrollDistance = totalAmount + previousYear - currentYear;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
-          for (i = _j = 0; 0 <= scrollDistance ? _j <= scrollDistance : _j >= scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+          log('@@@@@@@@@@@@@@currentYear distance from previousYear@@@@@@@@@@@@@@', scrollDistance);
+          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
             window.timelineYearScroller.goToPreviousPage();
           }
         } else {
+          log('Just scroll as normal!');
           scrollDistance = previousYear - currentYear;
           if (scrollDistance < 0) {
             scrollDistance = scrollDistance * -1;
           }
           if (previousYear < currentYear) {
-            for (i = _k = 0; 0 <= scrollDistance ? _k <= scrollDistance : _k >= scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+            log('!!!!!!!!!!!!!currentYear distance from previousYear!(forwards)!!!!', scrollDistance);
+            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
               window.timelineYearScroller.goToNextPage();
             }
           } else {
-            for (i = _l = 0; 0 <= scrollDistance ? _l <= scrollDistance : _l >= scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+            log('!!!!!!!!!!!!currentYear distance from previousYear!(backwards)!!!!', scrollDistance);
+            for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
               window.timelineYearScroller.goToPreviousPage();
             }
           }
@@ -912,9 +967,20 @@ if (Meteor.isClient) {
     };
     Template.timelineYearScroller.helpers({
       timelineYearStyles: function() {
-        return {
-          color: '#ffffff'
-        };
+        var currentYear, data, instance;
+        currentYear = Session.get('currentYear');
+        instance = Template.instance();
+        data = instance.data;
+        if (currentYear === data.index) {
+          return {
+            backgroundColor: 'gray'
+          };
+        } else {
+          return {
+            backgroundColor: 'orange',
+            color: '#ffffff'
+          };
+        }
       }
     });
     Template.timelineYear.rendered = function() {
