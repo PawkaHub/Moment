@@ -82,6 +82,7 @@ if Meteor.isClient
 
 		# Famous Globals
 		@Transform = famous.core.Transform
+		@Engine = famous.core.Engine
 
 		# Transitions
 		@Transitionable = famous.transitions.Transitionable
@@ -106,6 +107,17 @@ if Meteor.isClient
 		Session.setDefault 'userIsPublishing', false
 		Session.setDefault 'timer', momentTimer
 		Session.setDefault 'now', TimeSync.serverTime()
+
+		# Parallax Scrolling Capabilities
+		Engine.on('prerender', () ->
+			if window.timelineMinuteScroller
+				parallaxEffect = 2.0
+				bgPos = -window.timelineMinuteScroller.getPosition() / parallaxEffect
+				#log 'bgPos',bgPos
+				fview = FView.byId('timelineMinuteDisplay' + (window.timelineMinuteScroller.getCurrentIndex() + 1))
+				#if fview
+					#fview.modifier.setTransform Transform.translate(0, bgPos)
+		)
 
 		#Global Template Helpers
 		Template.registerHelper 'minutes', ->
@@ -625,10 +637,15 @@ if Meteor.isClient
 			timelineMomentStyles: ->
 				backgroundColor: 'green'
 				backgroundImage: 'url(https://scontent-b-mia.xx.fbcdn.net/hphotos-xfp1/v/t1.0-9/10394468_10205341300640506_2618669216905892361_n.jpg?oh=9d025ee5282fe8dc128fadcc6bf0503a&oe=550C45A6)'
+				backgroundRepeat: 'no-repeat'
 				backgroundSize: 'cover'
 				backgroundPosition: '50% 50%'
 				textAlign: 'center'
 				color: '#ffffff'
+			timelineMinuteTitleIndex: ->
+				'timelineMinuteTitle' + this.index
+			timelineMinuteIndex: ->
+				'timelineMinute' + this.index
 			timelineMinuteStyles: ->
 				#backgroundColor: '#000000'
 				currentMinute = Session.get('currentMinute')
@@ -638,12 +655,25 @@ if Meteor.isClient
 
 				if currentMinute is data.index
 					backgroundColor: 'red'
+				else if this.index is 0
+					backgroundColor: 'green'
 				else
 					backgroundColor: 'blue'
-					textAlign: 'center'
+					textAlign: 'left'
 					color: '#ffffff'
-					lineHeight: '460px'
-					fontSize: '36px'
+					fontSize: '24px'
+					#lineHeight: '460px'
+			timelineMinuteTitleStyles: ->
+				#backgroundColor: '#000000'
+				currentMinute = Session.get('currentMinute')
+				instance = Template.instance()
+				data = instance.data
+				#log 'fviewHeight',fviewHeight
+				background: 'purple'
+				textAlign: 'right'
+				color: '#ffffff'
+				fontSize: '36px'
+				zIndex: '1'
 
 		Template.timelineMinute.rendered = ->
 			fview = FView.from(this)
@@ -1229,7 +1259,7 @@ if Meteor.isClient
 		Template.timelineMoment.rendered = ->
 			fview = FView.from(this)
 
-			target = fview.surface || fview.view._eventInput
+			target = fview.surface || fview.view || fview.view._eventInput
 			target.on('mouseover', () ->
 				log 'TIMELINE MOMENT HOVERED',fview, target, this
 			)

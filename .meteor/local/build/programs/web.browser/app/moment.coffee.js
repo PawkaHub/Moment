@@ -86,6 +86,7 @@ if (Meteor.isClient) {
       }
     });
     this.Transform = famous.core.Transform;
+    this.Engine = famous.core.Engine;
     this.Transitionable = famous.transitions.Transitionable;
     this.SpringTransition = famous.transitions.SpringTransition;
     this.SnapTransition = famous.transitions.SnapTransition;
@@ -104,6 +105,14 @@ if (Meteor.isClient) {
     Session.setDefault('userIsPublishing', false);
     Session.setDefault('timer', momentTimer);
     Session.setDefault('now', TimeSync.serverTime());
+    Engine.on('prerender', function() {
+      var bgPos, fview, parallaxEffect;
+      if (window.timelineMinuteScroller) {
+        parallaxEffect = 2.0;
+        bgPos = -window.timelineMinuteScroller.getPosition() / parallaxEffect;
+        return fview = FView.byId('timelineMinuteDisplay' + (window.timelineMinuteScroller.getCurrentIndex() + 1));
+      }
+    });
     Template.registerHelper('minutes', function() {
       var epoch, minute, minutes, minutesInADay, momentMinute;
       epoch = TimeSync.serverTime();
@@ -625,11 +634,18 @@ if (Meteor.isClient) {
         return {
           backgroundColor: 'green',
           backgroundImage: 'url(https://scontent-b-mia.xx.fbcdn.net/hphotos-xfp1/v/t1.0-9/10394468_10205341300640506_2618669216905892361_n.jpg?oh=9d025ee5282fe8dc128fadcc6bf0503a&oe=550C45A6)',
+          backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
           backgroundPosition: '50% 50%',
           textAlign: 'center',
           color: '#ffffff'
         };
+      },
+      timelineMinuteTitleIndex: function() {
+        return 'timelineMinuteTitle' + this.index;
+      },
+      timelineMinuteIndex: function() {
+        return 'timelineMinute' + this.index;
       },
       timelineMinuteStyles: function() {
         var currentMinute, data, instance;
@@ -640,15 +656,31 @@ if (Meteor.isClient) {
           return {
             backgroundColor: 'red'
           };
+        } else if (this.index === 0) {
+          return {
+            backgroundColor: 'green'
+          };
         } else {
           return {
             backgroundColor: 'blue',
-            textAlign: 'center',
+            textAlign: 'left',
             color: '#ffffff',
-            lineHeight: '460px',
-            fontSize: '36px'
+            fontSize: '24px'
           };
         }
+      },
+      timelineMinuteTitleStyles: function() {
+        var currentMinute, data, instance;
+        currentMinute = Session.get('currentMinute');
+        instance = Template.instance();
+        data = instance.data;
+        return {
+          background: 'purple',
+          textAlign: 'right',
+          color: '#ffffff',
+          fontSize: '36px',
+          zIndex: '1'
+        };
       }
     });
     Template.timelineMinute.rendered = function() {
@@ -1090,7 +1122,7 @@ if (Meteor.isClient) {
     Template.timelineMoment.rendered = function() {
       var fview, target;
       fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
+      target = fview.surface || fview.view || fview.view._eventInput;
       target.on('mouseover', function() {
         return log('TIMELINE MOMENT HOVERED', fview, target, this);
       });

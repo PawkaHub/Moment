@@ -16,27 +16,44 @@ template(name='about')
 		+timelineMonthScroller
 		+timelineYearScroller
 		+timelineSearchHolder
-		+Surface template='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
-		+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='0.4' properties=overlayStyles
-		+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=introStyles
-		+Surface template='question' size='[200,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=questionStyles
-		+Surface template='momentButton' size='[200,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=momentButtonStyles
-		+Surface template='ppLogo' size='[100,100]' origin='[1,1]' align='[1,1]' translate='[-10,-10,0]' opacity='0.14' properties=ppLogoStyles
-		+Surface template='timer' size='[60,60]' origin='[0.5,1]' align='[0.5,0.5]' translate='[0,100,0]' opacity='1' properties=timerStyles
-		+Surface template='timelineToggle' size='[60,60]' origin='[1,0]' align='[1,0]' translate='[-10,10,0]' opacity='0.14' properties=timelineToggleStyles
-		+Surface template='timelineOverlay' size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,0]' opacity='0.85' properties=timelineOverlayStyles
+		//-+Surface template='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
+		//-+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='0.4' properties=overlayStyles
+		//-+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=introStyles
+		//-+Surface template='question' size='[200,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=questionStyles
+		//-+Surface template='momentButton' size='[200,40]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=momentButtonStyles
+		//-+Surface template='ppLogo' size='[100,100]' origin='[1,1]' align='[1,1]' translate='[-10,-10,0]' opacity='0.14' properties=ppLogoStyles
+		//-+Surface template='timer' size='[60,60]' origin='[0.5,1]' align='[0.5,0.5]' translate='[0,100,0]' opacity='1' properties=timerStyles
+		+Surface template='timelineToggle' size='[60,60]' origin='[1,0]' align='[1,0]' translate='[-10,10,100]' opacity='0.14' properties=timelineToggleStyles
+		//-+Surface template='timelineOverlay' size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,0]' opacity='0.85' properties=timelineOverlayStyles
 
 template(name='timelineSearchHolder')
-	+InputSurface template='timelineSearch' size='[undefined,100]' origin='[0.5,0]' align='[0.5,0]' translate='[0,0,1]' properties=timelineSearchStyles placeholder='Hello Search' opacity='0.8'
+	+InputSurface template='timelineSearch' size='[undefined,100]' origin='[0.5,0]' align='[0.5,0]' translate='[0,0,9]' properties=timelineSearchStyles placeholder='Hello Search' opacity='0.8'
 
 template(name='timelineSearch')
 
 template(name='timelineMinuteScroller')
 	+Scrollview size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,1]'
 		+famousEach minutes
-			+StateModifier size='[undefined,460]'
-				+Surface template='timelineMinute' origin='[0,0]' align='[0,-0.5]' size='[undefined,460]' properties=timelineMinuteStyles
-				+GridLayout dimensions='[5,2]' size='[1600,360]' translate='[0,50,1]' origin='[0.5,0]' align='[0.5,0]'
+			+StateModifier size='[undefined,1160]'
+				+Surface id=timelineMinuteIndex template='timelineMinute' origin='[0,0]' align='[0,0]' size='[undefined,undefined]' properties=timelineMinuteStyles
+				+Surface id=timelineMinuteTitleIndex template='timelineMinuteTitle' origin='[0,0]' align='[0,0]' translate='[0,100,1]' size='[undefined,40]' properties=timelineMinuteTitleStyles
+				//-+Surface id=timelineMinuteDisplayIndex template='timelineMinute' origin='[0,0]' align='[0,1]' size='[undefined,undefined]' properties=timelineMinuteDisplayStyles
+				+GridLayout dimensions='[5,5]' gutterSize='[10,10]' size='[1640,940]' translate='[0,-40,1]' origin='[0.5,1]' align='[0.5,1]'
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
+					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
 					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
 					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
 					+Surface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' translate='[0,0]' properties=timelineMomentStyles
@@ -91,6 +108,9 @@ template(name='timelineToggle')
 
 template(name='timelineOverlay')
 	| timelineOverlay
+
+template(name='timelineMinuteTitle')
+	.minuteTitle QUESTION OF THE DAY/RANDOM QUOTE
 
 template(name='timelineMinute')
 	.minute= minute.formattedMinute

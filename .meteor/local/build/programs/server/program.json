@@ -375,6 +375,11 @@
       "path": "packages/carlodicelico_tokbox.js"
     },
     {
+      "sourceMap": "packages/gadicohen_fview-kenburns.js.map",
+      "sourceMapRoot": "packages",
+      "path": "packages/gadicohen_fview-kenburns.js"
+    },
+    {
       "sourceMap": "packages/session.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/session.js"
