@@ -28,6 +28,11 @@ if Meteor.isClient
 	    	# `this` or `@` is the fview for this instance
 			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
 
+	FView.registerView 'GridLayout',famous.views.GridLayout,
+		famousCreatedPost: ->
+			# `this` or `@` is the fview for this instance
+			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+
 	Meteor.startup ->
 		#Set famous logging to be more calm
 		Logger.setLevel 'famous-views', 'info'
@@ -218,9 +223,6 @@ if Meteor.isClient
 			timelineToggleStyles: ->
 				backgroundColor: '#ffffff'
 				borderRadius: '50%'
-				textAlign: 'center'
-				color: '#ffffff'
-			timelineMomentStyles: ->
 				textAlign: 'center'
 				color: '#ffffff'
 			timelineOverlayStyles: ->
@@ -609,6 +611,24 @@ if Meteor.isClient
 			)
 
 		Template.timelineMinuteScroller.helpers
+			moments: ->
+				self = this
+				#Iterate enough items based on the current index for stub issues right now
+				moments = []
+				moment =
+					archiveCreatedAt: 'ARCHIVECREATEDAT'
+					tokboxArchiveId: 'TOKBOXARCHIVEID'
+					tokboxArchiveName: 'TOKBOXARCHIVENAME'
+				for i in [0...self.index]
+					moments.push moment
+				moments
+			timelineMomentStyles: ->
+				backgroundColor: 'green'
+				backgroundImage: 'url(https://scontent-b-mia.xx.fbcdn.net/hphotos-xfp1/v/t1.0-9/10394468_10205341300640506_2618669216905892361_n.jpg?oh=9d025ee5282fe8dc128fadcc6bf0503a&oe=550C45A6)'
+				backgroundSize: 'cover'
+				backgroundPosition: '50% 50%'
+				textAlign: 'center'
+				color: '#ffffff'
 			timelineMinuteStyles: ->
 				#backgroundColor: '#000000'
 				currentMinute = Session.get('currentMinute')
@@ -622,6 +642,8 @@ if Meteor.isClient
 					backgroundColor: 'blue'
 					textAlign: 'center'
 					color: '#ffffff'
+					lineHeight: '460px'
+					fontSize: '36px'
 
 		Template.timelineMinute.rendered = ->
 			fview = FView.from(this)
@@ -1208,10 +1230,14 @@ if Meteor.isClient
 			fview = FView.from(this)
 
 			target = fview.surface || fview.view._eventInput
+			target.on('mouseover', () ->
+				log 'TIMELINE MOMENT HOVERED',fview, target, this
+			)
+			target.on('mouseout', () ->
+				log 'TIMELINE MOMENT MOUSEOUT',fview, target, this
+			)
 			target.on('click', () ->
 				log 'TIMELINE MOMENT CLICKED',fview, target, this
-
-				#if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
 
 				fview.modifier.halt()
 				fview.modifier.setTransform Transform.translate(10, 10),

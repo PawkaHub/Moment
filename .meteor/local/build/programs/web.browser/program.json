@@ -719,20 +719,20 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?969011be8a33bf1d571c66de59079893a947b7f4",
-      "size": 18007,
-      "hash": "969011be8a33bf1d571c66de59079893a947b7f4"
+      "url": "/moment.jade.js?61f5f5d1e6531eb3cc882167ea714bf4c2ac7990",
+      "size": 25085,
+      "hash": "61f5f5d1e6531eb3cc882167ea714bf4c2ac7990"
     },
     {
       "path": "app/moment.coffee.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?7cc2de4efcb50ccc69681d7575d509dad5e228a9",
+      "url": "/moment.coffee.js?aa220e9832f5a4b9a3a101d8e8d21312ff18c0b9",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/7cc2de4efcb50ccc69681d7575d509dad5e228a9.map",
-      "size": 64925,
-      "hash": "7cc2de4efcb50ccc69681d7575d509dad5e228a9"
+      "sourceMapUrl": "/aa220e9832f5a4b9a3a101d8e8d21312ff18c0b9.map",
+      "size": 66251,
+      "hash": "aa220e9832f5a4b9a3a101d8e8d21312ff18c0b9"
     },
     {
       "path": "packages/service-configuration.js",
@@ -746,15 +746,15 @@
       "hash": "262da6fb1e9c97be84333c429c9a2929c80f8e3b"
     },
     {
-      "path": "f26caf03ff59eb758378ec39559e9704cb8f5fcd.css",
+      "path": "dc2611da74dbc63487d3fbbc8920593c1b6f1422.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/f26caf03ff59eb758378ec39559e9704cb8f5fcd.css",
-      "sourceMap": "f26caf03ff59eb758378ec39559e9704cb8f5fcd.css.map",
-      "sourceMapUrl": "/f26caf03ff59eb758378ec39559e9704cb8f5fcd.map",
-      "size": 2060,
-      "hash": "f26caf03ff59eb758378ec39559e9704cb8f5fcd"
+      "url": "/dc2611da74dbc63487d3fbbc8920593c1b6f1422.css",
+      "sourceMap": "dc2611da74dbc63487d3fbbc8920593c1b6f1422.css.map",
+      "sourceMapUrl": "/dc2611da74dbc63487d3fbbc8920593c1b6f1422.map",
+      "size": 2080,
+      "hash": "dc2611da74dbc63487d3fbbc8920593c1b6f1422"
     },
     {
       "path": "app/index.html",

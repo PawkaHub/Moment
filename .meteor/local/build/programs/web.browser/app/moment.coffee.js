@@ -38,6 +38,11 @@ if (Meteor.isClient) {
       return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
     }
   });
+  FView.registerView('GridLayout', famous.views.GridLayout, {
+    famousCreatedPost: function() {
+      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+    }
+  });
   Meteor.startup(function() {
     Logger.setLevel('famous-views', 'info');
     Guests.add();
@@ -235,12 +240,6 @@ if (Meteor.isClient) {
         return {
           backgroundColor: '#ffffff',
           borderRadius: '50%',
-          textAlign: 'center',
-          color: '#ffffff'
-        };
-      },
-      timelineMomentStyles: function() {
-        return {
           textAlign: 'center',
           color: '#ffffff'
         };
@@ -608,6 +607,30 @@ if (Meteor.isClient) {
       });
     };
     Template.timelineMinuteScroller.helpers({
+      moments: function() {
+        var i, moment, moments, self, _i, _ref;
+        self = this;
+        moments = [];
+        moment = {
+          archiveCreatedAt: 'ARCHIVECREATEDAT',
+          tokboxArchiveId: 'TOKBOXARCHIVEID',
+          tokboxArchiveName: 'TOKBOXARCHIVENAME'
+        };
+        for (i = _i = 0, _ref = self.index; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+          moments.push(moment);
+        }
+        return moments;
+      },
+      timelineMomentStyles: function() {
+        return {
+          backgroundColor: 'green',
+          backgroundImage: 'url(https://scontent-b-mia.xx.fbcdn.net/hphotos-xfp1/v/t1.0-9/10394468_10205341300640506_2618669216905892361_n.jpg?oh=9d025ee5282fe8dc128fadcc6bf0503a&oe=550C45A6)',
+          backgroundSize: 'cover',
+          backgroundPosition: '50% 50%',
+          textAlign: 'center',
+          color: '#ffffff'
+        };
+      },
       timelineMinuteStyles: function() {
         var currentMinute, data, instance;
         currentMinute = Session.get('currentMinute');
@@ -621,7 +644,9 @@ if (Meteor.isClient) {
           return {
             backgroundColor: 'blue',
             textAlign: 'center',
-            color: '#ffffff'
+            color: '#ffffff',
+            lineHeight: '460px',
+            fontSize: '36px'
           };
         }
       }
@@ -1066,6 +1091,12 @@ if (Meteor.isClient) {
       var fview, target;
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
+      target.on('mouseover', function() {
+        return log('TIMELINE MOMENT HOVERED', fview, target, this);
+      });
+      target.on('mouseout', function() {
+        return log('TIMELINE MOMENT MOUSEOUT', fview, target, this);
+      });
       return target.on('click', function() {
         log('TIMELINE MOMENT CLICKED', fview, target, this);
         fview.modifier.halt();
