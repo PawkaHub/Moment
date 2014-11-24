@@ -148,7 +148,7 @@ if Meteor.isClient
 			epoch = TimeSync.serverTime()
 			day = moment(epoch)
 			currentDay = day.day()
-			daysInAMonth = 60
+			daysInAMonth = 100
 			days = []
 			while days.length < daysInAMonth
 				#log 'currentDay',currentDay
@@ -165,7 +165,7 @@ if Meteor.isClient
 			epoch = TimeSync.serverTime()
 			month = moment(epoch)
 			currentMonth = month.month()
-			monthsInAYear = 60
+			monthsInAYear = 100
 			months = []
 			while months.length < monthsInAYear
 				momentMonth = moment(epoch)
@@ -488,10 +488,14 @@ if Meteor.isClient
 
 		Template.timelineSearchHolder.helpers
 			timelineSearchStyles: ->
-				color: '#ffffff'
-				background: 'cadetblue'
+				backgroundColor: 'cadetblue'
+				backgroundColor: 'rgba(0,0,0,0.4)'
 				padding: '0 10px 0 10px'
 				fontSize: '72px'
+				color: '#ffffff'
+				fontFamily: 'ralewayregular'
+				textTransform: 'uppercase'
+				textAlign: 'center'
 
 		Template.timelineSearch.rendered = ->
 			fview = FView.from(this)
@@ -643,6 +647,8 @@ if Meteor.isClient
 			timelineMomentStyles: ->
 				textAlign: 'center'
 				color: '#ffffff'
+				fontFamily: 'ralewaylight'
+				textTransform: 'uppercase'
 				overflow: 'hidden'
 			timelineMinuteTitleIndex: ->
 				'timelineMinuteTitle' + this.index
@@ -656,12 +662,21 @@ if Meteor.isClient
 				#log 'fviewHeight',fviewHeight
 
 				if currentMinute is data.index
-					backgroundColor: 'red'
+					#backgroundColor: 'red'
+					backgroundColor: 'transparent'
+					textAlign: 'center'
+					color: '#ffffff'
+					fontSize: '24px'
 				else if this.index is 0
-					backgroundColor: 'green'
+					#backgroundColor: 'green'
+					backgroundColor: 'transparent'
+					textAlign: 'center'
+					color: '#ffffff'
+					fontSize: '24px'
 				else
-					backgroundColor: 'blue'
-					textAlign: 'left'
+					#backgroundColor: 'blue'
+					backgroundColor: 'transparent'
+					textAlign: 'center'
 					color: '#ffffff'
 					fontSize: '24px'
 					#lineHeight: '460px'
@@ -671,10 +686,20 @@ if Meteor.isClient
 				instance = Template.instance()
 				data = instance.data
 				#log 'fviewHeight',fviewHeight
-				background: 'purple'
-				textAlign: 'right'
+				backgroundColor: 'purple'
+				backgroundColor: 'transparent'
+				textAlign: 'center'
 				color: '#ffffff'
 				fontSize: '36px'
+				fontFamily: 'ralewayheavy'
+				zIndex: '1'
+			timelineMinuteTimeStyles: ->
+				backgroundColor: 'orange'
+				backgroundColor: 'transparent'
+				textAlign: 'center'
+				color: '#ffffff'
+				fontSize: '24px'
+				fontFamily: 'ralewayheavy'
 				zIndex: '1'
 
 		Template.timelineMinute.rendered = ->
@@ -875,9 +900,22 @@ if Meteor.isClient
 
 				if currentDay is data.index
 					backgroundColor: 'green'
+					backgroundColor: 'transparent'
+					color: '#ffffff'
+					fontFamily: 'ralewaythin'
+					textTransform: 'uppercase'
+					fontSize: '12px'
+					textAlign: 'right'
+					paddingRight: '190px'
 				else
 					backgroundColor: 'aqua'
+					backgroundColor: 'transparent'
 					color: '#ffffff'
+					fontFamily: 'ralewaythin'
+					textTransform: 'uppercase'
+					fontSize: '12px'
+					textAlign: 'right'
+					paddingRight: '190px'
 
 		Template.timelineDay.rendered = ->
 			fview = FView.from(this)
@@ -910,7 +948,7 @@ if Meteor.isClient
 				data = instance.data
 				if currentDay is data.index
 					fview.modifier.halt()
-					fview.modifier.setTransform Transform.translate(30, 0),
+					fview.modifier.setTransform Transform.translate(-20, 0),
 						method: 'spring'
 						period: 1000
 						dampingRatio: 0.3
@@ -1041,9 +1079,22 @@ if Meteor.isClient
 
 				if currentMonth is data.index
 					backgroundColor: 'brown'
+					backgroundColor: 'transparent'
+					color: '#ffffff'
+					fontFamily: 'ralewaythin'
+					textTransform: 'uppercase'
+					fontSize: '12px'
+					textAlign: 'right'
+					paddingRight: '80px'
 				else
 					backgroundColor: 'purple'
+					backgroundColor: 'transparent'
 					color: '#ffffff'
+					fontFamily: 'ralewaythin'
+					textTransform: 'uppercase'
+					fontSize: '12px'
+					textAlign: 'right'
+					paddingRight: '80px'
 
 		Template.timelineMonth.rendered = ->
 			fview = FView.from(this)
@@ -1076,7 +1127,7 @@ if Meteor.isClient
 				data = instance.data
 				if currentMonth is data.index
 					fview.modifier.halt()
-					fview.modifier.setTransform Transform.translate(30, 0),
+					fview.modifier.setTransform Transform.translate(-20, 0),
 						method: 'spring'
 						period: 1000
 						dampingRatio: 0.3
@@ -1207,9 +1258,20 @@ if Meteor.isClient
 
 				if currentYear is data.index
 					backgroundColor: 'gray'
+					backgroundColor: 'transparent'
+					color: '#ffffff'
+					fontFamily: 'ralewaythin'
+					textTransform: 'uppercase'
+					fontSize: '12px'
+					textAlign: 'center'
 				else
 					backgroundColor: 'orange'
+					backgroundColor: 'transparent'
 					color: '#ffffff'
+					fontFamily: 'ralewaythin'
+					textTransform: 'uppercase'
+					fontSize: '12px'
+					textAlign: 'center'
 
 		Template.timelineYear.rendered = ->
 			fview = FView.from(this)
@@ -1242,7 +1304,7 @@ if Meteor.isClient
 				data = instance.data
 				if currentYear is data.index
 					fview.modifier.halt()
-					fview.modifier.setTransform Transform.translate(30, 0),
+					fview.modifier.setTransform Transform.translate(-20, 0),
 						method: 'spring'
 						period: 1000
 						dampingRatio: 0.3
@@ -1268,7 +1330,7 @@ if Meteor.isClient
 			target = fview.surface || fview.view || fview.view._eventInput
 
 			zoomTransition =
-				duration: 300
+				duration: 500
 				curve: Easing.inOutSine
 
 			panTransition =
@@ -1280,7 +1342,7 @@ if Meteor.isClient
 				timelineMomentBackground.modifier.halt()
 				timelineMomentBackground.modifier.setTransform Transform.scale(1.5, 1.5, 1), zoomTransition
 			)
-			target.on('mousemove', (e) ->
+			###target.on('mousemove', (e) ->
 				#Center the image to where the mouse cursor currently is
 				timelineMomentBackgroundWidth = 320
 				timelineMomentBackgroundHeight = 180
@@ -1288,7 +1350,7 @@ if Meteor.isClient
 				destinationY = 1 - e.offsetY/timelineMomentBackgroundHeight
 				timelineMomentBackground.modifier.setOrigin [destinationX,destinationY]
 				timelineMomentBackground.modifier.setAlign [destinationX,destinationY]
-			)
+			)###
 			target.on('mouseout', (e) ->
 				#log 'TIMELINE MOMENT MOUSEOUT',fview, target, this
 				timelineMomentBackground.modifier.halt()

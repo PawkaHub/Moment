@@ -141,7 +141,7 @@ if (Meteor.isClient) {
       epoch = TimeSync.serverTime();
       day = moment(epoch);
       currentDay = day.day();
-      daysInAMonth = 60;
+      daysInAMonth = 100;
       days = [];
       while (days.length < daysInAMonth) {
         momentDay = moment(epoch);
@@ -160,7 +160,7 @@ if (Meteor.isClient) {
       epoch = TimeSync.serverTime();
       month = moment(epoch);
       currentMonth = month.month();
-      monthsInAYear = 60;
+      monthsInAYear = 100;
       months = [];
       while (months.length < monthsInAYear) {
         momentMonth = moment(epoch);
@@ -523,10 +523,14 @@ if (Meteor.isClient) {
     Template.timelineSearchHolder.helpers({
       timelineSearchStyles: function() {
         return {
-          color: '#ffffff',
-          background: 'cadetblue',
+          backgroundColor: 'cadetblue',
+          backgroundColor: 'rgba(0,0,0,0.4)',
           padding: '0 10px 0 10px',
-          fontSize: '72px'
+          fontSize: '72px',
+          color: '#ffffff',
+          fontFamily: 'ralewayregular',
+          textTransform: 'uppercase',
+          textAlign: 'center'
         };
       }
     });
@@ -640,6 +644,8 @@ if (Meteor.isClient) {
         return {
           textAlign: 'center',
           color: '#ffffff',
+          fontFamily: 'ralewaylight',
+          textTransform: 'uppercase',
           overflow: 'hidden'
         };
       },
@@ -656,16 +662,22 @@ if (Meteor.isClient) {
         data = instance.data;
         if (currentMinute === data.index) {
           return {
-            backgroundColor: 'red'
+            backgroundColor: 'transparent',
+            textAlign: 'center',
+            color: '#ffffff',
+            fontSize: '24px'
           };
         } else if (this.index === 0) {
           return {
-            backgroundColor: 'green'
+            backgroundColor: 'transparent',
+            textAlign: 'center',
+            color: '#ffffff',
+            fontSize: '24px'
           };
         } else {
           return {
-            backgroundColor: 'blue',
-            textAlign: 'left',
+            backgroundColor: 'transparent',
+            textAlign: 'center',
             color: '#ffffff',
             fontSize: '24px'
           };
@@ -677,10 +689,23 @@ if (Meteor.isClient) {
         instance = Template.instance();
         data = instance.data;
         return {
-          background: 'purple',
-          textAlign: 'right',
+          backgroundColor: 'purple',
+          backgroundColor: 'transparent',
+          textAlign: 'center',
           color: '#ffffff',
           fontSize: '36px',
+          fontFamily: 'ralewayheavy',
+          zIndex: '1'
+        };
+      },
+      timelineMinuteTimeStyles: function() {
+        return {
+          backgroundColor: 'orange',
+          backgroundColor: 'transparent',
+          textAlign: 'center',
+          color: '#ffffff',
+          fontSize: '24px',
+          fontFamily: 'ralewayheavy',
           zIndex: '1'
         };
       }
@@ -819,12 +844,25 @@ if (Meteor.isClient) {
         data = instance.data;
         if (currentDay === data.index) {
           return {
-            backgroundColor: 'green'
+            backgroundColor: 'green',
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            fontFamily: 'ralewaythin',
+            textTransform: 'uppercase',
+            fontSize: '12px',
+            textAlign: 'right',
+            paddingRight: '190px'
           };
         } else {
           return {
             backgroundColor: 'aqua',
-            color: '#ffffff'
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            fontFamily: 'ralewaythin',
+            textTransform: 'uppercase',
+            fontSize: '12px',
+            textAlign: 'right',
+            paddingRight: '190px'
           };
         }
       }
@@ -851,7 +889,7 @@ if (Meteor.isClient) {
         data = instance.data;
         if (currentDay === data.index) {
           fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(30, 0), {
+          return fview.modifier.setTransform(Transform.translate(-20, 0), {
             method: 'spring',
             period: 1000,
             dampingRatio: 0.3
@@ -946,12 +984,25 @@ if (Meteor.isClient) {
         data = instance.data;
         if (currentMonth === data.index) {
           return {
-            backgroundColor: 'brown'
+            backgroundColor: 'brown',
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            fontFamily: 'ralewaythin',
+            textTransform: 'uppercase',
+            fontSize: '12px',
+            textAlign: 'right',
+            paddingRight: '80px'
           };
         } else {
           return {
             backgroundColor: 'purple',
-            color: '#ffffff'
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            fontFamily: 'ralewaythin',
+            textTransform: 'uppercase',
+            fontSize: '12px',
+            textAlign: 'right',
+            paddingRight: '80px'
           };
         }
       }
@@ -979,7 +1030,7 @@ if (Meteor.isClient) {
         data = instance.data;
         if (currentMonth === data.index) {
           fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(30, 0), {
+          return fview.modifier.setTransform(Transform.translate(-20, 0), {
             method: 'spring',
             period: 1000,
             dampingRatio: 0.3
@@ -1069,12 +1120,23 @@ if (Meteor.isClient) {
         data = instance.data;
         if (currentYear === data.index) {
           return {
-            backgroundColor: 'gray'
+            backgroundColor: 'gray',
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            fontFamily: 'ralewaythin',
+            textTransform: 'uppercase',
+            fontSize: '12px',
+            textAlign: 'center'
           };
         } else {
           return {
             backgroundColor: 'orange',
-            color: '#ffffff'
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            fontFamily: 'ralewaythin',
+            textTransform: 'uppercase',
+            fontSize: '12px',
+            textAlign: 'center'
           };
         }
       }
@@ -1101,7 +1163,7 @@ if (Meteor.isClient) {
         data = instance.data;
         if (currentYear === data.index) {
           fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(30, 0), {
+          return fview.modifier.setTransform(Transform.translate(-20, 0), {
             method: 'spring',
             period: 1000,
             dampingRatio: 0.3
@@ -1127,7 +1189,7 @@ if (Meteor.isClient) {
       timelineMomentBackground = fview.children[0];
       target = fview.surface || fview.view || fview.view._eventInput;
       zoomTransition = {
-        duration: 300,
+        duration: 500,
         curve: Easing.inOutSine
       };
       panTransition = {
@@ -1137,15 +1199,17 @@ if (Meteor.isClient) {
         timelineMomentBackground.modifier.halt();
         return timelineMomentBackground.modifier.setTransform(Transform.scale(1.5, 1.5, 1), zoomTransition);
       });
-      target.on('mousemove', function(e) {
-        var destinationX, destinationY, timelineMomentBackgroundHeight, timelineMomentBackgroundWidth;
-        timelineMomentBackgroundWidth = 320;
-        timelineMomentBackgroundHeight = 180;
-        destinationX = 1 - e.offsetX / timelineMomentBackgroundWidth;
-        destinationY = 1 - e.offsetY / timelineMomentBackgroundHeight;
-        timelineMomentBackground.modifier.setOrigin([destinationX, destinationY]);
-        return timelineMomentBackground.modifier.setAlign([destinationX, destinationY]);
-      });
+
+      /*target.on('mousemove', (e) ->
+      				 *Center the image to where the mouse cursor currently is
+      				timelineMomentBackgroundWidth = 320
+      				timelineMomentBackgroundHeight = 180
+      				destinationX = 1 - e.offsetX/timelineMomentBackgroundWidth
+      				destinationY = 1 - e.offsetY/timelineMomentBackgroundHeight
+      				timelineMomentBackground.modifier.setOrigin [destinationX,destinationY]
+      				timelineMomentBackground.modifier.setAlign [destinationX,destinationY]
+      			)
+       */
       target.on('mouseout', function(e) {
         timelineMomentBackground.modifier.halt();
         return timelineMomentBackground.modifier.setTransform(Transform.scale(1, 1, 1), zoomTransition);
