@@ -554,7 +554,7 @@ Route.prototype.params = function (path) {                                      
  *    .post(function () { })                                                                  // 183
  *    .put(function () { })                                                                   // 184
  */                                                                                           // 185
-HTTP_METHODS.forEach(function (method) {                                                      // 186
+_.each(HTTP_METHODS, function (method) {                                                      // 186
   Route.prototype[method] = function (fn) {                                                   // 187
     // track the method being used for OPTIONS requests.                                      // 188
     this._methods[method] = true;                                                             // 189
@@ -955,7 +955,7 @@ Router.plugins = {};                                                            
  * Auto add helper mtehods for all the hooks.                                                 // 359
  */                                                                                           // 360
                                                                                               // 361
-Router.HOOK_TYPES.forEach(function (type) {                                                   // 362
+_.each(Router.HOOK_TYPES, function (type) {                                                   // 362
   Router.prototype[type] = function (hook, options) {                                         // 363
     this.addHook(type, hook, options);                                                        // 364
   };                                                                                          // 365
@@ -1277,95 +1277,105 @@ var env = process.env.NODE_ENV || 'development';                                
 Router.prototype.init = function (options) {};                                                // 8
                                                                                               // 9
 /**                                                                                           // 10
- * Add the router to the server connect handlers.                                             // 11
- */                                                                                           // 12
-Router.prototype.start = function () {                                                        // 13
-  WebApp.connectHandlers.use(this);                                                           // 14
-};                                                                                            // 15
-                                                                                              // 16
-/**                                                                                           // 17
- * Create a new controller and dispatch into the stack.                                       // 18
- */                                                                                           // 19
-Router.prototype.dispatch = function (url, context, done) {                                   // 20
-  var self = this;                                                                            // 21
-                                                                                              // 22
-  assert(typeof url === 'string', "expected url string in router dispatch");                  // 23
-  assert(typeof context === 'object', "expected context object in router dispatch");          // 24
-                                                                                              // 25
-  // assumes there is only one router                                                         // 26
-  // XXX need to initialize controller either from the context itself or if the               // 27
-  // context already has a controller on it, just use that one.                               // 28
-  var controller = this.createController(url, context);                                       // 29
-                                                                                              // 30
-  controller.dispatch(this._stack, url, function (err) {                                      // 31
-    var res = this.response;                                                                  // 32
-    var req = this.request;                                                                   // 33
-    var msg;                                                                                  // 34
+ * Give people a chance to customize the body parser                                          // 11
+ * behavior.                                                                                  // 12
+ */                                                                                           // 13
+Router.prototype.configureBodyParsers = function () {                                         // 14
+  Router.onBeforeAction(Iron.Router.bodyParser.json());                                       // 15
+  Router.onBeforeAction(Iron.Router.bodyParser.urlencoded({extended: false}));                // 16
+};                                                                                            // 17
+                                                                                              // 18
+/**                                                                                           // 19
+ * Add the router to the server connect handlers.                                             // 20
+ */                                                                                           // 21
+Router.prototype.start = function () {                                                        // 22
+  WebApp.connectHandlers.use(this);                                                           // 23
+  this.configureBodyParsers();                                                                // 24
+};                                                                                            // 25
+                                                                                              // 26
+/**                                                                                           // 27
+ * Create a new controller and dispatch into the stack.                                       // 28
+ */                                                                                           // 29
+Router.prototype.dispatch = function (url, context, done) {                                   // 30
+  var self = this;                                                                            // 31
+                                                                                              // 32
+  assert(typeof url === 'string', "expected url string in router dispatch");                  // 33
+  assert(typeof context === 'object', "expected context object in router dispatch");          // 34
                                                                                               // 35
-    if (err) {                                                                                // 36
-      if (res.statusCode < 400)                                                               // 37
-        res.statusCode = 500;                                                                 // 38
-                                                                                              // 39
-      if (err.status)                                                                         // 40
-        res.statusCode = err.status;                                                          // 41
-                                                                                              // 42
-      if (env === 'development')                                                              // 43
-        msg = (err.stack || err.toString()) + '\n';                                           // 44
-      else                                                                                    // 45
-        //XXX get this from standard dict of error messages?                                  // 46
-        msg = 'Server error.';                                                                // 47
-                                                                                              // 48
-      console.error(err.stack || err.toString());                                             // 49
-                                                                                              // 50
-      if (res.headersSent)                                                                    // 51
-        return req.socket.destroy();                                                          // 52
-                                                                                              // 53
-      res.setHeader('Content-Type', 'text/html');                                             // 54
-      res.setHeader('Content-Length', Buffer.byteLength(msg));                                // 55
-      if (req.method === 'HEAD')                                                              // 56
-        return res.end();                                                                     // 57
-      res.end(msg);                                                                           // 58
-      return;                                                                                 // 59
-    }                                                                                         // 60
-                                                                                              // 61
-    // if there are no client or server handlers for this dispatch                            // 62
-    // then send a 404.                                                                       // 63
-    // XXX we need a solution here for 404s on bad routes.                                    // 64
-    //     one solution might be to provide a custom 404 page in the public                   // 65
-    //     folder. But we need a proper way to handle 404s for search engines.                // 66
-    // XXX might be a PR to Meteor to use an existing status code if it's set                 // 67
-    if (!controller.isHandled() && !controller.willBeHandledOnClient()) {                     // 68
-      return done();                                                                          // 69
-      /*                                                                                      // 70
-      res.statusCode = 404;                                                                   // 71
-      res.setHeader('Content-Type', 'text/html');                                             // 72
-      msg = req.method + ' ' + req.originalUrl + ' not found.';                               // 73
-      console.error(msg);                                                                     // 74
-      if (req.method == 'HEAD')                                                               // 75
-        return res.end();                                                                     // 76
-      res.end(msg + '\n');                                                                    // 77
-      return;                                                                                 // 78
-      */                                                                                      // 79
-    }                                                                                         // 80
-                                                                                              // 81
-    // if for some reason there was a server handler but no client handler                    // 82
-    // and the server handler called next() we might end up here. We                          // 83
-    // want to make sure to end the response so it doesn't hang.                              // 84
-    if (controller.isHandled() && !controller.willBeHandledOnClient()) {                      // 85
-      res.setHeader('Content-Type', 'text/html');                                             // 86
-      if (req.method === 'HEAD')                                                              // 87
-        res.end();                                                                            // 88
-      res.end("<p>It looks like you don't have any client routes defined, but you had at least one server handler. You probably want to define some client side routes!</p>\n");
+  // assumes there is only one router                                                         // 36
+  // XXX need to initialize controller either from the context itself or if the               // 37
+  // context already has a controller on it, just use that one.                               // 38
+  var controller = this.createController(url, context);                                       // 39
+                                                                                              // 40
+  controller.dispatch(this._stack, url, function (err) {                                      // 41
+    var res = this.response;                                                                  // 42
+    var req = this.request;                                                                   // 43
+    var msg;                                                                                  // 44
+                                                                                              // 45
+    if (err) {                                                                                // 46
+      if (res.statusCode < 400)                                                               // 47
+        res.statusCode = 500;                                                                 // 48
+                                                                                              // 49
+      if (err.status)                                                                         // 50
+        res.statusCode = err.status;                                                          // 51
+                                                                                              // 52
+      if (env === 'development')                                                              // 53
+        msg = (err.stack || err.toString()) + '\n';                                           // 54
+      else                                                                                    // 55
+        //XXX get this from standard dict of error messages?                                  // 56
+        msg = 'Server error.';                                                                // 57
+                                                                                              // 58
+      console.error(err.stack || err.toString());                                             // 59
+                                                                                              // 60
+      if (res.headersSent)                                                                    // 61
+        return req.socket.destroy();                                                          // 62
+                                                                                              // 63
+      res.setHeader('Content-Type', 'text/html');                                             // 64
+      res.setHeader('Content-Length', Buffer.byteLength(msg));                                // 65
+      if (req.method === 'HEAD')                                                              // 66
+        return res.end();                                                                     // 67
+      res.end(msg);                                                                           // 68
+      return;                                                                                 // 69
+    }                                                                                         // 70
+                                                                                              // 71
+    // if there are no client or server handlers for this dispatch                            // 72
+    // then send a 404.                                                                       // 73
+    // XXX we need a solution here for 404s on bad routes.                                    // 74
+    //     one solution might be to provide a custom 404 page in the public                   // 75
+    //     folder. But we need a proper way to handle 404s for search engines.                // 76
+    // XXX might be a PR to Meteor to use an existing status code if it's set                 // 77
+    if (!controller.isHandled() && !controller.willBeHandledOnClient()) {                     // 78
+      return done();                                                                          // 79
+      /*                                                                                      // 80
+      res.statusCode = 404;                                                                   // 81
+      res.setHeader('Content-Type', 'text/html');                                             // 82
+      msg = req.method + ' ' + req.originalUrl + ' not found.';                               // 83
+      console.error(msg);                                                                     // 84
+      if (req.method == 'HEAD')                                                               // 85
+        return res.end();                                                                     // 86
+      res.end(msg + '\n');                                                                    // 87
+      return;                                                                                 // 88
+      */                                                                                      // 89
     }                                                                                         // 90
                                                                                               // 91
-    // we'll have Meteor load the normal application so long as                               // 92
-    // we have at least one client route/handler and the done() iterator                      // 93
-    // function has been passed to us, presumably from Connect.                               // 94
-    if (controller.willBeHandledOnClient() && done)                                           // 95
-      return done(err);                                                                       // 96
-  });                                                                                         // 97
-};                                                                                            // 98
-                                                                                              // 99
+    // if for some reason there was a server handler but no client handler                    // 92
+    // and the server handler called next() we might end up here. We                          // 93
+    // want to make sure to end the response so it doesn't hang.                              // 94
+    if (controller.isHandled() && !controller.willBeHandledOnClient()) {                      // 95
+      res.setHeader('Content-Type', 'text/html');                                             // 96
+      if (req.method === 'HEAD')                                                              // 97
+        res.end();                                                                            // 98
+      res.end("<p>It looks like you don't have any client routes defined, but you had at least one server handler. You probably want to define some client side routes!</p>\n");
+    }                                                                                         // 100
+                                                                                              // 101
+    // we'll have Meteor load the normal application so long as                               // 102
+    // we have at least one client route/handler and the done() iterator                      // 103
+    // function has been passed to us, presumably from Connect.                               // 104
+    if (controller.willBeHandledOnClient() && done)                                           // 105
+      return done(err);                                                                       // 106
+  });                                                                                         // 107
+};                                                                                            // 108
+                                                                                              // 109
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
@@ -1416,10 +1426,6 @@ Router.plugins.dataNotFound = function (router, options) {                      
                                                                                               //
 Router = new Iron.Router;                                                                     // 1
                                                                                               // 2
-if (Meteor.isServer) {                                                                        // 3
-  Router.onBeforeAction(Iron.Router.bodyParser.json());                                       // 4
-}                                                                                             // 5
-                                                                                              // 6
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);

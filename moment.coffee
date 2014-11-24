@@ -28,6 +28,11 @@ if Meteor.isClient
 	    	# `this` or `@` is the fview for this instance
 			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
 
+	FView.registerView 'ImageSurface',famous.surfaces.ImageSurface,
+		famousCreatedPost: ->
+	    	# `this` or `@` is the fview for this instance
+			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+
 	FView.registerView 'GridLayout',famous.views.GridLayout,
 		famousCreatedPost: ->
 			# `this` or `@` is the fview for this instance
@@ -88,6 +93,7 @@ if Meteor.isClient
 		@Transitionable = famous.transitions.Transitionable
 		@SpringTransition = famous.transitions.SpringTransition
 		@SnapTransition = famous.transitions.SnapTransition
+		@Easing = famous.transitions.Easing
 
 		# Register Transitions
 		Transitionable.registerMethod 'spring',SpringTransition
@@ -123,7 +129,7 @@ if Meteor.isClient
 		Template.registerHelper 'minutes', ->
 			#Create all the minutes in a day
 			epoch = TimeSync.serverTime()
-			minutesInADay = 60
+			minutesInADay = 3
 			minutes = []
 			while minutes.length < minutesInADay
 				momentMinute = moment(epoch)
@@ -635,13 +641,9 @@ if Meteor.isClient
 					moments.push moment
 				moments
 			timelineMomentStyles: ->
-				backgroundColor: 'green'
-				backgroundImage: 'url(https://scontent-b-mia.xx.fbcdn.net/hphotos-xfp1/v/t1.0-9/10394468_10205341300640506_2618669216905892361_n.jpg?oh=9d025ee5282fe8dc128fadcc6bf0503a&oe=550C45A6)'
-				backgroundRepeat: 'no-repeat'
-				backgroundSize: 'cover'
-				backgroundPosition: '50% 50%'
 				textAlign: 'center'
 				color: '#ffffff'
+				overflow: 'hidden'
 			timelineMinuteTitleIndex: ->
 				'timelineMinuteTitle' + this.index
 			timelineMinuteIndex: ->
@@ -1259,24 +1261,42 @@ if Meteor.isClient
 		Template.timelineMoment.rendered = ->
 			fview = FView.from(this)
 
+			timelineMomentBackground = fview.children[0]
+
+			#log 'timelineMomentBackground!!!',timelineMomentBackground
+
 			target = fview.surface || fview.view || fview.view._eventInput
+
+			zoomTransition =
+				duration: 1000
+				curve: Easing.inOutSine
+
+			#log 'timelineMoment',fview
+
 			target.on('mouseover', () ->
-				log 'TIMELINE MOMENT HOVERED',fview, target, this
+				#log 'TIMELINE MOMENT HOVERED',fview, target, this
+				#log 'kenBurnsContainer!',kenBurnsContainer
+				#Trigger the pan and zoom
+				#kenBurnsContainer.panAndZoom([0.5, 0.5], 1.0)
+				timelineMomentBackground.modifier.halt()
+				timelineMomentBackground.modifier.setTransform Transform.scale(1.5, 1.5, 1), zoomTransition
 			)
 			target.on('mouseout', () ->
-				log 'TIMELINE MOMENT MOUSEOUT',fview, target, this
+				#log 'TIMELINE MOMENT MOUSEOUT',fview, target, this
+				timelineMomentBackground.modifier.halt()
+				timelineMomentBackground.modifier.setTransform Transform.scale(1, 1, 1), zoomTransition
 			)
 			target.on('click', () ->
-				log 'TIMELINE MOMENT CLICKED',fview, target, this
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(10, 10),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+				log 'TIMELINE MOMENT CLICKED',fview, target
 			)
 
 		Template.timelineMoment.helpers
+			timelineMomentImageStyles: ->
+				backgroundSize: 'cover'
+				backgroundPosition: '50% 50%'
+				backgroundRepeat: 'no-repeat'
+				backgroundColor: 'rgba(255,255,255,1)'
+				backgroundImage: 'url(http://placekitten.com/g/320/180)'
 			moment: ->
 				instance = Template.instance()
 				#log 'timelineMoment instance!',instance

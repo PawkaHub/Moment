@@ -297,11 +297,6 @@
       "path": "packages/mjn_famous.js"
     },
     {
-      "sourceMap": "packages/gadicohen_famous-views.js.map",
-      "sourceMapRoot": "packages",
-      "path": "packages/gadicohen_famous-views.js"
-    },
-    {
       "sourceMap": "packages/accounts-base.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/accounts-base.js"
@@ -373,6 +368,11 @@
       "sourceMap": "packages/carlodicelico_tokbox.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/carlodicelico_tokbox.js"
+    },
+    {
+      "sourceMap": "packages/gadicohen_famous-views.js.map",
+      "sourceMapRoot": "packages",
+      "path": "packages/gadicohen_famous-views.js"
     },
     {
       "sourceMap": "packages/gadicohen_fview-kenburns.js.map",

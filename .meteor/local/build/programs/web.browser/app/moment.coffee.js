@@ -38,6 +38,11 @@ if (Meteor.isClient) {
       return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
     }
   });
+  FView.registerView('ImageSurface', famous.surfaces.ImageSurface, {
+    famousCreatedPost: function() {
+      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+    }
+  });
   FView.registerView('GridLayout', famous.views.GridLayout, {
     famousCreatedPost: function() {
       return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
@@ -90,6 +95,7 @@ if (Meteor.isClient) {
     this.Transitionable = famous.transitions.Transitionable;
     this.SpringTransition = famous.transitions.SpringTransition;
     this.SnapTransition = famous.transitions.SnapTransition;
+    this.Easing = famous.transitions.Easing;
     Transitionable.registerMethod('spring', SpringTransition);
     Transitionable.registerMethod('snap', SpringTransition);
     Session.setDefault('backgroundTranslation', 0);
@@ -116,7 +122,7 @@ if (Meteor.isClient) {
     Template.registerHelper('minutes', function() {
       var epoch, minute, minutes, minutesInADay, momentMinute;
       epoch = TimeSync.serverTime();
-      minutesInADay = 60;
+      minutesInADay = 3;
       minutes = [];
       while (minutes.length < minutesInADay) {
         momentMinute = moment(epoch);
@@ -632,13 +638,9 @@ if (Meteor.isClient) {
       },
       timelineMomentStyles: function() {
         return {
-          backgroundColor: 'green',
-          backgroundImage: 'url(https://scontent-b-mia.xx.fbcdn.net/hphotos-xfp1/v/t1.0-9/10394468_10205341300640506_2618669216905892361_n.jpg?oh=9d025ee5282fe8dc128fadcc6bf0503a&oe=550C45A6)',
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: 'cover',
-          backgroundPosition: '50% 50%',
           textAlign: 'center',
-          color: '#ffffff'
+          color: '#ffffff',
+          overflow: 'hidden'
         };
       },
       timelineMinuteTitleIndex: function() {
@@ -1120,26 +1122,36 @@ if (Meteor.isClient) {
       }
     });
     Template.timelineMoment.rendered = function() {
-      var fview, target;
+      var fview, target, timelineMomentBackground, zoomTransition;
       fview = FView.from(this);
+      timelineMomentBackground = fview.children[0];
       target = fview.surface || fview.view || fview.view._eventInput;
+      zoomTransition = {
+        duration: 1000,
+        curve: Easing.inOutSine
+      };
       target.on('mouseover', function() {
-        return log('TIMELINE MOMENT HOVERED', fview, target, this);
+        timelineMomentBackground.modifier.halt();
+        return timelineMomentBackground.modifier.setTransform(Transform.scale(1.5, 1.5, 1), zoomTransition);
       });
       target.on('mouseout', function() {
-        return log('TIMELINE MOMENT MOUSEOUT', fview, target, this);
+        timelineMomentBackground.modifier.halt();
+        return timelineMomentBackground.modifier.setTransform(Transform.scale(1, 1, 1), zoomTransition);
       });
       return target.on('click', function() {
-        log('TIMELINE MOMENT CLICKED', fview, target, this);
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(10, 10), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
+        return log('TIMELINE MOMENT CLICKED', fview, target);
       });
     };
     return Template.timelineMoment.helpers({
+      timelineMomentImageStyles: function() {
+        return {
+          backgroundSize: 'cover',
+          backgroundPosition: '50% 50%',
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: 'rgba(255,255,255,1)',
+          backgroundImage: 'url(http://placekitten.com/g/320/180)'
+        };
+      },
       moment: function() {
         var data, instance;
         instance = Template.instance();

@@ -880,7 +880,7 @@ Route.prototype.params = function (path) {                                      
  *    .post(function () { })                                                                                      // 183
  *    .put(function () { })                                                                                       // 184
  */                                                                                                               // 185
-HTTP_METHODS.forEach(function (method) {                                                                          // 186
+_.each(HTTP_METHODS, function (method) {                                                                          // 186
   Route.prototype[method] = function (fn) {                                                                       // 187
     // track the method being used for OPTIONS requests.                                                          // 188
     this._methods[method] = true;                                                                                 // 189
@@ -1281,7 +1281,7 @@ Router.plugins = {};                                                            
  * Auto add helper mtehods for all the hooks.                                                                     // 359
  */                                                                                                               // 360
                                                                                                                   // 361
-Router.HOOK_TYPES.forEach(function (type) {                                                                       // 362
+_.each(Router.HOOK_TYPES, function (type) {                                                                       // 362
   Router.prototype[type] = function (hook, options) {                                                             // 363
     this.addHook(type, hook, options);                                                                            // 364
   };                                                                                                              // 365
@@ -1853,10 +1853,6 @@ Router.plugins.dataNotFound = function (router, options) {                      
                                                                                                                   //
 Router = new Iron.Router;                                                                                         // 1
                                                                                                                   // 2
-if (Meteor.isServer) {                                                                                            // 3
-  Router.onBeforeAction(Iron.Router.bodyParser.json());                                                           // 4
-}                                                                                                                 // 5
-                                                                                                                  // 6
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);

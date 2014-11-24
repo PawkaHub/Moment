@@ -29,19 +29,7 @@ Template["about"] = new Template("Template.about", (function() {
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("View"), function() {
-      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineDayScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineMonthScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineYearScroller")), "\n", Spacebars.include(view.lookupTemplate("timelineSearchHolder")), "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", null, "\n", Blaze._TemplateWith(function() {
-        return {
-          template: Spacebars.call("timelineToggle"),
-          size: Spacebars.call("[60,60]"),
-          origin: Spacebars.call("[1,0]"),
-          align: Spacebars.call("[1,0]"),
-          translate: Spacebars.call("[-10,10,100]"),
-          opacity: Spacebars.call("0.14"),
-          properties: Spacebars.call(view.lookup("timelineToggleStyles"))
-        };
-      }, function() {
-        return Spacebars.include(view.lookupTemplate("Surface"));
-      }), "\n", null ];
+      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), null, null, null, null, null, null, null, null, null, null, null, null, null ];
     });
   });
 }));
@@ -104,7 +92,7 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                 };
               }, function() {
                 return Spacebars.include(view.lookupTemplate("Surface"));
-              }), "\n", Blaze._TemplateWith(function() {
+              }), Blaze._TemplateWith(function() {
                 return {
                   id: Spacebars.call(view.lookup("timelineMinuteTitleIndex")),
                   template: Spacebars.call("timelineMinuteTitle"),
@@ -116,7 +104,7 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                 };
               }, function() {
                 return Spacebars.include(view.lookupTemplate("Surface"));
-              }), "\n", null, "\n", Blaze._TemplateWith(function() {
+              }), Blaze._TemplateWith(function() {
                 return {
                   dimensions: Spacebars.call("[5,5]"),
                   gutterSize: Spacebars.call("[10,10]"),
@@ -137,8 +125,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -148,8 +136,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -159,8 +147,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -170,8 +158,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -181,8 +169,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -192,8 +180,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -203,8 +191,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -214,8 +202,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -225,8 +213,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -236,8 +224,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -247,8 +235,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -258,8 +246,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -269,8 +257,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -280,8 +268,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -291,8 +279,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -302,8 +290,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -313,8 +301,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -324,8 +312,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -335,8 +323,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -346,8 +334,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -357,8 +345,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -368,8 +356,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -379,8 +367,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -390,8 +378,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
-                  }), "\n", Blaze._TemplateWith(function() {
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
+                  }), Blaze._TemplateWith(function() {
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
@@ -401,7 +389,7 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
                   }, function() {
-                    return Spacebars.include(view.lookupTemplate("Surface"));
+                    return Spacebars.include(view.lookupTemplate("ContainerSurface"));
                   }) ];
                 });
               }) ];
@@ -585,20 +573,46 @@ Template["timelineMinute"] = new Template("Template.timelineMinute", (function()
   return [ HTML.DIV({
     "class": "minute"
   }, Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("minute"), "formattedMinute"));
+    return Spacebars.mustache(Spacebars.dot(view.lookup("minute"), "index"));
   })) ];
 }));
 
 Template.__checkName("timelineMoment");
 Template["timelineMoment"] = new Template("Template.timelineMoment", (function() {
   var view = this;
-  return HTML.UL(HTML.Raw("<li>Hello Moment!</li>\n"), HTML.LI(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("moment"), "archiveCreatedAt"));
-  })), "\n", HTML.LI(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("moment"), "tokboxArchiveId"));
-  })), "\n", HTML.LI(Blaze.View(function() {
-    return Spacebars.mustache(Spacebars.dot(view.lookup("moment"), "tokboxArchiveName"));
-  })), "\n\n\n");
+  return Blaze._TemplateWith(function() {
+    return {
+      size: Spacebars.call("[undefined,undefined]"),
+      origin: Spacebars.call("[0.5,0.5]"),
+      align: Spacebars.call("[0.5,0.5]")
+    };
+  }, function() {
+    return Spacebars.include(view.lookupTemplate("StateModifier"), function() {
+      return Blaze._TemplateWith(function() {
+        return {
+          origin: Spacebars.call("[0.5,0.5]"),
+          align: Spacebars.call("[0.5,0.5]"),
+          properties: Spacebars.call(view.lookup("timelineMomentImageStyles"))
+        };
+      }, function() {
+        return Spacebars.include(view.lookupTemplate("Surface"), function() {
+          return HTML.UL(HTML.LI("Hello Moment!"), "\n", HTML.LI(Blaze.View(function() {
+            return Spacebars.mustache(Spacebars.dot(view.lookup("moment"), "archiveCreatedAt"));
+          })), "\n", HTML.LI(Blaze.View(function() {
+            return Spacebars.mustache(Spacebars.dot(view.lookup("moment"), "tokboxArchiveId"));
+          })), "\n", HTML.LI(Blaze.View(function() {
+            return Spacebars.mustache(Spacebars.dot(view.lookup("moment"), "tokboxArchiveName"));
+          })), "\n", null, "\n", null, "\n", null);
+        });
+      });
+    });
+  });
+}));
+
+Template.__checkName("timelineMomentEmptyText");
+Template["timelineMomentEmptyText"] = new Template("Template.timelineMomentEmptyText", (function() {
+  var view = this;
+  return "";
 }));
 
 Template.__checkName("timelineDay");

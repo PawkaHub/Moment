@@ -3,13 +3,13 @@
 Router = Package['iron:router'].Router;
 RouteController = Package['iron:router'].RouteController;
 famous = Package['mjn:famous'].famous;
-FView = Package['gadicohen:famous-views'].FView;
 Accounts = Package['accounts-base'].Accounts;
 Guests = Package['wenape:accounts-guest'].Guests;
 moment = Package['mrt:moment'].moment;
 TimeSync = Package['mizzao:timesync'].TimeSync;
 FastRender = Package['meteorhacks:fast-render'].FastRender;
 __init_fast_render = Package['meteorhacks:fast-render'].__init_fast_render;
+FView = Package['gadicohen:famous-views'].FView;
 Meteor = Package.meteor.Meteor;
 WebApp = Package.webapp.WebApp;
 Log = Package.logging.Log;
