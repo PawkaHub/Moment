@@ -991,7 +991,7 @@ if (Meteor.isClient) {
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'right',
-            paddingRight: '80px'
+            paddingRight: '90px'
           };
         } else {
           return {
@@ -1002,7 +1002,7 @@ if (Meteor.isClient) {
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'right',
-            paddingRight: '80px'
+            paddingRight: '90px'
           };
         }
       }
@@ -1193,7 +1193,8 @@ if (Meteor.isClient) {
         curve: Easing.inOutSine
       };
       panTransition = {
-        duration: 0
+        duration: 500,
+        curving: Easing.inOutSine
       };
       target.on('mouseover', function(e) {
         timelineMomentBackground.modifier.halt();

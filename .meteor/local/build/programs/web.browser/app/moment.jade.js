@@ -153,7 +153,8 @@ Template["timelineSearchHolder"] = new Template("Template.timelineSearchHolder",
       align: Spacebars.call("[0.5,0]"),
       translate: Spacebars.call("[0,0,8]"),
       properties: Spacebars.call(view.lookup("timelineSearchStyles")),
-      placeholder: Spacebars.call("Hello Search")
+      placeholder: Spacebars.call("Hello Search"),
+      opacity: Spacebars.call("0.8")
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("InputSurface"));
@@ -195,7 +196,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                   origin: Spacebars.call("[0,0]"),
                   align: Spacebars.call("[0,0]"),
                   size: Spacebars.call("[undefined,undefined]"),
-                  properties: Spacebars.call(view.lookup("timelineMinuteStyles"))
+                  properties: Spacebars.call(view.lookup("timelineMinuteStyles")),
+                  opacity: Spacebars.call("0.8")
                 };
               }, function() {
                 return Spacebars.include(view.lookupTemplate("Surface"));
@@ -207,7 +209,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                   align: Spacebars.call("[0,0]"),
                   translate: Spacebars.call("[0,100,1]"),
                   size: Spacebars.call("[undefined,40]"),
-                  properties: Spacebars.call(view.lookup("timelineMinuteTitleStyles"))
+                  properties: Spacebars.call(view.lookup("timelineMinuteTitleStyles")),
+                  opacity: Spacebars.call("0.8")
                 };
               }, function() {
                 return Spacebars.include(view.lookupTemplate("Surface"));
@@ -218,7 +221,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                   align: Spacebars.call("[0,0]"),
                   translate: Spacebars.call("[0,40,1]"),
                   size: Spacebars.call("[undefined,40]"),
-                  properties: Spacebars.call(view.lookup("timelineMinuteTimeStyles"))
+                  properties: Spacebars.call(view.lookup("timelineMinuteTimeStyles")),
+                  opacity: Spacebars.call("0.8")
                 };
               }, function() {
                 return Spacebars.include(view.lookupTemplate("Surface"));
@@ -557,7 +561,7 @@ Template["timelineMonthScroller"] = new Template("Template.timelineMonthScroller
   var view = this;
   return Blaze._TemplateWith(function() {
     return {
-      size: Spacebars.call("[150,undefined]"),
+      size: Spacebars.call("[170,undefined]"),
       origin: Spacebars.call("[1,0]"),
       align: Spacebars.call("[1,0.5]"),
       translate: Spacebars.call("[0,0,9]")

@@ -1085,7 +1085,7 @@ if Meteor.isClient
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'right'
-					paddingRight: '80px'
+					paddingRight: '90px'
 				else
 					backgroundColor: 'purple'
 					backgroundColor: 'transparent'
@@ -1094,7 +1094,7 @@ if Meteor.isClient
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'right'
-					paddingRight: '80px'
+					paddingRight: '90px'
 
 		Template.timelineMonth.rendered = ->
 			fview = FView.from(this)
@@ -1334,7 +1334,8 @@ if Meteor.isClient
 				curve: Easing.inOutSine
 
 			panTransition =
-				duration: 0
+				duration: 500
+				curving: Easing.inOutSine
 
 			#log 'timelineMoment',fview
 
