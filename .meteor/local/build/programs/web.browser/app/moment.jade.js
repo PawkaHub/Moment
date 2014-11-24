@@ -29,7 +29,7 @@ Template["about"] = new Template("Template.about", (function() {
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("View"), function() {
-      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), null, null, null, null, null, null, null, null, null, null, null, null, null ];
+      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), Spacebars.include(view.lookupTemplate("timelineDayScroller")), Spacebars.include(view.lookupTemplate("timelineMonthScroller")), Spacebars.include(view.lookupTemplate("timelineYearScroller")), Spacebars.include(view.lookupTemplate("timelineSearchHolder")), null, null, null, null, null, null, null, null, null ];
     });
   });
 }));

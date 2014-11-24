@@ -1122,19 +1122,31 @@ if (Meteor.isClient) {
       }
     });
     Template.timelineMoment.rendered = function() {
-      var fview, target, timelineMomentBackground, zoomTransition;
+      var fview, panTransition, target, timelineMomentBackground, zoomTransition;
       fview = FView.from(this);
       timelineMomentBackground = fview.children[0];
       target = fview.surface || fview.view || fview.view._eventInput;
       zoomTransition = {
-        duration: 1000,
+        duration: 300,
         curve: Easing.inOutSine
       };
-      target.on('mouseover', function() {
+      panTransition = {
+        duration: 0
+      };
+      target.on('mouseover', function(e) {
         timelineMomentBackground.modifier.halt();
         return timelineMomentBackground.modifier.setTransform(Transform.scale(1.5, 1.5, 1), zoomTransition);
       });
-      target.on('mouseout', function() {
+      target.on('mousemove', function(e) {
+        var destinationX, destinationY, timelineMomentBackgroundHeight, timelineMomentBackgroundWidth;
+        timelineMomentBackgroundWidth = 320;
+        timelineMomentBackgroundHeight = 180;
+        destinationX = 1 - e.offsetX / timelineMomentBackgroundWidth;
+        destinationY = 1 - e.offsetY / timelineMomentBackgroundHeight;
+        timelineMomentBackground.modifier.setOrigin([destinationX, destinationY]);
+        return timelineMomentBackground.modifier.setAlign([destinationX, destinationY]);
+      });
+      target.on('mouseout', function(e) {
         timelineMomentBackground.modifier.halt();
         return timelineMomentBackground.modifier.setTransform(Transform.scale(1, 1, 1), zoomTransition);
       });

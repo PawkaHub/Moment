@@ -1268,20 +1268,28 @@ if Meteor.isClient
 			target = fview.surface || fview.view || fview.view._eventInput
 
 			zoomTransition =
-				duration: 1000
+				duration: 300
 				curve: Easing.inOutSine
+
+			panTransition =
+				duration: 0
 
 			#log 'timelineMoment',fview
 
-			target.on('mouseover', () ->
-				#log 'TIMELINE MOMENT HOVERED',fview, target, this
-				#log 'kenBurnsContainer!',kenBurnsContainer
-				#Trigger the pan and zoom
-				#kenBurnsContainer.panAndZoom([0.5, 0.5], 1.0)
+			target.on('mouseover', (e) ->
 				timelineMomentBackground.modifier.halt()
 				timelineMomentBackground.modifier.setTransform Transform.scale(1.5, 1.5, 1), zoomTransition
 			)
-			target.on('mouseout', () ->
+			target.on('mousemove', (e) ->
+				#Center the image to where the mouse cursor currently is
+				timelineMomentBackgroundWidth = 320
+				timelineMomentBackgroundHeight = 180
+				destinationX = 1 - e.offsetX/timelineMomentBackgroundWidth
+				destinationY = 1 - e.offsetY/timelineMomentBackgroundHeight
+				timelineMomentBackground.modifier.setOrigin [destinationX,destinationY]
+				timelineMomentBackground.modifier.setAlign [destinationX,destinationY]
+			)
+			target.on('mouseout', (e) ->
 				#log 'TIMELINE MOMENT MOUSEOUT',fview, target, this
 				timelineMomentBackground.modifier.halt()
 				timelineMomentBackground.modifier.setTransform Transform.scale(1, 1, 1), zoomTransition

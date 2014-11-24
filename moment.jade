@@ -12,10 +12,10 @@ template(name='layout')
 template(name='about')
 	+View size='[undefined,undefined]'
 		+timelineMinuteScroller
-		//-+timelineDayScroller
-		//-+timelineMonthScroller
-		//-+timelineYearScroller
-		//-+timelineSearchHolder
+		+timelineDayScroller
+		+timelineMonthScroller
+		+timelineYearScroller
+		+timelineSearchHolder
 		//-+Surface template='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
 		//-+Surface template='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='0.4' properties=overlayStyles
 		//-+Surface template='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=introStyles
