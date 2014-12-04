@@ -364,20 +364,15 @@
       }
     },
     {
-      "node_modules": "npm/carlodicelico:tokbox/node_modules",
-      "sourceMap": "packages/carlodicelico_tokbox.js.map",
-      "sourceMapRoot": "packages",
-      "path": "packages/carlodicelico_tokbox.js"
-    },
-    {
       "sourceMap": "packages/gadicohen_famous-views.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/gadicohen_famous-views.js"
     },
     {
-      "sourceMap": "packages/gadicohen_fview-kenburns.js.map",
+      "node_modules": "npm/mrt:tokbox/node_modules",
+      "sourceMap": "packages/mrt_tokbox.js.map",
       "sourceMapRoot": "packages",
-      "path": "packages/gadicohen_fview-kenburns.js"
+      "path": "packages/mrt_tokbox.js"
     },
     {
       "sourceMap": "packages/session.js.map",

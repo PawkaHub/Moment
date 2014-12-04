@@ -9,7 +9,6 @@ blaze-tools@1.0.1
 blaze@2.0.3
 boilerplate-generator@1.0.1
 callback-hook@1.0.1
-carlodicelico:tokbox@2.2.8
 check@1.0.2
 chuangbo:cookie@1.1.0
 coffeescript@1.0.4
@@ -55,6 +54,7 @@ mongo-livedata@1.0.6
 mongo@1.0.8
 mquandalle:jade@0.3.0
 mrt:moment@2.8.1
+mrt:tokbox@2.2.8
 npm-bcrypt@0.7.7
 observe-sequence@1.0.3
 ordered-dict@1.0.1

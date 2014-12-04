@@ -33,6 +33,11 @@ if Meteor.isClient
 	    	# `this` or `@` is the fview for this instance
 			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
 
+	FView.registerView 'CanvasSurface',famous.surfaces.CanvasSurface,
+		famousCreatedPost: ->
+	    	# `this` or `@` is the fview for this instance
+			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+
 	FView.registerView 'GridLayout',famous.views.GridLayout,
 		famousCreatedPost: ->
 			# `this` or `@` is the fview for this instance
@@ -66,6 +71,18 @@ if Meteor.isClient
 							log 'Subscribe err',err
 						else
 							log 'Subscribed to stream!'
+							canvasSize = window.canvas.getSize()
+							imgData = window.subscriber.getImgData()
+							#Only output to canvas if there's image data
+							if imgData and imgData.length > 10
+								log 'imgData exists!'
+								img = new Image()
+								img.src = 'data:image/png;base64,' + imgData
+								img.onload = () ->
+									log 'Stream image loaded!!!'
+									log 'Stream image!',img
+									#Output the stream to canvas!
+									window.context.drawImage(img,canvasSize[0],canvasSize[1])
 
 					layout()
 
@@ -107,7 +124,7 @@ if Meteor.isClient
 		Session.setDefault 'ppLogoTranslation', -10
 		Session.setDefault 'timerTranslation', 300
 		Session.setDefault 'questionTranslation', -200
-		Session.setDefault 'timelineToggleTranslation', -10
+		Session.setDefault 'timelineActive',false
 		Session.setDefault 'canSubscribeToStream', false
 		Session.setDefault 'userCanPublish', false
 		Session.setDefault 'userIsPublishing', false
@@ -221,6 +238,8 @@ if Meteor.isClient
 				styles =
 					#backgroundColor: '#e5e5e5'
 					textAlign: 'center'
+					fontSize: '36px'
+					fontFamily: 'ralewayheavy'
 					color: '#ffffff'
 			momentButtonStyles: ->
 				styles =
@@ -243,6 +262,7 @@ if Meteor.isClient
 				borderRadius: '50%'
 				textAlign: 'center'
 				color: '#ffffff'
+				zIndex: '999'
 			timelineOverlayStyles: ->
 				backgroundColor: '#000000'
 
@@ -269,13 +289,18 @@ if Meteor.isClient
 		Template.background.rendered = ->
 			fview = FView.from(this)
 
-			log 'Set videoWrapper layout!'
+			log 'Set videoWrapper layout!',fview
 			videoWrapper = this.find '#videoWrapper'
 			log 'videoWrapper',videoWrapper
 			window.layout = TB.initLayoutContainer(videoWrapper,
 				bigFixedRatio: false
 			).layout
 			log 'layout',layout
+			window.canvas = fview.view
+
+			# Get the context
+			window.context = window.canvas.getContext('2d')
+			log 'context!!!',window.context
 
 			# Recalculate layout on resize
 			window.onresize = ->
@@ -285,17 +310,25 @@ if Meteor.isClient
 					layout()
 				, 20)
 
-			target = fview.surface || fview.view._eventInput
+			target = fview.surface || fview.view || fview.view._eventInput
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
+				log 'BACKGROUND TARGET CLICKED',fview, target
+			)
 
-				if Session.equals 'backgroundTranslation', 0 then Session.set 'backgroundTranslation', 300 else Session.set 'backgroundTranslation', 0
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(0, Session.get 'backgroundTranslation'),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+			@autorun((computation)->
+				timelineActive = Session.get('timelineActive')
+				if timelineActive is true
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(0.8,0.8,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 			)
 
 		Template.overlay.rendered = ->
@@ -348,6 +381,15 @@ if Meteor.isClient
 					publisher.on
 						streamCreated: (event) ->
 							log 'publishStream created!',event
+							#Hacky
+							#video = event.target.element.children[0].children[2]
+							#log 'Video!',video
+
+							#video.addEventListener('play', () ->
+							#	log 'DRAWING!!!'
+						    #    #draw(this,context,cw,ch);
+    						#,false)
+
 							Meteor.call('createMoment', (err,result)->
 								if err
 									log 'createMoment err',err
@@ -377,12 +419,12 @@ if Meteor.isClient
 											log clock
 											if clock is 0
 												log "That's All Folks, let's cancel this clientside session"
-												session.unpublish publisher
+												#session.unpublish publisher
 												#Meteor.clearInterval interval
 										else
 											log "Uhhh else"
 											#session.unpublish publisher
-											Meteor.clearInterval interval
+											#Meteor.clearInterval interval
 									interval = Meteor.setInterval(timeLeft, 1000)
 							)
 						streamDestroyed: (event) ->
@@ -392,7 +434,7 @@ if Meteor.isClient
 							Meteor.setTimeout(->
 								Session.set 'timer', momentTimer
 							,1000)
-					#if window.subscriber then session.unsubscribe window.subscriber
+					if window.subscriber then session.unsubscribe window.subscriber
 					session.publish publisher
 					layout()
 				else
@@ -413,6 +455,15 @@ if Meteor.isClient
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
 				log 'TARGET CLICKED',fview, target
+
+				archiveId = Moments.find().fetch()[0].tokboxArchiveId
+				Meteor.call('getMoment', archiveId, (err,result) ->
+					log 'Calling getMoment!'
+					if err
+						log 'getMoment err!',err
+					else
+						log 'getMoment result!',result
+				)
 
 				if Session.equals 'ppLogoTranslation', -10 then Session.set 'ppLogoTranslation', -100 else Session.set 'ppLogoTranslation', -10
 
@@ -464,16 +515,21 @@ if Meteor.isClient
 
 			target = fview.surface || fview.view
 
+			zoomTransition =
+				duration: 500
+				curve: Easing.inOutSine
+
 			target.on('click', () ->
 				log 'TARGET CLICKED',fview, target
 
-				if Session.equals 'timelineToggleTranslation', -10 then Session.set 'timelineToggleTranslation', -100 else Session.set 'timelineToggleTranslation', -10
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(Session.get('timelineToggleTranslation'), 10),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+				if Session.equals 'timelineActive', false
+					Session.set 'timelineActive',true
+					###fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(1.5, 1.5, 999), zoomTransition###
+				else
+					Session.set 'timelineActive',false
+					###fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(1, 1, 999), zoomTransition###
 			)
 
 		#Timeline Search
@@ -489,7 +545,7 @@ if Meteor.isClient
 		Template.timelineSearchHolder.helpers
 			timelineSearchStyles: ->
 				backgroundColor: 'cadetblue'
-				backgroundColor: 'rgba(0,0,0,0.4)'
+				backgroundColor: 'transparent'
 				padding: '0 10px 0 10px'
 				fontSize: '72px'
 				color: '#ffffff'
@@ -574,6 +630,7 @@ if Meteor.isClient
 				#log 'slip',e.slip
 				#log 'velocity',e.velocity
 			)
+
 			@autorun((computation)->
 				currentMinute = Session.get('currentMinute')
 				previousMinute = window.timelineMinuteScroller.getCurrentIndex()
@@ -1360,6 +1417,21 @@ if Meteor.isClient
 			target.on('click', () ->
 				log 'TIMELINE MOMENT CLICKED',fview, target
 			)
+			@autorun((computation)->
+				timelineActive = Session.get('timelineActive')
+				if timelineActive is true
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+			)
 
 		Template.timelineMoment.helpers
 			timelineMomentImageStyles: ->
@@ -1405,6 +1477,8 @@ if Meteor.isServer
 
 			archive = openTokClient.startArchive openTokSession, openTokArchiveOptions
 
+			log 'ARCHIVE!!!!',archive
+
 			#Start the timer!
 			clock = momentTimer
 			timeLeft = ->
@@ -1436,6 +1510,13 @@ if Meteor.isServer
 			interval = Meteor.setInterval(timeLeft, 1000)
 
 			log 'Sigh archive',archive
+			archive
+		getMoment: (archiveId) ->
+			log 'Server getMoment called!',archiveId
+
+			#Retrieve an archive
+			archive = openTokClient.getArchive archiveId
+			log 'RETRIEVED ARCHIVE',archive
 			archive
 		listArchives: () ->
 			log 'listArchives called!'

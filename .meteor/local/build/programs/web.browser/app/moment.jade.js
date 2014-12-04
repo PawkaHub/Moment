@@ -29,7 +29,7 @@ Template["about"] = new Template("Template.about", (function() {
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("View"), function() {
-      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), Spacebars.include(view.lookupTemplate("timelineDayScroller")), Spacebars.include(view.lookupTemplate("timelineMonthScroller")), Spacebars.include(view.lookupTemplate("timelineYearScroller")), Spacebars.include(view.lookupTemplate("timelineSearchHolder")), Blaze._TemplateWith(function() {
+      return [ null, null, null, null, null, Blaze._TemplateWith(function() {
         return {
           template: Spacebars.call("background"),
           size: Spacebars.call("[undefined,undefined]"),
@@ -40,7 +40,7 @@ Template["about"] = new Template("Template.about", (function() {
           properties: Spacebars.call(view.lookup("backgroundStyles"))
         };
       }, function() {
-        return Spacebars.include(view.lookupTemplate("Surface"));
+        return Spacebars.include(view.lookupTemplate("CanvasSurface"));
       }), Blaze._TemplateWith(function() {
         return {
           template: Spacebars.call("overlay"),
@@ -93,9 +93,9 @@ Template["about"] = new Template("Template.about", (function() {
         return {
           template: Spacebars.call("ppLogo"),
           size: Spacebars.call("[100,100]"),
-          origin: Spacebars.call("[1,1]"),
-          align: Spacebars.call("[1,1]"),
-          translate: Spacebars.call("[-10,-10,0]"),
+          origin: Spacebars.call("[0,1]"),
+          align: Spacebars.call("[0,1]"),
+          translate: Spacebars.call("[20,-20,0]"),
           opacity: Spacebars.call("0.14"),
           properties: Spacebars.call(view.lookup("ppLogoStyles"))
         };
@@ -117,27 +117,15 @@ Template["about"] = new Template("Template.about", (function() {
         return {
           template: Spacebars.call("timelineToggle"),
           size: Spacebars.call("[60,60]"),
-          origin: Spacebars.call("[1,0]"),
-          align: Spacebars.call("[1,0]"),
-          translate: Spacebars.call("[-10,10,100]"),
+          origin: Spacebars.call("[0,0]"),
+          align: Spacebars.call("[0,0]"),
+          translate: Spacebars.call("[20,20,100]"),
           opacity: Spacebars.call("0.14"),
           properties: Spacebars.call(view.lookup("timelineToggleStyles"))
         };
       }, function() {
         return Spacebars.include(view.lookupTemplate("Surface"));
-      }), Blaze._TemplateWith(function() {
-        return {
-          template: Spacebars.call("timelineOverlay"),
-          size: Spacebars.call("[undefined,undefined]"),
-          origin: Spacebars.call("[0,0]"),
-          align: Spacebars.call("[0,0]"),
-          translate: Spacebars.call("[0,0,0]"),
-          opacity: Spacebars.call("0.75"),
-          properties: Spacebars.call(view.lookup("timelineOverlayStyles"))
-        };
-      }, function() {
-        return Spacebars.include(view.lookupTemplate("Surface"));
-      }) ];
+      }), null ];
     });
   });
 }));
@@ -175,7 +163,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
       size: Spacebars.call("[undefined,undefined]"),
       origin: Spacebars.call("[0,0]"),
       align: Spacebars.call("[0,0]"),
-      translate: Spacebars.call("[0,100,1]")
+      translate: Spacebars.call("[0,100,1]"),
+      opacity: Spacebars.call("0.9")
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("Scrollview"), function() {
@@ -241,8 +230,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -252,8 +241,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -263,8 +252,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -274,8 +263,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -285,8 +274,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -296,8 +285,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -307,8 +296,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -318,8 +307,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -329,8 +318,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -340,8 +329,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -351,8 +340,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -362,8 +351,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -373,8 +362,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -384,8 +373,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -395,8 +384,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -406,8 +395,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -417,8 +406,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -428,8 +417,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -439,8 +428,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -450,8 +439,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -461,8 +450,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -472,8 +461,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -483,8 +472,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -494,8 +483,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -505,8 +494,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
                     return {
                       template: Spacebars.call("timelineMoment"),
                       size: Spacebars.call("[320,180]"),
-                      origin: Spacebars.call("[0,0]"),
-                      align: Spacebars.call("[0,0]"),
+                      origin: Spacebars.call("[0.5,0.5]"),
+                      align: Spacebars.call("[0.5,0.5]"),
                       translate: Spacebars.call("[0,0]"),
                       properties: Spacebars.call(view.lookup("timelineMomentStyles"))
                     };
@@ -637,7 +626,7 @@ Template["overlay"] = new Template("Template.overlay", (function() {
 Template.__checkName("intro");
 Template["intro"] = new Template("Template.intro", (function() {
   var view = this;
-  return "Moment";
+  return HTML.Raw('<div class="header">Moment</div>');
 }));
 
 Template.__checkName("momentButton");

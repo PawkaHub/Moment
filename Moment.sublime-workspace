@@ -4,6 +4,50 @@
 		"selected_items":
 		[
 			[
+				"tran",
+				"transparent"
+			],
+			[
+				"text",
+				"textAlign"
+			],
+			[
+				"ralr",
+				"raleway-extralight-webfont"
+			],
+			[
+				"des",
+				"destinationY"
+			],
+			[
+				"desit",
+				"destinationX"
+			],
+			[
+				"timelineMomentBack",
+				"timelineMomentBackgroundHeight"
+			],
+			[
+				"timelineMOmnt",
+				"timelineMomentBackgroundWidth"
+			],
+			[
+				"pan",
+				"panTransition"
+			],
+			[
+				"zoom",
+				"zoomTransition"
+			],
+			[
+				"fv",
+				"fviewId"
+			],
+			[
+				"timelineMinu",
+				"timelineMinuteScroller"
+			],
+			[
 				"tokboxA",
 				"tokboxArchiveName"
 			],
@@ -19,15 +63,24 @@
 			"file": "moment.jade",
 			"settings":
 			{
-				"buffer_size": 6346,
+				"buffer_size": 11502,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "NAME!\n\nCan I ask you for a quick favor?\n\nMy friends and I are in a competition to make a show for television, and we're currently in the top 10%. Would you mind voting for our show? It only takes two minutes and it'd be super appreciated!\n\nAwesome! Thanks! Here's the link: http://yycyeg.storyhive.com/project/show/id/354\n\nSign up in the top right, and after that you can vote! \n\nAWESOME! Thanks so much for doing this!\n\nIf you feel like it, you can also vote for our friends too at http://yycyeg.storyhive.com/project/show/id/185, but that's entirely your call. I really really appreciate you voting for us as is!",
+			"settings":
+			{
+				"buffer_size": 614,
+				"line_ending": "Unix",
+				"name": "NAME!"
 			}
 		},
 		{
 			"file": "moment.coffee",
 			"settings":
 			{
-				"buffer_size": 58566,
+				"buffer_size": 64269,
 				"line_ending": "Unix"
 			}
 		},
@@ -35,7 +88,7 @@
 			"file": "moment.styl",
 			"settings":
 			{
-				"buffer_size": 494,
+				"buffer_size": 4438,
 				"line_ending": "Unix"
 			}
 		}
@@ -43,9 +96,13 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 400.0,
+		"height": 341.0,
 		"selected_items":
 		[
+			[
+				"stylus",
+				"Set Syntax: Stylus"
+			],
 			[
 				"git push",
 				"Git: Push"
@@ -101,8 +158,20 @@
 	],
 	"file_history":
 	[
-		"/Users/Pawka/Developer/Parker/Moment/moment.styl",
 		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/StripListView.js",
+		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/PageListView.js",
+		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/ListView.js",
+		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/index.html",
+		"/Users/Pawka/Developer/Parker/Moment/public/assets/fonts/font-faces.css",
+		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
+		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/Stylus/Stylus.sublime-settings",
+		"/Users/Pawka/Downloads/Moment-353c6a9b5ddb5aa8af97fd91dbb4d5aa87072f59/assets/css/fonts/font-faces.css",
+		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Stylus.sublime-settings",
+		"/Users/Pawka/Developer/Parker/Moment/moment.styl",
+		"/Users/Pawka/Developer/Parker/Moment/packages/fview-kenburns/lib/post.js",
+		"/Users/Pawka/Developer/Experiments/famous/examples/views/FlexibleLayout/example.js",
+		"/Users/Pawka/Developer/Experiments/famous/examples/views/Deck/example.js",
 		"/Users/Pawka/Developer/Parker/Logo/js/main.js",
 		"/Users/Pawka/Developer/Parker/Logo/css/main.css",
 		"/Users/Pawka/Developer/Parker/Logo/index.html",
@@ -111,8 +180,7 @@
 		"/Users/Pawka/Developer/Beep/BeepApp/www/index.html",
 		"/Users/Pawka/Developer/Beep/BeepApp/.gitignore",
 		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Default (OSX).sublime-keymap",
-		"/Users/Pawka/Developer/Beep/BeepAndroid/config.xml",
-		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings"
+		"/Users/Pawka/Developer/Beep/BeepAndroid/config.xml"
 	],
 	"find":
 	{
@@ -130,6 +198,32 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"context = ",
+			"+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]'",
+			"computation",
+			"timelineActive",
+			"scale(",
+			"setDefault '",
+			"clicked",
+			"overlayStyles",
+			"#000000",
+			"timelineYearStyles",
+			"timelineMOnthStyles",
+			"timelineMOmentStyles",
+			"url('",
+			"tabs",
+			"2",
+			"x",
+			"info",
+			"timelineMomentStyles",
+			"timeline moment clicked",
+			"imageSurface",
+			"timelineMOment",
+			"hovered",
+			"VM546:5 ",
+			"lineHeight",
+			"backgroundImage",
+			"size='[360",
 			"timelineMOments",
 			"moments: ->",
 			"moment: ->",
@@ -160,15 +254,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 6346,
+						"buffer_size": 11502,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2526,
-								2526
+								437,
+								437
 							]
 						],
 						"settings":
@@ -177,7 +271,70 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 530.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 614,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								540,
+								540
+							]
+						],
+						"settings":
+						{
+							"auto_name": "NAME!",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 2,
+					"file": "moment.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 64269,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								48716,
+								48716
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 28550.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
@@ -190,67 +347,33 @@
 			"sheets":
 			[
 				{
-					"buffer": 1,
-					"file": "moment.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 58566,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								20513,
-								20513
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 11848.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
-				{
-					"buffer": 2,
+					"buffer": 3,
 					"file": "moment.styl",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 494,
+						"buffer_size": 4438,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								417,
+								417
 							]
 						],
 						"settings":
 						{
 							"syntax": "Packages/Stylus/Stylus.tmLanguage",
+							"tab_size": 4,
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 3,
 					"type": "text"
 				}
 			]
@@ -347,7 +470,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 0,
+	"selected_group": 1,
 	"settings":
 	{
 	},

@@ -43,6 +43,11 @@ if (Meteor.isClient) {
       return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
     }
   });
+  FView.registerView('CanvasSurface', famous.surfaces.CanvasSurface, {
+    famousCreatedPost: function() {
+      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+    }
+  });
   FView.registerView('GridLayout', famous.views.GridLayout, {
     famousCreatedPost: function() {
       return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
@@ -65,10 +70,23 @@ if (Meteor.isClient) {
             insertMode: 'replace',
             resolution: '1280x720'
           }, function(err) {
+            var canvasSize, img, imgData;
             if (err) {
               return log('Subscribe err', err);
             } else {
-              return log('Subscribed to stream!');
+              log('Subscribed to stream!');
+              canvasSize = window.canvas.getSize();
+              imgData = window.subscriber.getImgData();
+              if (imgData && imgData.length > 10) {
+                log('imgData exists!');
+                img = new Image();
+                img.src = 'data:image/png;base64,' + imgData;
+                return img.onload = function() {
+                  log('Stream image loaded!!!');
+                  log('Stream image!', img);
+                  return window.context.drawImage(img, canvasSize[0], canvasSize[1]);
+                };
+              }
             }
           });
           return layout();
@@ -105,7 +123,7 @@ if (Meteor.isClient) {
     Session.setDefault('ppLogoTranslation', -10);
     Session.setDefault('timerTranslation', 300);
     Session.setDefault('questionTranslation', -200);
-    Session.setDefault('timelineToggleTranslation', -10);
+    Session.setDefault('timelineActive', false);
     Session.setDefault('canSubscribeToStream', false);
     Session.setDefault('userCanPublish', false);
     Session.setDefault('userIsPublishing', false);
@@ -223,6 +241,8 @@ if (Meteor.isClient) {
         var styles;
         return styles = {
           textAlign: 'center',
+          fontSize: '36px',
+          fontFamily: 'ralewayheavy',
           color: '#ffffff'
         };
       },
@@ -256,7 +276,8 @@ if (Meteor.isClient) {
           backgroundColor: '#ffffff',
           borderRadius: '50%',
           textAlign: 'center',
-          color: '#ffffff'
+          color: '#ffffff',
+          zIndex: '999'
         };
       },
       timelineOverlayStyles: function() {
@@ -284,13 +305,16 @@ if (Meteor.isClient) {
     Template.background.rendered = function() {
       var fview, target, videoWrapper;
       fview = FView.from(this);
-      log('Set videoWrapper layout!');
+      log('Set videoWrapper layout!', fview);
       videoWrapper = this.find('#videoWrapper');
       log('videoWrapper', videoWrapper);
       window.layout = TB.initLayoutContainer(videoWrapper, {
         bigFixedRatio: false
       }).layout;
       log('layout', layout);
+      window.canvas = fview.view;
+      window.context = window.canvas.getContext('2d');
+      log('context!!!', window.context);
       window.onresize = function() {
         var resizeTimeout;
         clearTimeout(resizeTimeout);
@@ -299,20 +323,28 @@ if (Meteor.isClient) {
           return layout();
         }, 20);
       };
-      target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        if (Session.equals('backgroundTranslation', 0)) {
-          Session.set('backgroundTranslation', 300);
+      target = fview.surface || fview.view || fview.view._eventInput;
+      target.on('click', function() {
+        return log('BACKGROUND TARGET CLICKED', fview, target);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.scale(0.8, 0.8, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
         } else {
-          Session.set('backgroundTranslation', 0);
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
         }
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(0, Session.get('backgroundTranslation')), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
       });
     };
     Template.overlay.rendered = function() {
@@ -391,12 +423,10 @@ if (Meteor.isClient) {
                       Session.set('timer', clock);
                       log(clock);
                       if (clock === 0) {
-                        log("That's All Folks, let's cancel this clientside session");
-                        return session.unpublish(publisher);
+                        return log("That's All Folks, let's cancel this clientside session");
                       }
                     } else {
-                      log("Uhhh else");
-                      return Meteor.clearInterval(interval);
+                      return log("Uhhh else");
                     }
                   };
                   return interval = Meteor.setInterval(timeLeft, 1000);
@@ -411,6 +441,9 @@ if (Meteor.isClient) {
               }, 1000);
             }
           });
+          if (window.subscriber) {
+            session.unsubscribe(window.subscriber);
+          }
           session.publish(publisher);
           layout();
         } else {
@@ -434,7 +467,17 @@ if (Meteor.isClient) {
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
       return target.on('click', function() {
+        var archiveId;
         log('TARGET CLICKED', fview, target);
+        archiveId = Moments.find().fetch()[0].tokboxArchiveId;
+        Meteor.call('getMoment', archiveId, function(err, result) {
+          log('Calling getMoment!');
+          if (err) {
+            return log('getMoment err!', err);
+          } else {
+            return log('getMoment result!', result);
+          }
+        });
         if (Session.equals('ppLogoTranslation', -10)) {
           Session.set('ppLogoTranslation', -100);
         } else {
@@ -492,22 +535,28 @@ if (Meteor.isClient) {
       });
     };
     Template.timelineToggle.rendered = function() {
-      var fview, target;
+      var fview, target, zoomTransition;
       fview = FView.from(this);
       target = fview.surface || fview.view;
+      zoomTransition = {
+        duration: 500,
+        curve: Easing.inOutSine
+      };
       return target.on('click', function() {
         log('TARGET CLICKED', fview, target);
-        if (Session.equals('timelineToggleTranslation', -10)) {
-          Session.set('timelineToggleTranslation', -100);
+        if (Session.equals('timelineActive', false)) {
+          return Session.set('timelineActive', true);
+
+          /*fview.modifier.halt()
+          					fview.modifier.setTransform Transform.scale(1.5, 1.5, 999), zoomTransition
+           */
         } else {
-          Session.set('timelineToggleTranslation', -10);
+          return Session.set('timelineActive', false);
+
+          /*fview.modifier.halt()
+          					fview.modifier.setTransform Transform.scale(1, 1, 999), zoomTransition
+           */
         }
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(Session.get('timelineToggleTranslation'), 10), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
       });
     };
     Template.timelineSearchHolder.rendered = function() {
@@ -524,7 +573,7 @@ if (Meteor.isClient) {
       timelineSearchStyles: function() {
         return {
           backgroundColor: 'cadetblue',
-          backgroundColor: 'rgba(0,0,0,0.4)',
+          backgroundColor: 'transparent',
           padding: '0 10px 0 10px',
           fontSize: '72px',
           color: '#ffffff',
@@ -1215,8 +1264,27 @@ if (Meteor.isClient) {
         timelineMomentBackground.modifier.halt();
         return timelineMomentBackground.modifier.setTransform(Transform.scale(1, 1, 1), zoomTransition);
       });
-      return target.on('click', function() {
+      target.on('click', function() {
         return log('TIMELINE MOMENT CLICKED', fview, target);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        } else {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        }
       });
     };
     return Template.timelineMoment.helpers({
@@ -1266,6 +1334,7 @@ if (Meteor.isServer) {
         name: 'moment:' + Meteor.userId()
       };
       archive = openTokClient.startArchive(openTokSession, openTokArchiveOptions);
+      log('ARCHIVE!!!!', archive);
       clock = momentTimer;
       timeLeft = function() {
         var storedArchive;
@@ -1297,6 +1366,13 @@ if (Meteor.isServer) {
       };
       interval = Meteor.setInterval(timeLeft, 1000);
       log('Sigh archive', archive);
+      return archive;
+    },
+    getMoment: function(archiveId) {
+      var archive;
+      log('Server getMoment called!', archiveId);
+      archive = openTokClient.getArchive(archiveId);
+      log('RETRIEVED ARCHIVE', archive);
       return archive;
     },
     listArchives: function() {

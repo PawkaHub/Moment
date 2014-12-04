@@ -618,17 +618,6 @@
       "hash": "6124869b3b4f1c1dc6e5264821b1496dc7d69e91"
     },
     {
-      "path": "packages/carlodicelico_tokbox.js",
-      "where": "client",
-      "type": "js",
-      "cacheable": true,
-      "url": "/packages/carlodicelico_tokbox.js?4a69077a8b534f18b509e42f4d12c832c045b5db",
-      "sourceMap": "packages/carlodicelico_tokbox.js.map",
-      "sourceMapUrl": "/packages/4a69077a8b534f18b509e42f4d12c832c045b5db.map",
-      "size": 222989,
-      "hash": "4a69077a8b534f18b509e42f4d12c832c045b5db"
-    },
-    {
       "path": "packages/jag_pince.js",
       "where": "client",
       "type": "js",
@@ -662,15 +651,15 @@
       "hash": "d9736fa1cace99ce5dd0d5d3a3354a162c7002b6"
     },
     {
-      "path": "packages/gadicohen_fview-kenburns.js",
+      "path": "packages/mrt_tokbox.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/packages/gadicohen_fview-kenburns.js?2ce10ea14bd1efd7eb7cd09c70e9ca294a0989be",
-      "sourceMap": "packages/gadicohen_fview-kenburns.js.map",
-      "sourceMapUrl": "/packages/2ce10ea14bd1efd7eb7cd09c70e9ca294a0989be.map",
-      "size": 24790,
-      "hash": "2ce10ea14bd1efd7eb7cd09c70e9ca294a0989be"
+      "url": "/packages/mrt_tokbox.js?0d45a2622416c31b895fe6827503ac26e98033ea",
+      "sourceMap": "packages/mrt_tokbox.js.map",
+      "sourceMapUrl": "/packages/0d45a2622416c31b895fe6827503ac26e98033ea.map",
+      "size": 222979,
+      "hash": "0d45a2622416c31b895fe6827503ac26e98033ea"
     },
     {
       "path": "packages/webapp.js",
@@ -741,20 +730,20 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?a579e5dc1e63c030b2caaa69aa19694e102cbf17",
-      "size": 36907,
-      "hash": "a579e5dc1e63c030b2caaa69aa19694e102cbf17"
+      "url": "/moment.jade.js?73b9b9d1378ba40f28bcf368a563eea014d135fb",
+      "size": 36377,
+      "hash": "73b9b9d1378ba40f28bcf368a563eea014d135fb"
     },
     {
       "path": "app/moment.coffee.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?d5910fee72a75255c06fc081b25939cde2b8307c",
+      "url": "/moment.coffee.js?6c4944c304911457e72e6a3313ed76a19e613953",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/d5910fee72a75255c06fc081b25939cde2b8307c.map",
-      "size": 70640,
-      "hash": "d5910fee72a75255c06fc081b25939cde2b8307c"
+      "sourceMapUrl": "/6c4944c304911457e72e6a3313ed76a19e613953.map",
+      "size": 73282,
+      "hash": "6c4944c304911457e72e6a3313ed76a19e613953"
     },
     {
       "path": "packages/service-configuration.js",
