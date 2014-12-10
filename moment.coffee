@@ -37,6 +37,7 @@ if Meteor.isClient
 		famousCreatedPost: ->
 	    	# `this` or `@` is the fview for this instance
 			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+			log 'CONTEXT?!'
 
 	FView.registerView 'GridLayout',famous.views.GridLayout,
 		famousCreatedPost: ->
@@ -84,7 +85,7 @@ if Meteor.isClient
 									#Output the stream to canvas!
 									window.context.drawImage(img,canvasSize[0],canvasSize[1])
 
-					layout()
+					#layout()
 
 				session.on 'streamDestroyed', (event) ->
 					event.preventDefault()
@@ -120,7 +121,7 @@ if Meteor.isClient
 		Session.setDefault 'backgroundTranslation', 0
 		Session.setDefault 'overlayTranslation', 0
 		Session.setDefault 'introTranslation', 0
-		Session.setDefault 'momentButtonTranslation', 0
+		Session.setDefault 'momentButtonTranslation', 1
 		Session.setDefault 'ppLogoTranslation', -10
 		Session.setDefault 'timerTranslation', 300
 		Session.setDefault 'questionTranslation', -200
@@ -131,6 +132,10 @@ if Meteor.isClient
 		Session.setDefault 'timer', momentTimer
 		Session.setDefault 'now', TimeSync.serverTime()
 
+		#Filters
+		Session.setDefault 'blur',0
+		Session.setDefault 'grayscale',false
+
 		# Parallax Scrolling Capabilities
 		Engine.on('prerender', () ->
 			if window.timelineMinuteScroller
@@ -140,6 +145,64 @@ if Meteor.isClient
 				fview = FView.byId('timelineMinuteDisplay' + (window.timelineMinuteScroller.getCurrentIndex() + 1))
 				#if fview
 					#fview.modifier.setTransform Transform.translate(0, bgPos)
+		)
+		# Detect loading to initialize Canvas
+		Engine.on('postrender', () ->
+			if window.canvas and not window.context
+				#log 'MAKE CANVAS!!!!'
+				#size = FView.mainCtx.getSize()
+				#canvasSize = [size[0] * 2, size[1] * 2];
+				size = [320,240]
+				canvasSize = [640,480]
+				window.canvas.setSize(size, canvasSize);
+
+				# Get the context
+				window.context = window.canvas.getContext('2d')
+				#log 'context!!!',window.context
+			#else if window.canvas and FView.mainCtx
+			#	size = FView.mainCtx.getSize()
+			#	canvasSize = [size[0] * 2, size[1] * 2];
+			#	window.canvas.setSize(size, canvasSize);
+			if window.publisher and Session.equals 'userIsPublishing',true
+				#There's a publisher! Pipe the video to canvas!\
+				#size = window.canvas.getSize()
+				#canvasSize = [size[0] * 2, size[1] * 2];
+				size = [320,240]
+				canvasSize = [640,480]
+				imgData = window.publisher.getImgData()
+				#Only output to canvas if there's image data
+				if imgData and imgData.length > 10
+					#log 'imgData exists!'
+					img = new Image()
+					img.src = 'data:image/png;base64,' + imgData
+					img.onload = () ->
+						#log 'Stream image loaded!!!'
+						#log 'Stream image!',img
+						#Output the stream to canvas!
+						window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
+						window.context.drawImage(img, 0, 0, 640,480)
+						#Get the canvasData
+						if Session.equals 'grayscale',true
+							canvasData = window.context.getImageData(0,0,canvasSize[0],canvasSize[1])
+							data = canvasData.data
+							#Iterate through the pixels
+							i = 0
+							while i < data.length
+								r = data[i]
+								g = data[i + 1]
+								b = data[i + 2]
+								brightness = parseInt((r + g + b) / 3)
+								data[i] = brightness
+								data[i + 1] = brightness
+								data[i + 2] = brightness
+								i += 4
+							canvasData.data = data
+							filteredData = canvasData
+							window.context.putImageData filteredData,0,0
+						if !Session.equals 'blur',0
+							#Blur the canvas
+							stackBlurCanvasRGB 'canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get 'blur'
+
 		)
 
 		#Global Template Helpers
@@ -233,7 +296,11 @@ if Meteor.isClient
 					backgroundSize: 'cover'
 			overlayStyles: ->
 				styles =
-					backgroundColor: '#000000'
+					#backgroundColor: 'rgba(0,0,0,0.4)'
+					backgroundImage: 'radial-gradient(rgba(0,0,0,0) 45%, rgba(0,0,0,0.4) 46%), radial-gradient(rgba(0,0,0,0) 45%, rgba(0,0,0,0.4) 46%)'
+					backgroundPosition: '0 0, 2px 2px'
+					backgroundSize: '4px 4px, 4px 4px, 100% 100%'
+					backgroundRepeat: 'repeat, repeat, no-repeat'
 			introStyles: ->
 				styles =
 					#backgroundColor: '#e5e5e5'
@@ -296,19 +363,40 @@ if Meteor.isClient
 				bigFixedRatio: false
 			).layout
 			log 'layout',layout
+			window.canvasParent = fview
 			window.canvas = fview.view
 
+			log 'Ready?',FView.isReady
+
+			log 'Canvas!',this.$('canvas')
+
+			#window.requestAnimationFrame ->
+			#size = window.canvas.getSize()
+			#canvasSize = [size[0] * 2, size[1] * 2];
+			#window.canvas.setSize(size, canvasSize);
+
 			# Get the context
-			window.context = window.canvas.getContext('2d')
-			log 'context!!!',window.context
+			#window.context = window.canvas.getContext('2d')
+			#log 'context!!!',window.context
+
+			###setTimeout(->
+				# Set canvas size
+				size = window.canvas.getSize()
+				canvasSize = [size[0] * 2, size[1] * 2];
+				window.canvas.setSize(size, canvasSize);
+
+				# Get the context
+				window.context = window.canvas.getContext('2d')
+				log 'context!!!',window.context
+			, 20)###
 
 			# Recalculate layout on resize
-			window.onresize = ->
-				clearTimeout resizeTimeout
-				resizeTimeout = setTimeout(->
-					log 'Layouting'
-					layout()
-				, 20)
+			#window.onresize = ->
+			#	clearTimeout resizeTimeout
+			#	resizeTimeout = setTimeout(->
+			#		log 'Layouting'
+			#		#layout()
+			#	, 20)
 
 			target = fview.surface || fview.view || fview.view._eventInput
 			target.on('click', () ->
@@ -375,12 +463,30 @@ if Meteor.isClient
 					log 'User can publish!'
 					window.publisher = OT.initPublisher('video',
 						insertMode: 'replace'
+						width: '1280'
+						height: '720'
 						resolution: '1280x720'
+						audioLevelDisplayMode: 'none'
+						buttonDisplayMode: 'off'
+						nameDisplayMode: 'off'
 					)
 
 					publisher.on
 						streamCreated: (event) ->
 							log 'publishStream created!',event
+							Session.set 'userIsPublishing',true
+							###canvasSize = window.canvas.getSize()
+							imgData = window.publisher.getImgData()
+							#Only output to canvas if there's image data
+							if imgData and imgData.length > 10
+								log 'imgData exists!'
+								img = new Image()
+								img.src = 'data:image/png;base64,' + imgData
+								img.onload = () ->
+									log 'Stream image loaded!!!'
+									log 'Stream image!',img
+									#Output the stream to canvas!
+									window.context.drawImage(img,canvasSize[0]/2,canvasSize[1]/2)###
 							#Hacky
 							#video = event.target.element.children[0].children[2]
 							#log 'Video!',video
@@ -424,7 +530,7 @@ if Meteor.isClient
 										else
 											log "Uhhh else"
 											#session.unpublish publisher
-											#Meteor.clearInterval interval
+											Meteor.clearInterval interval
 									interval = Meteor.setInterval(timeLeft, 1000)
 							)
 						streamDestroyed: (event) ->
@@ -436,14 +542,14 @@ if Meteor.isClient
 							,1000)
 					if window.subscriber then session.unsubscribe window.subscriber
 					session.publish publisher
-					layout()
+					#layout()
 				else
 					log 'Nope!'
 
-				if Session.equals 'momentButtonTranslation', 0 then Session.set 'momentButtonTranslation', 200 else Session.set 'momentButtonTranslation', 0
+				if Session.equals 'momentButtonTranslation', 1 then Session.set 'momentButtonTranslation', 1.3 else Session.set 'momentButtonTranslation', 1
 
 				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(0, Session.get 'momentButtonTranslation'),
+				fview.modifier.setTransform Transform.scale(Session.get 'momentButtonTranslation'),
 					method: 'spring'
 					period: 1000
 					dampingRatio: 0.3

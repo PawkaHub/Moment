@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"sub",
+				"subscriber"
+			],
+			[
 				"tran",
 				"transparent"
 			],
@@ -63,24 +67,39 @@
 			"file": "moment.jade",
 			"settings":
 			{
-				"buffer_size": 11502,
+				"buffer_size": 11520,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "NAME!\n\nCan I ask you for a quick favor?\n\nMy friends and I are in a competition to make a show for television, and we're currently in the top 10%. Would you mind voting for our show? It only takes two minutes and it'd be super appreciated!\n\nAwesome! Thanks! Here's the link: http://yycyeg.storyhive.com/project/show/id/354\n\nSign up in the top right, and after that you can vote! \n\nAWESOME! Thanks so much for doing this!\n\nIf you feel like it, you can also vote for our friends too at http://yycyeg.storyhive.com/project/show/id/185, but that's entirely your call. I really really appreciate you voting for us as is!",
-			"settings":
-			{
-				"buffer_size": 614,
-				"line_ending": "Unix",
-				"name": "NAME!"
 			}
 		},
 		{
 			"file": "moment.coffee",
 			"settings":
 			{
-				"buffer_size": 64269,
+				"buffer_size": 65473,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "var context = this.canvas.getContext('2d');\nvar size = this.getSize();\nvar canvasSize = [size[0] * 2, size[1] * 2];\nthis.canvas.setSize(size, canvasSize);\n\n// Do canvas drawing here...\ncontext.clearRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.fillStyle = this.options.backgroundColor;\ncontext.fillRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.lineWidth = 1;\ncontext.strokeStyle = this.options.borderColor;\ncontext.strokeRect(0, 0, canvasSize[0], canvasSize[1]);\n...\n\n// Call super\nreturn this._node.render();\n\n\n\n// Output to Canvas\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Clear Background\n//window.context.clearRect(0,0,canvasSize[0],canvasSize[1]);\nwindow.context.fillStyle = 'red';\nwindow.context.fillRect(20,20,150,200);\n/*window.context.lineWidth = 1;\nwindow.context.strokeStyle = 'green'\nwindow.context.strokeRect(0,0,canvasSize[0],canvasSize[1]);*/\n\n//window.canvasParent.render()\n\n// Works\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\ncontext = window.canvas.getContext('2d');\n\n// Draw\ncontext.fillStyle = 'red';\ncontext.fillRect(20,20,150,200);\n\n\n// Doesn't work\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Draw\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n\n// Works with Delay\n// Draw\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n###setTimeout(->\n    # Set canvas size\n    size = window.canvas.getSize()\n    canvasSize = [size[0] * 2, size[1] * 2];\n    window.canvas.setSize(size, canvasSize);\n\n    # Get the context\n    window.context = window.canvas.getContext('2d')\n    log 'context!!!',window.context\n, 20)###",
+			"settings":
+			{
+				"buffer_size": 1853,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/Lagometer.js",
+			"settings":
+			{
+				"buffer_size": 9560,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/AppView.js",
+			"settings":
+			{
+				"buffer_size": 14650,
 				"line_ending": "Unix"
 			}
 		},
@@ -96,9 +115,13 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 341.0,
+		"height": 273.0,
 		"selected_items":
 		[
+			[
+				"java",
+				"Set Syntax: JavaScript"
+			],
 			[
 				"stylus",
 				"Set Syntax: Stylus"
@@ -158,6 +181,9 @@
 	],
 	"file_history":
 	[
+		"/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/index.html",
+		"/Users/Pawka/Developer/Beep/BeepWebsite/.gitignore",
+		"/Users/Pawka/Developer/Parker/Moment/packages/tokbox-meteor/server/index.js",
 		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/StripListView.js",
 		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/PageListView.js",
@@ -198,6 +224,29 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"helpers",
+			"uhhh else",
+			"Nope!",
+			"momentButtonTranslation",
+			"momentButton",
+			"render()",
+			"render",
+			"init",
+			"window.context",
+			"stroke()",
+			"backgroundColor",
+			"render",
+			"canvasSurface",
+			"Lagometer",
+			"ppLogo",
+			"createOpenTokSession'",
+			".call",
+			"call",
+			"createMoment",
+			"method",
+			"canvas ",
+			"canvas",
+			"layout()",
 			"context = ",
 			"+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]'",
 			"computation",
@@ -254,15 +303,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 11502,
+						"buffer_size": 11520,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								437,
-								437
+								7786,
+								7786
 							]
 						],
 						"settings":
@@ -271,38 +320,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2957.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 614,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								540,
-								540
-							]
-						],
-						"settings":
-						{
-							"auto_name": "NAME!",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -312,20 +333,20 @@
 			"sheets":
 			[
 				{
-					"buffer": 2,
+					"buffer": 1,
 					"file": "moment.coffee",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 64269,
+						"buffer_size": 65473,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								48716,
-								48716
+								9121,
+								9121
 							]
 						],
 						"settings":
@@ -334,10 +355,99 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 28550.0,
+						"translation.y": 5300.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1853,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1608,
+								1608
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 154.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/Lagometer.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 9560,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6731,
+								6739
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 3098.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/AppView.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 14650,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								13118,
+								13118
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 7028.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
 					"type": "text"
 				}
 			]
@@ -347,7 +457,7 @@
 			"sheets":
 			[
 				{
-					"buffer": 3,
+					"buffer": 5,
 					"file": "moment.styl",
 					"semi_transient": false,
 					"settings":
@@ -359,8 +469,8 @@
 						"selection":
 						[
 							[
-								417,
-								417
+								68,
+								68
 							]
 						],
 						"settings":
@@ -370,10 +480,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 6.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 5,
 					"type": "text"
 				}
 			]

@@ -45,7 +45,8 @@ if (Meteor.isClient) {
   });
   FView.registerView('CanvasSurface', famous.surfaces.CanvasSurface, {
     famousCreatedPost: function() {
-      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+      this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+      return log('CONTEXT?!');
     }
   });
   FView.registerView('GridLayout', famous.views.GridLayout, {
@@ -66,7 +67,7 @@ if (Meteor.isClient) {
           if (window.publisher) {
             session.unpublish(window.publisher);
           }
-          window.subscriber = session.subscribe(event.stream, 'video', {
+          return window.subscriber = session.subscribe(event.stream, 'video', {
             insertMode: 'replace',
             resolution: '1280x720'
           }, function(err) {
@@ -89,7 +90,6 @@ if (Meteor.isClient) {
               }
             }
           });
-          return layout();
         });
         session.on('streamDestroyed', function(event) {
           event.preventDefault();
@@ -119,7 +119,7 @@ if (Meteor.isClient) {
     Session.setDefault('backgroundTranslation', 0);
     Session.setDefault('overlayTranslation', 0);
     Session.setDefault('introTranslation', 0);
-    Session.setDefault('momentButtonTranslation', 0);
+    Session.setDefault('momentButtonTranslation', 1);
     Session.setDefault('ppLogoTranslation', -10);
     Session.setDefault('timerTranslation', 300);
     Session.setDefault('questionTranslation', -200);
@@ -129,12 +129,58 @@ if (Meteor.isClient) {
     Session.setDefault('userIsPublishing', false);
     Session.setDefault('timer', momentTimer);
     Session.setDefault('now', TimeSync.serverTime());
+    Session.setDefault('blur', 0);
+    Session.setDefault('grayscale', false);
     Engine.on('prerender', function() {
       var bgPos, fview, parallaxEffect;
       if (window.timelineMinuteScroller) {
         parallaxEffect = 2.0;
         bgPos = -window.timelineMinuteScroller.getPosition() / parallaxEffect;
         return fview = FView.byId('timelineMinuteDisplay' + (window.timelineMinuteScroller.getCurrentIndex() + 1));
+      }
+    });
+    Engine.on('postrender', function() {
+      var canvasSize, img, imgData, size;
+      if (window.canvas && !window.context) {
+        size = [320, 240];
+        canvasSize = [640, 480];
+        window.canvas.setSize(size, canvasSize);
+        window.context = window.canvas.getContext('2d');
+      }
+      if (window.publisher && Session.equals('userIsPublishing', true)) {
+        size = [320, 240];
+        canvasSize = [640, 480];
+        imgData = window.publisher.getImgData();
+        if (imgData && imgData.length > 10) {
+          img = new Image();
+          img.src = 'data:image/png;base64,' + imgData;
+          return img.onload = function() {
+            var b, brightness, canvasData, data, filteredData, g, i, r;
+            window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
+            window.context.drawImage(img, 0, 0, 640, 480);
+            if (Session.equals('grayscale', true)) {
+              canvasData = window.context.getImageData(0, 0, canvasSize[0], canvasSize[1]);
+              data = canvasData.data;
+              i = 0;
+              while (i < data.length) {
+                r = data[i];
+                g = data[i + 1];
+                b = data[i + 2];
+                brightness = parseInt((r + g + b) / 3);
+                data[i] = brightness;
+                data[i + 1] = brightness;
+                data[i + 2] = brightness;
+                i += 4;
+              }
+              canvasData.data = data;
+              filteredData = canvasData;
+              window.context.putImageData(filteredData, 0, 0);
+            }
+            if (!Session.equals('blur', 0)) {
+              return stackBlurCanvasRGB('canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get('blur'));
+            }
+          };
+        }
       }
     });
     Template.registerHelper('minutes', function() {
@@ -234,7 +280,10 @@ if (Meteor.isClient) {
       overlayStyles: function() {
         var styles;
         return styles = {
-          backgroundColor: '#000000'
+          backgroundImage: 'radial-gradient(rgba(0,0,0,0) 45%, rgba(0,0,0,0.4) 46%), radial-gradient(rgba(0,0,0,0) 45%, rgba(0,0,0,0.4) 46%)',
+          backgroundPosition: '0 0, 2px 2px',
+          backgroundSize: '4px 4px, 4px 4px, 100% 100%',
+          backgroundRepeat: 'repeat, repeat, no-repeat'
         };
       },
       introStyles: function() {
@@ -312,17 +361,22 @@ if (Meteor.isClient) {
         bigFixedRatio: false
       }).layout;
       log('layout', layout);
+      window.canvasParent = fview;
       window.canvas = fview.view;
-      window.context = window.canvas.getContext('2d');
-      log('context!!!', window.context);
-      window.onresize = function() {
-        var resizeTimeout;
-        clearTimeout(resizeTimeout);
-        return resizeTimeout = setTimeout(function() {
-          log('Layouting');
-          return layout();
-        }, 20);
-      };
+      log('Ready?', FView.isReady);
+      log('Canvas!', this.$('canvas'));
+
+      /*setTimeout(->
+      				 * Set canvas size
+      				size = window.canvas.getSize()
+      				canvasSize = [size[0] * 2, size[1] * 2];
+      				window.canvas.setSize(size, canvasSize);
+      
+      				 * Get the context
+      				window.context = window.canvas.getContext('2d')
+      				log 'context!!!',window.context
+      			, 20)
+       */
       target = fview.surface || fview.view || fview.view._eventInput;
       target.on('click', function() {
         return log('BACKGROUND TARGET CLICKED', fview, target);
@@ -395,11 +449,31 @@ if (Meteor.isClient) {
           log('User can publish!');
           window.publisher = OT.initPublisher('video', {
             insertMode: 'replace',
-            resolution: '1280x720'
+            width: '1280',
+            height: '720',
+            resolution: '1280x720',
+            audioLevelDisplayMode: 'none',
+            buttonDisplayMode: 'off',
+            nameDisplayMode: 'off'
           });
           publisher.on({
             streamCreated: function(event) {
               log('publishStream created!', event);
+              Session.set('userIsPublishing', true);
+
+              /*canvasSize = window.canvas.getSize()
+              							imgData = window.publisher.getImgData()
+              							 *Only output to canvas if there's image data
+              							if imgData and imgData.length > 10
+              								log 'imgData exists!'
+              								img = new Image()
+              								img.src = 'data:image/png;base64,' + imgData
+              								img.onload = () ->
+              									log 'Stream image loaded!!!'
+              									log 'Stream image!',img
+              									 *Output the stream to canvas!
+              									window.context.drawImage(img,canvasSize[0]/2,canvasSize[1]/2)
+               */
               return Meteor.call('createMoment', function(err, result) {
                 var archive, clock, interval, timeLeft;
                 if (err) {
@@ -426,7 +500,8 @@ if (Meteor.isClient) {
                         return log("That's All Folks, let's cancel this clientside session");
                       }
                     } else {
-                      return log("Uhhh else");
+                      log("Uhhh else");
+                      return Meteor.clearInterval(interval);
                     }
                   };
                   return interval = Meteor.setInterval(timeLeft, 1000);
@@ -445,17 +520,16 @@ if (Meteor.isClient) {
             session.unsubscribe(window.subscriber);
           }
           session.publish(publisher);
-          layout();
         } else {
           log('Nope!');
         }
-        if (Session.equals('momentButtonTranslation', 0)) {
-          Session.set('momentButtonTranslation', 200);
+        if (Session.equals('momentButtonTranslation', 1)) {
+          Session.set('momentButtonTranslation', 1.3);
         } else {
-          Session.set('momentButtonTranslation', 0);
+          Session.set('momentButtonTranslation', 1);
         }
         fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(0, Session.get('momentButtonTranslation')), {
+        return fview.modifier.setTransform(Transform.scale(Session.get('momentButtonTranslation')), {
           method: 'spring',
           period: 1000,
           dampingRatio: 0.3

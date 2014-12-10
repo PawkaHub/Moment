@@ -32,6 +32,7 @@ Template["about"] = new Template("Template.about", (function() {
       return [ null, null, null, null, null, Blaze._TemplateWith(function() {
         return {
           template: Spacebars.call("background"),
+          id: Spacebars.call("background"),
           size: Spacebars.call("[undefined,undefined]"),
           origin: Spacebars.call("[0.5,0.5]"),
           align: Spacebars.call("[0.5,0.5]"),
@@ -48,7 +49,6 @@ Template["about"] = new Template("Template.about", (function() {
           origin: Spacebars.call("[0.5,0.5]"),
           align: Spacebars.call("[0.5,0.5]"),
           translate: Spacebars.call("[0,0,0]"),
-          opacity: Spacebars.call("0.4"),
           properties: Spacebars.call(view.lookup("overlayStyles"))
         };
       }, function() {
@@ -92,10 +92,10 @@ Template["about"] = new Template("Template.about", (function() {
       }), Blaze._TemplateWith(function() {
         return {
           template: Spacebars.call("ppLogo"),
-          size: Spacebars.call("[100,100]"),
-          origin: Spacebars.call("[0,1]"),
-          align: Spacebars.call("[0,1]"),
-          translate: Spacebars.call("[20,-20,0]"),
+          size: Spacebars.call("[60,60]"),
+          origin: Spacebars.call("[0.5,1]"),
+          align: Spacebars.call("[0.5,1]"),
+          translate: Spacebars.call("[0,-20,0]"),
           opacity: Spacebars.call("0.14"),
           properties: Spacebars.call(view.lookup("ppLogoStyles"))
         };
@@ -117,9 +117,9 @@ Template["about"] = new Template("Template.about", (function() {
         return {
           template: Spacebars.call("timelineToggle"),
           size: Spacebars.call("[60,60]"),
-          origin: Spacebars.call("[0,0]"),
-          align: Spacebars.call("[0,0]"),
-          translate: Spacebars.call("[20,20,100]"),
+          origin: Spacebars.call("[0.5,0]"),
+          align: Spacebars.call("[0.5,0]"),
+          translate: Spacebars.call("[0,20,100]"),
           opacity: Spacebars.call("0.14"),
           properties: Spacebars.call(view.lookup("timelineToggleStyles"))
         };
@@ -620,7 +620,10 @@ Template["background"] = new Template("Template.background", (function() {
 Template.__checkName("overlay");
 Template["overlay"] = new Template("Template.overlay", (function() {
   var view = this;
-  return "";
+  return [ HTML.FILTER(HTML.FECOLORMATRIX({
+    type: "matrix",
+    values: "0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0"
+  })) ];
 }));
 
 Template.__checkName("intro");

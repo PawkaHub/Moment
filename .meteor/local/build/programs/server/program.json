@@ -383,6 +383,9 @@
       "path": "packages/global-imports.js"
     },
     {
+      "path": "app/compatibility/blur.js"
+    },
+    {
       "sourceMap": "app/moment.coffee.js.map",
       "sourceMapRoot": ".",
       "path": "app/moment.coffee.js"

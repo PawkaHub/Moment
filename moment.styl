@@ -32,6 +32,20 @@ html, body
 #video
 	absolute-full()
 
+/* Hide Video Elements */
+video, .OT_publisher, .OT_root
+	display none!important
+
+/* Upscale canvas for performance sakes */
+canvas
+	position absolute!important
+	top 0!important
+	right 0!important
+	bottom 0!important
+	left 0!important
+	width 100%!important
+	height 100%!important
+
 /*Temporary Styles for Testing p tag centering*/
 p
 	line-height 40px
