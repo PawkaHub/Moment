@@ -763,122 +763,12 @@ Template["ppLogo"] = new Template("Template.ppLogo", (function() {
     id: "ppLogo",
     "class": "icon",
     viewbox: "0 0 100 100"
-  }, HTML.DEFS(HTML.PATTERN({
-    id: "ppImageFill",
-    patternunits: "userSpaceOnUse",
-    width: "300",
-    height: "100"
-  }, HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/nebula.png",
-    x: "-100",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/starry.jpg",
-    x: "-120",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/mayan.jpeg",
-    x: "-70",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/rain.png",
-    x: "-135",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/owl.jpg",
-    x: "-80",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/earth.png",
-    x: "-80",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/samurai.png",
-    x: "-140",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/cave.jpg",
-    x: "-120",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/skullkid.jpg",
-    x: "-120",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/deer.jpg",
-    x: "-90",
-    y: "0",
-    width: "300",
-    height: "100"
-  }), "\n", HTML.IMAGE({
-    "class": "ppImageFillImage",
-    "xlink:href": "img/performers/01.jpg",
-    x: "-90",
-    y: "0",
-    width: "300",
-    height: "100"
-  }))), "\n", HTML.DEFS({
-    id: "pFirstDef"
   }, HTML.PATH({
     id: "pFirst",
     d: "M68.791,3.982H34.513v58v3.824v30.211h20.72V65.935v-0.128h13.558C86.059,65.807,100,51.912,100,34.703C100,17.622,86.059,3.982,68.791,3.982z"
-  })), "\n", HTML.CLIPPATH({
-    id: "pFirstMask"
-  }, HTML.USE({
-    "xlink:href": "#pFirst",
-    overflow: "visible"
-  })), "\n", HTML.RECT({
-    id: "pFirstFill",
-    x: "32.301",
-    y: "1.77",
-    "clip-path": "url(#pFirstMask)",
-    width: "69.911",
-    height: "96.46"
-  }), "\n", HTML.DEFS({
-    id: "pLastDef"
-  }, HTML.PATH({
+  }), "\n", HTML.PATH({
     id: "pLast",
     d: "M34.278,3.982H0v58v3.824v30.211h20.72V65.935v-0.128h13.558c17.267,0,31.208-13.895,31.208-31.104C65.486,17.622,51.545,3.982,34.278,3.982z"
-  })), "\n", HTML.CLIPPATH({
-    id: "pLastMask"
-  }, HTML.USE({
-    "xlink:href": "#pLast",
-    overflow: "visible"
-  })), "\n", HTML.RECT({
-    id: "pLastFill",
-    x: "-2.212",
-    y: "1.77",
-    "clip-path": "url(#pLastMask)",
-    width: "69.912",
-    height: "96.46"
   }));
 }));
 

@@ -112,6 +112,7 @@ if Meteor.isClient
 		@SpringTransition = famous.transitions.SpringTransition
 		@SnapTransition = famous.transitions.SnapTransition
 		@Easing = famous.transitions.Easing
+		@Timer = famous.utilities.Timer
 
 		# Register Transitions
 		Transitionable.registerMethod 'spring',SpringTransition
@@ -122,7 +123,7 @@ if Meteor.isClient
 		Session.setDefault 'overlayTranslation', 0
 		Session.setDefault 'introTranslation', 0
 		Session.setDefault 'momentButtonTranslation', 1
-		Session.setDefault 'ppLogoTranslation', -10
+		Session.setDefault 'ppLogoTranslation', -20
 		Session.setDefault 'timerTranslation', 300
 		Session.setDefault 'questionTranslation', -200
 		Session.setDefault 'timelineActive',false
@@ -133,11 +134,11 @@ if Meteor.isClient
 		Session.setDefault 'now', TimeSync.serverTime()
 
 		#Filters
-		Session.setDefault 'blur',0
-		Session.setDefault 'grayscale',false
+		Session.setDefault 'blur', 100
+		Session.setDefault 'grayscale', false
 
 		# Parallax Scrolling Capabilities
-		Engine.on('prerender', () ->
+		###Engine.on('prerender', () ->
 			if window.timelineMinuteScroller
 				parallaxEffect = 2.0
 				bgPos = -window.timelineMinuteScroller.getPosition() / parallaxEffect
@@ -145,7 +146,7 @@ if Meteor.isClient
 				fview = FView.byId('timelineMinuteDisplay' + (window.timelineMinuteScroller.getCurrentIndex() + 1))
 				#if fview
 					#fview.modifier.setTransform Transform.translate(0, bgPos)
-		)
+		)###
 		# Detect loading to initialize Canvas
 		Engine.on('postrender', () ->
 			if window.canvas and not window.context
@@ -424,15 +425,7 @@ if Meteor.isClient
 
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
-				if Session.equals 'overlayTranslation', 0 then Session.set 'overlayTranslation', 500 else Session.set 'overlayTranslation', 0
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(0, Session.get 'overlayTranslation'),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+				log 'OVERLAY CLICKED',fview, target
 			)
 
 		Template.intro.rendered = ->
@@ -475,6 +468,45 @@ if Meteor.isClient
 						streamCreated: (event) ->
 							log 'publishStream created!',event
 							Session.set 'userIsPublishing',true
+							###output = () ->
+								size = [320,240]
+								canvasSize = [640,480]
+								imgData = window.publisher.getImgData()
+								#Only output to canvas if there's image data
+								if imgData and imgData.length > 10
+									#log 'imgData exists!'
+									img = new Image()
+									img.src = 'data:image/png;base64,' + imgData
+									img.onload = () ->
+										#log 'Stream image loaded!!!'
+										#log 'Stream image!',img
+										#Output the stream to canvas!
+										#window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
+										window.context.drawImage(img, 0, 0, 640,480)
+										#Get the canvasData
+										if Session.equals 'grayscale',true
+											canvasData = window.context.getImageData(0,0,canvasSize[0],canvasSize[1])
+											data = canvasData.data
+											#Iterate through the pixels
+											i = 0
+											while i < data.length
+												r = data[i]
+												g = data[i + 1]
+												b = data[i + 2]
+												brightness = parseInt((r + g + b) / 3)
+												data[i] = brightness
+												data[i + 1] = brightness
+												data[i + 2] = brightness
+												i += 4
+											canvasData.data = data
+											filteredData = canvasData
+											window.context.putImageData filteredData,0,0
+										if !Session.equals 'blur',0
+											#Blur the canvas
+											stackBlurCanvasRGB 'canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get 'blur'
+								Timer.setTimeout(output,20)
+							output()###
+
 							###canvasSize = window.canvas.getSize()
 							imgData = window.publisher.getImgData()
 							#Only output to canvas if there's image data
@@ -559,6 +591,13 @@ if Meteor.isClient
 			fview = FView.from(this)
 
 			target = fview.surface || fview.view._eventInput
+
+			log 'DOM INSERTION',this.$('#ppLogo')
+			#Not sure why we have to do this, but remove the path from the element and add it back in so that we get proper resizing for the SVG element.
+			ppLogo = this.$('#ppLogo')
+			#ppLogo.remove()
+			log 'ppLogo still exists!',ppLogo
+
 			target.on('click', () ->
 				log 'TARGET CLICKED',fview, target
 
@@ -571,10 +610,10 @@ if Meteor.isClient
 						log 'getMoment result!',result
 				)
 
-				if Session.equals 'ppLogoTranslation', -10 then Session.set 'ppLogoTranslation', -100 else Session.set 'ppLogoTranslation', -10
+				if Session.equals 'ppLogoTranslation', -20 then Session.set 'ppLogoTranslation', -60 else Session.set 'ppLogoTranslation', -20
 
 				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(Session.get('ppLogoTranslation'), -10),
+				fview.modifier.setTransform Transform.translate(0, Session.get('ppLogoTranslation')),
 					method: 'spring'
 					period: 1000
 					dampingRatio: 0.3

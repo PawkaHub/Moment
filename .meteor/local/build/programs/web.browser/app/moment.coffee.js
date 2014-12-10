@@ -114,13 +114,14 @@ if (Meteor.isClient) {
     this.SpringTransition = famous.transitions.SpringTransition;
     this.SnapTransition = famous.transitions.SnapTransition;
     this.Easing = famous.transitions.Easing;
+    this.Timer = famous.utilities.Timer;
     Transitionable.registerMethod('spring', SpringTransition);
     Transitionable.registerMethod('snap', SpringTransition);
     Session.setDefault('backgroundTranslation', 0);
     Session.setDefault('overlayTranslation', 0);
     Session.setDefault('introTranslation', 0);
     Session.setDefault('momentButtonTranslation', 1);
-    Session.setDefault('ppLogoTranslation', -10);
+    Session.setDefault('ppLogoTranslation', -20);
     Session.setDefault('timerTranslation', 300);
     Session.setDefault('questionTranslation', -200);
     Session.setDefault('timelineActive', false);
@@ -129,16 +130,19 @@ if (Meteor.isClient) {
     Session.setDefault('userIsPublishing', false);
     Session.setDefault('timer', momentTimer);
     Session.setDefault('now', TimeSync.serverTime());
-    Session.setDefault('blur', 0);
+    Session.setDefault('blur', 100);
     Session.setDefault('grayscale', false);
-    Engine.on('prerender', function() {
-      var bgPos, fview, parallaxEffect;
-      if (window.timelineMinuteScroller) {
-        parallaxEffect = 2.0;
-        bgPos = -window.timelineMinuteScroller.getPosition() / parallaxEffect;
-        return fview = FView.byId('timelineMinuteDisplay' + (window.timelineMinuteScroller.getCurrentIndex() + 1));
-      }
-    });
+
+    /*Engine.on('prerender', () ->
+    			if window.timelineMinuteScroller
+    				parallaxEffect = 2.0
+    				bgPos = -window.timelineMinuteScroller.getPosition() / parallaxEffect
+    				 *log 'bgPos',bgPos
+    				fview = FView.byId('timelineMinuteDisplay' + (window.timelineMinuteScroller.getCurrentIndex() + 1))
+    				 *if fview
+    					 *fview.modifier.setTransform Transform.translate(0, bgPos)
+    		)
+     */
     Engine.on('postrender', function() {
       var canvasSize, img, imgData, size;
       if (window.canvas && !window.context) {
@@ -406,18 +410,7 @@ if (Meteor.isClient) {
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
       return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        if (Session.equals('overlayTranslation', 0)) {
-          Session.set('overlayTranslation', 500);
-        } else {
-          Session.set('overlayTranslation', 0);
-        }
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(0, Session.get('overlayTranslation')), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
+        return log('OVERLAY CLICKED', fview, target);
       });
     };
     Template.intro.rendered = function() {
@@ -460,6 +453,46 @@ if (Meteor.isClient) {
             streamCreated: function(event) {
               log('publishStream created!', event);
               Session.set('userIsPublishing', true);
+
+              /*output = () ->
+              								size = [320,240]
+              								canvasSize = [640,480]
+              								imgData = window.publisher.getImgData()
+              								 *Only output to canvas if there's image data
+              								if imgData and imgData.length > 10
+              									 *log 'imgData exists!'
+              									img = new Image()
+              									img.src = 'data:image/png;base64,' + imgData
+              									img.onload = () ->
+              										 *log 'Stream image loaded!!!'
+              										 *log 'Stream image!',img
+              										 *Output the stream to canvas!
+              										 *window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
+              										window.context.drawImage(img, 0, 0, 640,480)
+              										 *Get the canvasData
+              										if Session.equals 'grayscale',true
+              											canvasData = window.context.getImageData(0,0,canvasSize[0],canvasSize[1])
+              											data = canvasData.data
+              											 *Iterate through the pixels
+              											i = 0
+              											while i < data.length
+              												r = data[i]
+              												g = data[i + 1]
+              												b = data[i + 2]
+              												brightness = parseInt((r + g + b) / 3)
+              												data[i] = brightness
+              												data[i + 1] = brightness
+              												data[i + 2] = brightness
+              												i += 4
+              											canvasData.data = data
+              											filteredData = canvasData
+              											window.context.putImageData filteredData,0,0
+              										if !Session.equals 'blur',0
+              											 *Blur the canvas
+              											stackBlurCanvasRGB 'canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get 'blur'
+              								Timer.setTimeout(output,20)
+              							output()
+               */
 
               /*canvasSize = window.canvas.getSize()
               							imgData = window.publisher.getImgData()
@@ -537,9 +570,12 @@ if (Meteor.isClient) {
       });
     };
     Template.ppLogo.rendered = function() {
-      var fview, target;
+      var fview, ppLogo, target;
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
+      log('DOM INSERTION', this.$('#ppLogo'));
+      ppLogo = this.$('#ppLogo');
+      log('ppLogo still exists!', ppLogo);
       return target.on('click', function() {
         var archiveId;
         log('TARGET CLICKED', fview, target);
@@ -552,13 +588,13 @@ if (Meteor.isClient) {
             return log('getMoment result!', result);
           }
         });
-        if (Session.equals('ppLogoTranslation', -10)) {
-          Session.set('ppLogoTranslation', -100);
+        if (Session.equals('ppLogoTranslation', -20)) {
+          Session.set('ppLogoTranslation', -60);
         } else {
-          Session.set('ppLogoTranslation', -10);
+          Session.set('ppLogoTranslation', -20);
         }
         fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(Session.get('ppLogoTranslation'), -10), {
+        return fview.modifier.setTransform(Transform.translate(0, Session.get('ppLogoTranslation')), {
           method: 'spring',
           period: 1000,
           dampingRatio: 0.3
