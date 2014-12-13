@@ -70,20 +70,10 @@ if Meteor.isClient
 					, (err) ->
 						if err
 							log 'Subscribe err',err
+							Session.set 'subscribed',false
 						else
 							log 'Subscribed to stream!'
-							canvasSize = window.canvas.getSize()
-							imgData = window.subscriber.getImgData()
-							#Only output to canvas if there's image data
-							if imgData and imgData.length > 10
-								log 'imgData exists!'
-								img = new Image()
-								img.src = 'data:image/png;base64,' + imgData
-								img.onload = () ->
-									log 'Stream image loaded!!!'
-									log 'Stream image!',img
-									#Output the stream to canvas!
-									window.context.drawImage(img,canvasSize[0],canvasSize[1])
+							Session.set 'subscribed',true
 
 					#layout()
 
@@ -130,6 +120,7 @@ if Meteor.isClient
 		Session.setDefault 'canSubscribeToStream', false
 		Session.setDefault 'userCanPublish', false
 		Session.setDefault 'userIsPublishing', false
+		Session.setDefault 'subscribed',false
 		Session.setDefault 'timer', momentTimer
 		Session.setDefault 'now', TimeSync.serverTime()
 
@@ -216,7 +207,7 @@ if Meteor.isClient
 			#	size = FView.mainCtx.getSize()
 			#	canvasSize = [size[0] * 2, size[1] * 2];
 			#	window.canvas.setSize(size, canvasSize);
-			if window.publisher and Session.equals 'userIsPublishing',true and not window.videoCube
+			if (window.publisher and Session.equals 'userIsPublishing',true and not window.videoCube) or (window.subscriber and Session.equals 'subscribed',true and not window.videoCube)
 
 				video = document.querySelector('video')
 

@@ -71,23 +71,12 @@ if (Meteor.isClient) {
             insertMode: 'replace',
             resolution: '1280x720'
           }, function(err) {
-            var canvasSize, img, imgData;
             if (err) {
-              return log('Subscribe err', err);
+              log('Subscribe err', err);
+              return Session.set('subscribed', false);
             } else {
               log('Subscribed to stream!');
-              canvasSize = window.canvas.getSize();
-              imgData = window.subscriber.getImgData();
-              if (imgData && imgData.length > 10) {
-                log('imgData exists!');
-                img = new Image();
-                img.src = 'data:image/png;base64,' + imgData;
-                return img.onload = function() {
-                  log('Stream image loaded!!!');
-                  log('Stream image!', img);
-                  return window.context.drawImage(img, canvasSize[0], canvasSize[1]);
-                };
-              }
+              return Session.set('subscribed', true);
             }
           });
         });
@@ -128,6 +117,7 @@ if (Meteor.isClient) {
     Session.setDefault('canSubscribeToStream', false);
     Session.setDefault('userCanPublish', false);
     Session.setDefault('userIsPublishing', false);
+    Session.setDefault('subscribed', false);
     Session.setDefault('timer', momentTimer);
     Session.setDefault('now', TimeSync.serverTime());
     Session.setDefault('blur', 100);
@@ -182,7 +172,7 @@ if (Meteor.isClient) {
         				window.scene.add rectMesh
          */
       }
-      if (window.publisher && Session.equals('userIsPublishing', true && !window.videoCube)) {
+      if ((window.publisher && Session.equals('userIsPublishing', true && !window.videoCube)) || (window.subscriber && Session.equals('subscribed', true && !window.videoCube))) {
         video = document.querySelector('video');
         window.videoTexture = new THREE.Texture(video);
         window.videoTexture.wrapS = THREE.RepeatWrapping;

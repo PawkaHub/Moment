@@ -759,11 +759,11 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?eae4d1e0e630444e04cea78c5f049a27be51b64d",
+      "url": "/moment.coffee.js?2b9d27dc925a0a0ff04754fb4b64093679d2027c",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/eae4d1e0e630444e04cea78c5f049a27be51b64d.map",
-      "size": 81905,
-      "hash": "eae4d1e0e630444e04cea78c5f049a27be51b64d"
+      "sourceMapUrl": "/2b9d27dc925a0a0ff04754fb4b64093679d2027c.map",
+      "size": 81533,
+      "hash": "2b9d27dc925a0a0ff04754fb4b64093679d2027c"
     },
     {
       "path": "packages/service-configuration.js",
