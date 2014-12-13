@@ -144,47 +144,71 @@ if (Meteor.isClient) {
     		)
      */
     Engine.on('postrender', function() {
-      var canvasSize, img, imgData, size;
+      var canvasSize, light, size, video, videoGeometry, videoMaterial;
       if (window.canvas && !window.context) {
         size = [320, 240];
         canvasSize = [640, 480];
         window.canvas.setSize(size, canvasSize);
-        window.context = window.canvas.getContext('2d');
+        window.context = window.canvas.getContext('webgl');
+        window.renderer = new THREE.WebGLRenderer({
+          canvas: window.canvas._currentTarget,
+          antialias: true,
+          devicePixelRatio: window.devicePixelRatio,
+          context: window.context
+        });
+        window.scene = new THREE.Scene();
+        window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+        window.camera.position.x = 0;
+        window.camera.position.y = 0;
+        window.camera.position.z = 1000;
+
+        /*rectLength = 640
+        				rectWidth = 480
+        				rectShape = new THREE.Shape()
+        				rectShape.moveTo 0, 0
+        				rectShape.lineTo 0, rectWidth
+        				rectShape.lineTo rectLength, rectWidth
+        				rectShape.lineTo rectLength, 0
+        				rectShape.lineTo 0, 0
+        
+        				 * Create the rectangle shape
+        				rectGeom = new THREE.ShapeGeometry(rectShape)
+        
+        				rectMaterial = new THREE.MeshBasicMaterial
+        					color: 0x66FF66
+        				rectMesh = new THREE.Mesh(rectGeom, rectMaterial)
+        
+        				 * Add the video rectangle to the scene
+        				window.scene.add rectMesh
+         */
       }
-      if (window.publisher && Session.equals('userIsPublishing', true)) {
-        size = [320, 240];
-        canvasSize = [640, 480];
-        imgData = window.publisher.getImgData();
-        if (imgData && imgData.length > 10) {
-          img = new Image();
-          img.src = 'data:image/png;base64,' + imgData;
-          return img.onload = function() {
-            var b, brightness, canvasData, data, filteredData, g, i, r;
-            window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
-            window.context.drawImage(img, 0, 0, 640, 480);
-            if (Session.equals('grayscale', true)) {
-              canvasData = window.context.getImageData(0, 0, canvasSize[0], canvasSize[1]);
-              data = canvasData.data;
-              i = 0;
-              while (i < data.length) {
-                r = data[i];
-                g = data[i + 1];
-                b = data[i + 2];
-                brightness = parseInt((r + g + b) / 3);
-                data[i] = brightness;
-                data[i + 1] = brightness;
-                data[i + 2] = brightness;
-                i += 4;
-              }
-              canvasData.data = data;
-              filteredData = canvasData;
-              window.context.putImageData(filteredData, 0, 0);
-            }
-            if (!Session.equals('blur', 0)) {
-              return stackBlurCanvasRGB('canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get('blur'));
-            }
-          };
+      if (window.publisher && Session.equals('userIsPublishing', true && !window.videoCube)) {
+        video = document.querySelector('video');
+        window.videoTexture = new THREE.Texture(video);
+        window.videoTexture.wrapS = THREE.RepeatWrapping;
+        window.videoTexture.wrapT = THREE.RepeatWrapping;
+        window.videoTexture.repeat.set(1, 1);
+        videoGeometry = new THREE.BoxGeometry(5, 5, 5);
+        videoMaterial = new THREE.MeshLambertMaterial({
+          map: window.videoTexture,
+          shading: THREE.FlatShading
+        });
+        window.videoCube = new THREE.Mesh(videoGeometry, videoMaterial);
+        window.scene.add(videoCube);
+        window.camera.position.z = 6;
+        light = new THREE.AmbientLight("rgb(255,255,255)");
+        window.scene.add(light);
+      }
+      if (window.renderer && window.scene && window.camera) {
+        if (window.videoCube) {
+          window.videoCube.rotation.x += 0.01;
+          window.videoCube.rotation.y += 0.01;
+          window.videoTexture.needsUpdate = true;
         }
+        if (window.easterEggModel) {
+          window.easterEggModel.rotation.y += 0.01;
+        }
+        return window.renderer.render(window.scene, window.camera);
       }
     });
     Template.registerHelper('minutes', function() {
@@ -356,7 +380,7 @@ if (Meteor.isClient) {
       });
     };
     Template.background.rendered = function() {
-      var fview, target, videoWrapper;
+      var easterEgg, fview, target, videoWrapper;
       fview = FView.from(this);
       log('Set videoWrapper layout!', fview);
       videoWrapper = this.find('#videoWrapper');
@@ -369,6 +393,59 @@ if (Meteor.isClient) {
       window.canvas = fview.view;
       log('Ready?', FView.isReady);
       log('Canvas!', this.$('canvas'));
+      easterEgg = new Konami(function() {
+        var loader, loaderMTL, loaderModel, loaderTexture, manager, onDocumentMouseMove, onError, onProgress, texture, windowHalfX, windowHalfY;
+        log('Trigger Model Viewer!');
+        windowHalfX = window.innerWidth / 2;
+        windowHalfY = window.innerHeight / 2;
+        onDocumentMouseMove = function(event) {
+          window.mouseX = (event.clientX - windowHalfX) / 2;
+          return window.mouseY = (event.clientY - windowHalfY) / 2;
+        };
+        document.addEventListener("mousemove", onDocumentMouseMove, false);
+        window.camera.position.y = 10;
+        window.camera.position.z = 200;
+        window.directionalLight = new THREE.DirectionalLight(0xffeedd);
+        window.directionalLight.position.set(0, 0, 1);
+        scene.add(window.directionalLight);
+        window.byLight = new THREE.DirectionalLight(0xffeedd);
+        window.byLight.position.set(0, 1, 0);
+        scene.add(window.byLight);
+        manager = new THREE.LoadingManager();
+        manager.onProgress = function(item, loaded, total) {
+          return log(item, loaded, total);
+        };
+        texture = new THREE.Texture();
+        onProgress = function(xhr) {
+          var percentComplete;
+          if (xhr.lengthComputable) {
+            percentComplete = xhr.loaded / xhr.total * 100;
+            return log(Math.round(percentComplete, 2) + "% downloaded");
+          }
+        };
+        onError = function(xhr) {
+          return log('xhr error!', xhr);
+        };
+        loader = new THREE.ImageLoader(manager);
+        loaderTexture = 'models/YoungLink/YoungLink_grp.png';
+        loader.load(loaderTexture, function(image) {
+          texture.image = image;
+          texture.needsUpdate = true;
+        });
+        loader = new THREE.OBJMTLLoader(manager);
+        loaderModel = 'models/YoungLink/YoungLinkEquipped.obj';
+        loaderMTL = 'models/YoungLink/YoungLinkEquipped.mtl';
+        return loader.load(loaderModel, loaderMTL, (function(object) {
+          object.traverse(function(child) {
+            if (child instanceof THREE.Mesh) {
+              return child.material.map = texture;
+            }
+          });
+          object.position.y = -10;
+          window.easterEggModel = object;
+          return scene.add(window.easterEggModel);
+        }), onProgress, onError);
+      });
 
       /*setTimeout(->
       				 * Set canvas size
@@ -381,6 +458,13 @@ if (Meteor.isClient) {
       				log 'context!!!',window.context
       			, 20)
        */
+      window.onresize = function() {
+        var resizeTimeout;
+        clearTimeout(resizeTimeout);
+        return resizeTimeout = setTimeout(function() {
+          return log('Layouting!');
+        }, 20);
+      };
       target = fview.surface || fview.view || fview.view._eventInput;
       target.on('click', function() {
         return log('BACKGROUND TARGET CLICKED', fview, target);

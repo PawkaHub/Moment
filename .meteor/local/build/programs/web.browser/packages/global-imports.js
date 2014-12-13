@@ -10,6 +10,7 @@ TimeSync = Package['mizzao:timesync'].TimeSync;
 FastRender = Package['meteorhacks:fast-render'].FastRender;
 __init_fast_render = Package['meteorhacks:fast-render'].__init_fast_render;
 FView = Package['gadicohen:famous-views'].FView;
+THREE = Package['limemakers:three'].THREE;
 Meteor = Package.meteor.Meteor;
 WebApp = Package.webapp.WebApp;
 Log = Package.logging.Log;

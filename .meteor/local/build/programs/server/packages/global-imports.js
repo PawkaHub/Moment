@@ -8,6 +8,7 @@ moment = Package['mrt:moment'].moment;
 FastRender = Package['meteorhacks:fast-render'].FastRender;
 OpenTok = Package['mrt:tokbox'].OpenTok;
 OpenTokClient = Package['mrt:tokbox'].OpenTokClient;
+THREE = Package['limemakers:three'].THREE;
 Meteor = Package.meteor.Meteor;
 WebApp = Package.webapp.WebApp;
 main = Package.webapp.main;

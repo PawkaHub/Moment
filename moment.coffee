@@ -158,52 +158,111 @@ if Meteor.isClient
 				window.canvas.setSize(size, canvasSize);
 
 				# Get the context
-				window.context = window.canvas.getContext('2d')
+				#window.context = window.canvas.getContext('2d')
+				window.context = window.canvas.getContext('webgl')
+
+				# Create the WebGL renderer
+				window.renderer = new THREE.WebGLRenderer(
+					canvas: window.canvas._currentTarget
+					antialias: true
+					devicePixelRatio: window.devicePixelRatio
+					context: window.context
+				)
+
+				# Create the WebGL Scene
+				window.scene = new THREE.Scene()
+
+				# Create the Camera
+				window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
+				window.camera.position.x = 0
+				window.camera.position.y = 0
+				window.camera.position.z = 1000
+
+				# Create the rectangle bounds for the video input
+				###rectLength = 640
+				rectWidth = 480
+				rectShape = new THREE.Shape()
+				rectShape.moveTo 0, 0
+				rectShape.lineTo 0, rectWidth
+				rectShape.lineTo rectLength, rectWidth
+				rectShape.lineTo rectLength, 0
+				rectShape.lineTo 0, 0
+
+				# Create the rectangle shape
+				rectGeom = new THREE.ShapeGeometry(rectShape)
+
+				rectMaterial = new THREE.MeshBasicMaterial
+					color: 0x66FF66
+				rectMesh = new THREE.Mesh(rectGeom, rectMaterial)
+
+				# Add the video rectangle to the scene
+				window.scene.add rectMesh###
+
+				# Create the geometry
+				#window.geometry = new THREE.BoxGeometry(200, 200, 200)
+
+				# Create the material
+				#window.material = new THREE.MeshBasicMaterial(
+				#	color: 0xff0000
+				#	wireframe: true
+				#)
+
+				# Create the mesh and add it to the scene
+				#window.mesh = new THREE.Mesh(window.geometry, window.material)
+				#window.scene.add window.mesh
+
 				#log 'context!!!',window.context
 			#else if window.canvas and FView.mainCtx
 			#	size = FView.mainCtx.getSize()
 			#	canvasSize = [size[0] * 2, size[1] * 2];
 			#	window.canvas.setSize(size, canvasSize);
-			if window.publisher and Session.equals 'userIsPublishing',true
-				#There's a publisher! Pipe the video to canvas!\
-				#size = window.canvas.getSize()
-				#canvasSize = [size[0] * 2, size[1] * 2];
-				size = [320,240]
-				canvasSize = [640,480]
-				imgData = window.publisher.getImgData()
-				#Only output to canvas if there's image data
-				if imgData and imgData.length > 10
-					#log 'imgData exists!'
-					img = new Image()
-					img.src = 'data:image/png;base64,' + imgData
-					img.onload = () ->
-						#log 'Stream image loaded!!!'
-						#log 'Stream image!',img
-						#Output the stream to canvas!
-						window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
-						window.context.drawImage(img, 0, 0, 640,480)
-						#Get the canvasData
-						if Session.equals 'grayscale',true
-							canvasData = window.context.getImageData(0,0,canvasSize[0],canvasSize[1])
-							data = canvasData.data
-							#Iterate through the pixels
-							i = 0
-							while i < data.length
-								r = data[i]
-								g = data[i + 1]
-								b = data[i + 2]
-								brightness = parseInt((r + g + b) / 3)
-								data[i] = brightness
-								data[i + 1] = brightness
-								data[i + 2] = brightness
-								i += 4
-							canvasData.data = data
-							filteredData = canvasData
-							window.context.putImageData filteredData,0,0
-						if !Session.equals 'blur',0
-							#Blur the canvas
-							stackBlurCanvasRGB 'canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get 'blur'
+			if window.publisher and Session.equals 'userIsPublishing',true and not window.videoCube
 
+				video = document.querySelector('video')
+
+				#Pipe the video in
+				window.videoTexture = new THREE.Texture(video)
+				window.videoTexture.wrapS = THREE.RepeatWrapping
+				window.videoTexture.wrapT = THREE.RepeatWrapping
+				window.videoTexture.repeat.set 1, 1
+
+				videoGeometry = new THREE.BoxGeometry(5, 5, 5)
+				videoMaterial = new THREE.MeshLambertMaterial(
+				  map: window.videoTexture
+				  shading: THREE.FlatShading
+				)
+				window.videoCube = new THREE.Mesh(videoGeometry, videoMaterial)
+				window.scene.add videoCube
+				window.camera.position.z = 6
+
+				#Add a soft light
+				light = new THREE.AmbientLight("rgb(255,255,255)") # soft white light
+				window.scene.add light
+			# Render to WebGL if the renderer is initialized - This starts the main render loop for the WebGL
+			if window.renderer and window.scene and window.camera
+
+				#window.mesh.rotation.x += 0.01
+				#window.mesh.rotation.y += 0.02
+
+				#Render the video if it exists
+				if window.videoCube
+					# Rotate the video feed like a boss
+					window.videoCube.rotation.x += 0.01
+					window.videoCube.rotation.y += 0.01
+					window.videoTexture.needsUpdate = true
+
+				#Render the easter egg model if it exists
+				if window.easterEggModel
+					# Allow for mouse rotation of the model
+					#window.camera.position.x += (window.mouseX - window.camera.position.x) * .05
+					#window.camera.position.y += (-window.mouseY - window.camera.position.y) * .05
+					#window.camera.lookAt scene.position
+
+					# Rotate the model like a boss
+					window.easterEggModel.rotation.y += 0.01
+
+				# Render the scene
+				window.renderer.render window.scene, window.camera
 		)
 
 		#Global Template Helpers
@@ -371,6 +430,77 @@ if Meteor.isClient
 
 			log 'Canvas!',this.$('canvas')
 
+			#Initialize the Konami Code easter egg ;)
+			easterEgg = new Konami () ->
+				log 'Trigger Model Viewer!'
+
+				windowHalfX = window.innerWidth / 2
+				windowHalfY = window.innerHeight / 2
+
+				#Mousemove
+				onDocumentMouseMove = (event) ->
+					window.mouseX = (event.clientX - windowHalfX) / 2
+					window.mouseY = (event.clientY - windowHalfY) / 2
+
+				#Add an event listener to the mousemove
+				document.addEventListener "mousemove", onDocumentMouseMove, false
+
+				#Change the camera position to view the model better
+				#window.camera.position.z = 30 #Crash
+				window.camera.position.y = 10 #Link
+				window.camera.position.z = 200 #Link
+
+				#Add a directional light
+				window.directionalLight = new THREE.DirectionalLight(0xffeedd)
+				window.directionalLight.position.set 0, 0, 1
+				scene.add window.directionalLight
+
+				#Add a second directional light
+				window.byLight = new THREE.DirectionalLight(0xffeedd)
+				#window.byLight.position.set 1, 0, 1
+				window.byLight.position.set 0, 1, 0
+				scene.add window.byLight
+
+				#Create a load manager
+				manager = new THREE.LoadingManager()
+				manager.onProgress = (item, loaded, total) ->
+					log item, loaded, total
+				texture = new THREE.Texture()
+				onProgress = (xhr) ->
+					if xhr.lengthComputable
+						percentComplete = xhr.loaded / xhr.total * 100
+						log Math.round(percentComplete, 2) + "% downloaded"
+				onError = (xhr) ->
+					log 'xhr error!',xhr
+
+				#Instantiate the loader
+				loader = new THREE.ImageLoader(manager)
+				#loaderTexture = 'models/Crash/crash.png'
+				#loaderTexture = 'models/Link/body.png'
+				loaderTexture = 'models/YoungLink/YoungLink_grp.png'
+				loader.load loaderTexture, (image) ->
+					texture.image = image
+					texture.needsUpdate = true
+					return
+
+				#Import the model
+				loader = new THREE.OBJMTLLoader(manager)
+				#loaderModel = 'models/Crash/Crash.obj'
+				#loaderMTL = 'models/Crash/Crash.mtl'
+				#loaderModel = 'models/Link/link.obj'
+				#loaderMTL = 'models/Link/link.mtl'
+				loaderModel = 'models/YoungLink/YoungLinkEquipped.obj'
+				loaderMTL = 'models/YoungLink/YoungLinkEquipped.mtl'
+				loader.load loaderModel, loaderMTL, ((object) ->
+					object.traverse (child) ->
+						child.material.map = texture  if child instanceof THREE.Mesh
+					#object.position.y = 0 #Default
+					object.position.y = -10
+					window.easterEggModel = object
+					scene.add window.easterEggModel
+				), onProgress, onError
+
+
 			#window.requestAnimationFrame ->
 			#size = window.canvas.getSize()
 			#canvasSize = [size[0] * 2, size[1] * 2];
@@ -392,12 +522,12 @@ if Meteor.isClient
 			, 20)###
 
 			# Recalculate layout on resize
-			#window.onresize = ->
-			#	clearTimeout resizeTimeout
-			#	resizeTimeout = setTimeout(->
-			#		log 'Layouting'
-			#		#layout()
-			#	, 20)
+			window.onresize = ->
+				clearTimeout resizeTimeout
+				resizeTimeout = setTimeout(->
+					log 'Layouting!'
+					#layout()
+				, 20)
 
 			target = fview.surface || fview.view || fview.view._eventInput
 			target.on('click', () ->

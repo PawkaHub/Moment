@@ -349,18 +349,12 @@
       "path": "packages/livedata.js"
     },
     {
-      "sourceMap": "packages/mongo-livedata.js.map",
-      "sourceMapRoot": "packages",
-      "path": "packages/mongo-livedata.js"
-    },
-    {
       "node_modules": "npm/meteorhacks:fast-render/node_modules",
       "sourceMap": "packages/meteorhacks_fast-render.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/meteorhacks_fast-render.js",
       "assets": {
-        "lib/server/inject_data.html": "assets/packages/meteorhacks_fast-render/lib/server/inject_data.html",
-        "lib/server/inject_config.html": "assets/packages/meteorhacks_fast-render/lib/server/inject_config.html"
+        "lib/server/inject_data.html": "assets/packages/meteorhacks_fast-render/lib/server/inject_data.html"
       }
     },
     {
@@ -375,6 +369,11 @@
       "path": "packages/mrt_tokbox.js"
     },
     {
+      "sourceMap": "packages/limemakers_three.js.map",
+      "sourceMapRoot": "packages",
+      "path": "packages/limemakers_three.js"
+    },
+    {
       "sourceMap": "packages/session.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/session.js"
@@ -383,7 +382,7 @@
       "path": "packages/global-imports.js"
     },
     {
-      "path": "app/compatibility/blur.js"
+      "path": "app/compatibility/konami.js"
     },
     {
       "sourceMap": "app/moment.coffee.js.map",

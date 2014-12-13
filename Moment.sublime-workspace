@@ -67,7 +67,7 @@
 			"file": "moment.jade",
 			"settings":
 			{
-				"buffer_size": 11520,
+				"buffer_size": 10080,
 				"line_ending": "Unix"
 			}
 		},
@@ -75,31 +75,58 @@
 			"file": "moment.coffee",
 			"settings":
 			{
-				"buffer_size": 65473,
+				"buffer_size": 70478,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "var context = this.canvas.getContext('2d');\nvar size = this.getSize();\nvar canvasSize = [size[0] * 2, size[1] * 2];\nthis.canvas.setSize(size, canvasSize);\n\n// Do canvas drawing here...\ncontext.clearRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.fillStyle = this.options.backgroundColor;\ncontext.fillRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.lineWidth = 1;\ncontext.strokeStyle = this.options.borderColor;\ncontext.strokeRect(0, 0, canvasSize[0], canvasSize[1]);\n...\n\n// Call super\nreturn this._node.render();\n\n\n\n// Output to Canvas\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Clear Background\n//window.context.clearRect(0,0,canvasSize[0],canvasSize[1]);\nwindow.context.fillStyle = 'red';\nwindow.context.fillRect(20,20,150,200);\n/*window.context.lineWidth = 1;\nwindow.context.strokeStyle = 'green'\nwindow.context.strokeRect(0,0,canvasSize[0],canvasSize[1]);*/\n\n//window.canvasParent.render()\n\n// Works\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\ncontext = window.canvas.getContext('2d');\n\n// Draw\ncontext.fillStyle = 'red';\ncontext.fillRect(20,20,150,200);\n\n\n// Doesn't work\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Draw\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n\n// Works with Delay\n// Draw\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n###setTimeout(->\n    # Set canvas size\n    size = window.canvas.getSize()\n    canvasSize = [size[0] * 2, size[1] * 2];\n    window.canvas.setSize(size, canvasSize);\n\n    # Get the context\n    window.context = window.canvas.getContext('2d')\n    log 'context!!!',window.context\n, 20)###",
+			"contents": "//TODO: Find canvas from Meteor/Famous instead of DOM\nvar canvasElement = document.querySelector('canvas');\n\n//Initialize a ThreeJS scene in the Famo.us canvas\nvar renderer = new THREE.WebGLRenderer({\n	canvas: window.canvas._currentTarget,\n	antialias: true,\n	devicePixelRatio: window.devicePixelRatio,\n	context: window.context\n});\n\n//Set the renderer size (May not be needed?)\nrenderer.setSize(640,480);\n\n\nvar scene = new THREE.Scene();\n\n        var camera = new THREE.PerspectiveCamera(\n            35,             // Field of view\n            800 / 600,      // Aspect ratio\n            0.1,            // Near plane\n            10000           // Far plane\n        );\n        camera.position.set( -15, 10, 10 );\n        camera.lookAt( scene.position );\n\n        var geometry = new THREE.CubeGeometry( 5, 5, 5 );\n        var material = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );\n        var mesh = new THREE.Mesh( geometry, material );\n        scene.add( mesh );\n\n        var light = new THREE.PointLight( 0xFFFF00 );\n        light.position.set( 10, 0, 10 );\n        scene.add( light );\n\n        renderer.render( scene, camera );\n\n\n\n\n\n//Initialize a ThreeJS scene in the Famo.us canvas\nvar renderer = new THREE.WebGLRenderer({\n    canvas: window.canvas._currentTarget,\n    antialias: true,\n    devicePixelRatio: window.devicePixelRatio,\n    context: window.context\n});\n\n//Set the renderer size (May not be needed?)\nrenderer.setSize(640,480);\n\n//Create a THREE.JS scene\nvar scene = new THREE.Scene();\n\n//Create a camera\nvar camera = new THREE.PerspectiveCamera(\n	35, //Field of View\n	640/480, //Aspect Ratio\n	0.1, //Near Plane\n	10000 //Far Plane\n);\ncamera.position.set( -15, 10, 10 );\ncamera.lookAt ( scene.position );\n\n//Create some geometry to view\nvar geometry = new THREE.CubeGeometry( 5, 5, 5 );\nvar material = new THREE.MeshLambertMaterial({ color: 0xFF0000 });\nvar mesh = new THREE.Mesh ( geometry, material );\nscene.add( mesh );\n\n//Create a light\nvar light = new THREE.PointLight( 0xFF0000 );\nlight.position.set( 10, 0, 10 );\nscene.add( light );\n\n//Render it\nrenderer.render( scene, camera );\n\nvideo = document.querySelector('video');\nvideoTexture = new THREE.Texture(video);\n\n\n//Rotating cube scene",
 			"settings":
 			{
-				"buffer_size": 1853,
+				"buffer_size": 2219,
+				"line_ending": "Unix",
+				"name": "//TODO: Find canvas from Meteor/Famous instead of"
+			}
+		},
+		{
+			"contents": "6a6462 -> 333\n\nbab8b7 -> 666",
+			"settings":
+			{
+				"buffer_size": 28,
+				"line_ending": "Unix",
+				"name": "6a6462 -> 333"
+			}
+		},
+		{
+			"contents": "i = 0\n\nblur = function() {\n	if (i < 100) {\n		i+= 7\n		Session.set('blur',i)\n		setTimeout(blur);\n	} else {\n		clearTimeout(blur);\n		console.log('Blurred!');\n	}\n}\nblur();\n\nunblur = function() {\n	if (i > 0) {\n		i-= 7\n		Session.set('blur',i)\n		setTimeout(unblur);\n	} else {\n		clearTimeout(unblur);\n		console.log('Unblurred!');\n	}\n}\nunblur();\n\n\n",
+			"settings":
+			{
+				"buffer_size": 338,
+				"line_ending": "Unix",
+				"name": "i = 0"
+			}
+		},
+		{
+			"file": "compatibility/blur.js",
+			"settings":
+			{
+				"buffer_size": 17181,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "size = FView.mainCtx.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.canvas.setSize(size, canvasSize);",
+			"settings":
+			{
+				"buffer_size": 112,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/Lagometer.js",
+			"contents": "var context = this.canvas.getContext('2d');\nvar size = this.getSize();\nvar canvasSize = [size[0] * 2, size[1] * 2];\nthis.canvas.setSize(size, canvasSize);\n\n// Do canvas drawing here...\ncontext.clearRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.fillStyle = this.options.backgroundColor;\ncontext.fillRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.lineWidth = 1;\ncontext.strokeStyle = this.options.borderColor;\ncontext.strokeRect(0, 0, canvasSize[0], canvasSize[1]);\n...\n\n// Call super\nreturn this._node.render();\n\n\n\n// Output to Canvas\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Clear Background\n//window.context.clearRect(0,0,canvasSize[0],canvasSize[1]);\nwindow.context.fillStyle = 'red';\nwindow.context.fillRect(20,20,150,200);\n/*window.context.lineWidth = 1;\nwindow.context.strokeStyle = 'green'\nwindow.context.strokeRect(0,0,canvasSize[0],canvasSize[1]);*/\n\n//window.canvasParent.render()\n\n// Works\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\ncontext = window.canvas.getContext('2d');\n\n// Draw\ncontext.fillStyle = 'red';\ncontext.fillRect(20,20,150,200);\n\n\n// Doesn't work\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Draw\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n\n// Works with Delay\n// Draw\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.context.clearRect(0,0,canvasSize[0],canvasSize[1]);\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n###setTimeout(->\n    # Set canvas size\n    size = window.canvas.getSize()\n    canvasSize = [size[0] * 2, size[1] * 2];\n    window.canvas.setSize(size, canvasSize);\n\n    # Get the context\n    window.context = window.canvas.getContext('2d')\n    log 'context!!!',window.context\n, 20)###\n\n\nvideo = document.querySelector('video');\n\nvideo.addEventListener('play', function(){\n    console.log('Streaming!');\n},false);",
 			"settings":
 			{
-				"buffer_size": 9560,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/AppView.js",
-			"settings":
-			{
-				"buffer_size": 14650,
+				"buffer_size": 2112,
 				"line_ending": "Unix"
 			}
 		},
@@ -107,7 +134,7 @@
 			"file": "moment.styl",
 			"settings":
 			{
-				"buffer_size": 4438,
+				"buffer_size": 4756,
 				"line_ending": "Unix"
 			}
 		}
@@ -181,16 +208,19 @@
 	],
 	"file_history":
 	[
+		"/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/AppView.js",
+		"/Users/Pawka/Developer/Experiments/famous-lagometer/Lagometer.js",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/blur.js",
+		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
+		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/index.html",
 		"/Users/Pawka/Developer/Beep/BeepWebsite/.gitignore",
 		"/Users/Pawka/Developer/Parker/Moment/packages/tokbox-meteor/server/index.js",
-		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/StripListView.js",
 		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/PageListView.js",
 		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/js/app/ListView.js",
 		"/Users/Pawka/Developer/Experiments/famous-UltraVisual/index.html",
 		"/Users/Pawka/Developer/Parker/Moment/public/assets/fonts/font-faces.css",
-		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
 		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/Stylus/Stylus.sublime-settings",
 		"/Users/Pawka/Downloads/Moment-353c6a9b5ddb5aa8af97fd91dbb4d5aa87072f59/assets/css/fonts/font-faces.css",
 		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Stylus.sublime-settings",
@@ -224,6 +254,23 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"context ",
+			"drawImage",
+			"setTimeout",
+			"20",
+			"postrender",
+			"output",
+			"ppLogoTranslation",
+			"ppLogo",
+			"setDefaul",
+			"getImgData",
+			"layout()",
+			"session.publish",
+			"userIsPublishing",
+			"publishing",
+			"end",
+			"bottom",
+			"publishing",
 			"helpers",
 			"uhhh else",
 			"Nope!",
@@ -303,15 +350,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 11520,
+						"buffer_size": 10080,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								7786,
-								7786
+								1027,
+								1027
 							]
 						],
 						"settings":
@@ -320,16 +367,16 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2957.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 5,
 					"type": "text"
 				}
 			]
 		},
 		{
-			"selected": 0,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -338,15 +385,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 65473,
+						"buffer_size": 70478,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								9121,
-								9121
+								4608,
+								4608
 							]
 						],
 						"settings":
@@ -355,10 +402,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 5300.0,
+						"translation.y": 2145.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
@@ -366,75 +413,159 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1853,
+						"buffer_size": 2219,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1608,
-								1608
+								1382,
+								1382
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"auto_name": "//TODO: Find canvas from Meteor/Famous instead of",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 154.0,
+						"translation.y": 257.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 28,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								28,
+								28
+							]
+						],
+						"settings":
+						{
+							"auto_name": "6a6462 -> 333",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 338,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								338,
+								338
+							]
+						],
+						"settings":
+						{
+							"auto_name": "i = 0",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 2,
 					"type": "text"
 				},
 				{
-					"buffer": 3,
-					"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/Lagometer.js",
+					"buffer": 5,
+					"file": "compatibility/blur.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 9560,
+						"buffer_size": 17181,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6731,
-								6739
+								11580,
+								11580
 							]
 						],
 						"settings":
 						{
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 4,
+							"tab_size": 2,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 3098.0,
+						"translation.y": 739.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
-					"buffer": 4,
-					"file": "/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/AppView.js",
+					"buffer": 6,
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 14650,
+						"buffer_size": 112,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								13118,
-								13118
+								112,
+								112
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2112,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2112,
+								2112
 							]
 						],
 						"settings":
@@ -444,10 +575,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 7028.0,
+						"translation.y": 781.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 3,
 					"type": "text"
 				}
 			]
@@ -457,20 +588,20 @@
 			"sheets":
 			[
 				{
-					"buffer": 5,
+					"buffer": 8,
 					"file": "moment.styl",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4438,
+						"buffer_size": 4756,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								68,
-								68
+								394,
+								394
 							]
 						],
 						"settings":
@@ -480,10 +611,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 6.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 6,
 					"type": "text"
 				}
 			]
@@ -580,7 +711,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 1,
+	"selected_group": 0,
 	"settings":
 	{
 	},
