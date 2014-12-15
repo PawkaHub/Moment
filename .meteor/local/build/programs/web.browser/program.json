@@ -673,6 +673,17 @@
       "hash": "5436315ebe43e4d3b6b0b40c8965ca30779080ff"
     },
     {
+      "path": "packages/pierreeric_fview-flexgrid.js",
+      "where": "client",
+      "type": "js",
+      "cacheable": true,
+      "url": "/packages/pierreeric_fview-flexgrid.js?dd670d3879e88eb03dc3bf2044e653181937a72c",
+      "sourceMap": "packages/pierreeric_fview-flexgrid.js.map",
+      "sourceMapUrl": "/packages/dd670d3879e88eb03dc3bf2044e653181937a72c.map",
+      "size": 7570,
+      "hash": "dd670d3879e88eb03dc3bf2044e653181937a72c"
+    },
+    {
       "path": "packages/webapp.js",
       "where": "client",
       "type": "js",
@@ -741,9 +752,9 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?c84b8e98e6630489bf76c48e82b2abe3969dd12d",
-      "size": 35213,
-      "hash": "c84b8e98e6630489bf76c48e82b2abe3969dd12d"
+      "url": "/moment.jade.js?709155b0f726ade0275bf10ac6c8644b028e42a2",
+      "size": 23376,
+      "hash": "709155b0f726ade0275bf10ac6c8644b028e42a2"
     },
     {
       "path": "app/lib/THREEx.js",
@@ -804,11 +815,11 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?9778868d515ad40a5d6e92e1528c1fdf7f72e55c",
+      "url": "/moment.coffee.js?77d1841379ae02cb55163f9735cde9d44a4eefe0",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/9778868d515ad40a5d6e92e1528c1fdf7f72e55c.map",
-      "size": 88400,
-      "hash": "9778868d515ad40a5d6e92e1528c1fdf7f72e55c"
+      "sourceMapUrl": "/77d1841379ae02cb55163f9735cde9d44a4eefe0.map",
+      "size": 88424,
+      "hash": "77d1841379ae02cb55163f9735cde9d44a4eefe0"
     },
     {
       "path": "packages/service-configuration.js",

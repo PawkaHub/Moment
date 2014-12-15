@@ -374,6 +374,11 @@
       "path": "packages/limemakers_three.js"
     },
     {
+      "sourceMap": "packages/pierreeric_fview-flexgrid.js.map",
+      "sourceMapRoot": "packages",
+      "path": "packages/pierreeric_fview-flexgrid.js"
+    },
+    {
       "sourceMap": "packages/session.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/session.js"

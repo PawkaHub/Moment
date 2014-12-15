@@ -21,7 +21,7 @@ this.Seconds = new Mongo.Collection('seconds');
 
 this.openTokApiKey = '45020262';
 
-this.momentTimer = 5;
+this.momentTimer = 10;
 
 this.log = function() {
   log.history = log.history || [];
@@ -66,6 +66,10 @@ if (Meteor.isClient) {
           log('Another streamCreated!', event);
           if (window.publisher) {
             session.unpublish(window.publisher);
+            Session.set('userIsPublishing', false);
+            window.scene.remove(window.videoCube);
+            window.videoCube = null;
+            window.video = null;
           }
           return window.subscriber = session.subscribe(event.stream, 'video', {
             insertMode: 'replace',
@@ -73,17 +77,23 @@ if (Meteor.isClient) {
           }, function(err) {
             if (err) {
               log('Subscribe err', err);
-              return Session.set('subscribed', false);
+              Session.set('subscribed', false);
+              window.scene.remove(window.videoCube);
+              window.videoCube = null;
+              return window.video = null;
             } else {
               log('Subscribed to stream!');
-              return Session.set('subscribed', true);
+              Session.set('subscribed', true);
+              return window.video = document.querySelector('video');
             }
           });
         });
         session.on('streamDestroyed', function(event) {
-          event.preventDefault();
           log('Another streamDestroyed!', event);
-          return Session.set('subscribed', false);
+          Session.set('subscribed', false);
+          window.scene.remove(window.videoCube);
+          window.videoCube = null;
+          return window.video = null;
         });
         return session.connect(result.token, function(err) {
           if (err) {
@@ -107,8 +117,6 @@ if (Meteor.isClient) {
     this.Timer = famous.utilities.Timer;
     Transitionable.registerMethod('spring', SpringTransition);
     Transitionable.registerMethod('snap', SpringTransition);
-    Session.setDefault('backgroundTranslation', 0);
-    Session.setDefault('overlayTranslation', 0);
     Session.setDefault('ppLogoTranslation', -20);
     Session.setDefault('timelineActive', false);
     Session.setDefault('canSubscribeToStream', false);
@@ -132,7 +140,7 @@ if (Meteor.isClient) {
     		)
      */
     Engine.on('postrender', function() {
-      var FAR, NEAR, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_ANGLE, axisHelper, canvasSize, effectBloom, effectCopy, effectHorizBlur, effectVertiBlur, light, renderModel, size, video, videoGeometry, videoMaterial;
+      var FAR, NEAR, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_ANGLE, axisHelper, canvasSize, effectBloom, effectCopy, effectHorizBlur, effectVertiBlur, light, renderModel, size, subscribed, userIsPublishing, videoGeometry, videoMaterial;
       if (window.canvas && !window.context) {
         size = FView.mainCtx.getSize();
         canvasSize = [size[0] * 2, size[1] * 2];
@@ -168,10 +176,14 @@ if (Meteor.isClient) {
         window.composer.addPass(effectVertiBlur);
         axisHelper = new THREE.AxisHelper(1);
         scene.add(axisHelper);
+        light = new THREE.AmbientLight("rgb(255,255,255)");
+        window.scene.add(light);
       }
-      if ((window.publisher && Session.equals('userIsPublishing', true && !window.videoCube)) || (window.subscriber && Session.equals('subscribed', true && !window.videoCube))) {
-        video = document.querySelector('video');
-        window.videoTexture = new THREE.Texture(video);
+      userIsPublishing = Session.get('userIsPublishing');
+      subscribed = Session.get('subscribed');
+      if ((window.publisher && userIsPublishing && window.video && !window.videoCube) || (window.subscriber && subscribed && window.video && !window.videoCube)) {
+        log('Running!', window.publisher, Session.get('userIsPublishing'), window.videoCube, window.subscriber, Session.get('subscribed'), window.videoCube);
+        window.videoTexture = new THREE.Texture(window.video);
         window.videoTexture.wrapS = THREE.RepeatWrapping;
         window.videoTexture.wrapT = THREE.RepeatWrapping;
         window.videoTexture.repeat.set(1, 1);
@@ -181,10 +193,8 @@ if (Meteor.isClient) {
           shading: THREE.FlatShading
         });
         window.videoCube = new THREE.Mesh(videoGeometry, videoMaterial);
-        window.scene.add(videoCube);
+        window.scene.add(window.videoCube);
         window.camera.position.z = 3;
-        light = new THREE.AmbientLight("rgb(255,255,255)");
-        window.scene.add(light);
       }
       if (window.renderer && window.scene && window.camera) {
         if (window.videoCube) {
@@ -506,6 +516,7 @@ if (Meteor.isClient) {
             streamCreated: function(event) {
               log('publishStream created!', event);
               Session.set('userIsPublishing', true);
+              window.video = document.querySelector('video');
               return Meteor.call('createMoment', function(err, result) {
                 var archive, clock, interval, timeLeft;
                 if (err) {
@@ -532,12 +543,18 @@ if (Meteor.isClient) {
                         log("That's All Folks, let's cancel this clientside session");
                         session.unpublish(publisher);
                         Session.set('userIsPublishing', false);
+                        window.scene.remove(window.videoCube);
+                        window.videoCube = null;
+                        window.video = null;
                         return Meteor.clearInterval(interval);
                       }
                     } else {
                       log("Uhhh else");
                       session.unpublish(publisher);
                       Session.set('userIsPublishing', false);
+                      window.scene.remove(window.videoCube);
+                      window.videoCube = null;
+                      window.video = null;
                       return Meteor.clearInterval(interval);
                     }
                   };
@@ -546,9 +563,11 @@ if (Meteor.isClient) {
               });
             },
             streamDestroyed: function(event) {
-              event.preventDefault();
               log('publishStream destroyed!', event);
               Session.set('userIsPublishing', false);
+              window.scene.remove(window.videoCube);
+              window.videoCube = null;
+              window.video = null;
               return Meteor.setTimeout(function() {
                 return Session.set('timer', momentTimer);
               }, 1000);
@@ -822,53 +841,36 @@ if (Meteor.isClient) {
     Session.setDefault('epochMonth', moment(Session.get('epoch')).month());
     Session.setDefault('epochYear', moment(Session.get('epoch')).year());
     Template.timelineMinuteScroller.rendered = function() {
-      var fview, scrollView, target, timelineMinuteScrollerFView;
-      fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
-      scrollView = fview.children[0].view._eventInput;
-      window.timelineMinuteScroller = fview.children[0].view;
-      window.timelineMinuteSequence = window.timelineMinuteScroller._node;
-      window.timelineMinuteSequence._.loop = true;
+      var timelineMinuteScrollerFView;
       timelineMinuteScrollerFView = FView.byId('timelineMinuteScroller');
       timelineMinuteScrollerFView.modifier.setOrigin([0.5, 0.5]);
-      scrollView.on('start', function(e) {});
-      scrollView.on('update', function(e) {});
-      scrollView.on('end', function(e) {});
+      Engine.pipe(timelineMinuteScrollerFView.view);
       return this.autorun(function(computation) {
-        var amountMidPoint, currentMinute, disableThisDebugStyle, i, instance, previousMinute, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l, _results, _results1, _results2, _results3;
-        currentMinute = Session.get('currentMinute');
-        previousMinute = window.timelineMinuteScroller.getCurrentIndex();
-        totalAmount = window.timelineMinuteScroller._node._.array.length;
-        amountMidPoint = totalAmount / 2;
-        log('=====================================================================');
-        log('previousMinute', previousMinute);
-        log('currentMinute', currentMinute);
-        scrollStart = 0;
-        instance = Template.instance();
+        var disableThisDebugStyle, i, scrollDistance, timelineActive, _i, _j, _k, _l, _results, _results1, _results2, _results3;
         timelineActive = Session.get('timelineActive');
         if (timelineActive === true) {
           timelineMinuteScrollerFView.modifier.halt();
           timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
             method: 'spring',
             period: 1000,
-            dampingRatio: 0.6
+            dampingRatio: 0.8
           });
           timelineMinuteScrollerFView.modifier.setOpacity(1, {
             method: 'spring',
             period: 1000,
-            dampingRatio: 0.6
+            dampingRatio: 0.8
           });
         } else {
           timelineMinuteScrollerFView.modifier.halt();
           timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(3, 3, 3), {
             method: 'spring',
             period: 600,
-            dampingRatio: 0.6
+            dampingRatio: 0.8
           });
           timelineMinuteScrollerFView.modifier.setOpacity(0, {
             method: 'spring',
             period: 600,
-            dampingRatio: 0.6
+            dampingRatio: 0.8
           });
         }
         disableThisDebugStyle = false;

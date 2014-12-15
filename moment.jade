@@ -20,7 +20,7 @@ template(name='about')
 		+Surface template='overlay' id='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=overlayStyles
 		+Surface template='intro' id='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=introStyles
 		+Surface template='question' id='question' size='[300,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=questionStyles
-		+StateModifier translate='[0,20,0]'
+		+StateModifier translate='[0,30,0]'
 			+Surface template='momentButton' id='momentButton' size='[220,40]' origin='[0.5,0.5]' align='[0.5,0.5]' opacity='1' properties=momentButtonStyles
 		+Surface template='ppLogo' id='ppLogo' size='[60,60]' origin='[0.5,1]' align='[0.5,1]' translate='[0,-20,0]' opacity='0.14' properties=ppLogoStyles
 		+Surface template='timer' id='timer' size='[60,60]' origin='[0.5,1]' align='[0.5,0.5]' translate='[0,0,0]' opacity='0' properties=timerStyles
@@ -34,38 +34,20 @@ template(name='timelineSearchHolder')
 template(name='timelineSearch')
 
 template(name='timelineMinuteScroller')
-	+Scrollview id='timelineMinuteScroller' size='[undefined,undefined]' origin='[0.5,0]' align='[0.5,0]' opacity='0' properties=timelineMinuteScrollerStyles
-		+famousEach minutes
-			+StateModifier size='[undefined,1160]'
-				+Surface id=timelineMinuteIndex template='timelineMinute' origin='[0,0]' align='[0,0]' size='[undefined,undefined]' properties=timelineMinuteStyles opacity='0.8'
-				+Surface id=timelineMinuteTitleIndex template='timelineMinuteTitle' origin='[0,0]' align='[0,0]' translate='[0,100,1]' size='[undefined,40]' properties=timelineMinuteTitleStyles opacity='0.8'
-				+Surface template='timelineMinuteTime' origin='[0,0]' align='[0,0]' translate='[0,40,1]' size='[undefined,40]' properties=timelineMinuteTimeStyles opacity='0.8'
-				+GridLayout dimensions='[4,5]' gutterSize='[10,10]' size='[1320,940]' translate='[0,-40,1]' origin='[0.5,1]' align='[0.5,1]'
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
-					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0]' properties=timelineMomentStyles
+	+StateModifier origin='[0.5,0]' align='[0.5,0]' translate='[0,0,1]'
+		+Scrollview id='timelineMinuteScroller' size='[undefined,undefined]' opacity='0' properties=timelineMinuteScrollerStyles
+			+FlexGrid id='timelineMinuteGrid' marginTop=10 marginSide=100 gutterCol=20 gutterRow=20 itemSize='[320,180]'
+				+famousEach minutes
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
+					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
 
 template(name='timelineDayScroller')
 	+Scrollview id='timelineDayScroller' size='[270,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,2]'

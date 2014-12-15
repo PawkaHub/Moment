@@ -13,7 +13,7 @@ Router.map ->
 
 # API Keys
 @openTokApiKey = '45020262'
-@momentTimer = 5
+@momentTimer = 10
 
 @log = ->
 	log.history = log.history or [] # store logs to an array for reference
@@ -63,6 +63,10 @@ if Meteor.isClient
 					log 'Another streamCreated!',event
 					if window.publisher
 						session.unpublish window.publisher
+						Session.set 'userIsPublishing',false
+						window.scene.remove window.videoCube
+						window.videoCube = null
+						window.video = null
 
 					window.subscriber = session.subscribe event.stream, 'video',
 						insertMode: 'replace'
@@ -71,14 +75,21 @@ if Meteor.isClient
 						if err
 							log 'Subscribe err',err
 							Session.set 'subscribed',false
+							window.scene.remove window.videoCube
+							window.videoCube = null
+							window.video = null
 						else
 							log 'Subscribed to stream!'
 							Session.set 'subscribed',true
+							window.video = document.querySelector('video')
 
 				session.on 'streamDestroyed', (event) ->
-					event.preventDefault()
+					#event.preventDefault()
 					log 'Another streamDestroyed!',event
 					Session.set 'subscribed',false
+					window.scene.remove window.videoCube
+					window.videoCube = null
+					window.video = null
 
 				# Connect to the session
 				session.connect result.token, (err) ->
@@ -108,8 +119,6 @@ if Meteor.isClient
 		Transitionable.registerMethod 'snap',SpringTransition
 
 		#Default Session States
-		Session.setDefault 'backgroundTranslation', 0
-		Session.setDefault 'overlayTranslation', 0
 		Session.setDefault 'ppLogoTranslation', -20
 		Session.setDefault 'timelineActive',false
 		Session.setDefault 'canSubscribeToStream', false
@@ -207,15 +216,22 @@ if Meteor.isClient
 				axisHelper = new THREE.AxisHelper 1
 				scene.add axisHelper
 
+				# Add a soft light
+				light = new THREE.AmbientLight("rgb(255,255,255)") # soft white light
+				window.scene.add light
+
 				# Add debug controls for mouse movement
 				#window.controls = new THREE.OrbitControls window.camera, window.renderer.domElement
+			userIsPublishing = Session.get 'userIsPublishing'
+			subscribed = Session.get 'subscribed'
+			if (window.publisher and userIsPublishing and window.video and not window.videoCube) or (window.subscriber and subscribed and window.video and not window.videoCube)
 
-			if (window.publisher and Session.equals 'userIsPublishing',true and not window.videoCube) or (window.subscriber and Session.equals 'subscribed',true and not window.videoCube)
+				log 'Running!',window.publisher,Session.get('userIsPublishing'), window.videoCube, window.subscriber, Session.get('subscribed'), window.videoCube
 
-				video = document.querySelector('video')
+				#video = document.querySelector('video')
 
 				#Pipe the video in
-				window.videoTexture = new THREE.Texture(video)
+				window.videoTexture = new THREE.Texture(window.video)
 				window.videoTexture.wrapS = THREE.RepeatWrapping
 				window.videoTexture.wrapT = THREE.RepeatWrapping
 				window.videoTexture.repeat.set 1, 1
@@ -226,12 +242,8 @@ if Meteor.isClient
 				  shading: THREE.FlatShading
 				)
 				window.videoCube = new THREE.Mesh(videoGeometry, videoMaterial)
-				window.scene.add videoCube
+				window.scene.add window.videoCube
 				window.camera.position.z = 3
-
-				#Add a soft light
-				light = new THREE.AmbientLight("rgb(255,255,255)") # soft white light
-				window.scene.add light
 			# Render to WebGL if the renderer is initialized - This starts the main render loop for the WebGL
 			if window.renderer and window.scene and window.camera
 
@@ -551,6 +563,7 @@ if Meteor.isClient
 						streamCreated: (event) ->
 							log 'publishStream created!',event
 							Session.set 'userIsPublishing',true
+							window.video = document.querySelector('video')
 
 							Meteor.call('createMoment', (err,result)->
 								if err
@@ -583,18 +596,27 @@ if Meteor.isClient
 												log "That's All Folks, let's cancel this clientside session"
 												session.unpublish publisher
 												Session.set 'userIsPublishing',false
+												window.scene.remove window.videoCube
+												window.videoCube = null
+												window.video = null
 												Meteor.clearInterval interval
 										else
 											log "Uhhh else"
 											session.unpublish publisher
 											Session.set 'userIsPublishing',false
+											window.scene.remove window.videoCube
+											window.videoCube = null
+											window.video = null
 											Meteor.clearInterval interval
 									interval = Meteor.setInterval(timeLeft, 1000)
 							)
 						streamDestroyed: (event) ->
-							event.preventDefault()
+							#event.preventDefault()
 							log 'publishStream destroyed!',event
 							Session.set 'userIsPublishing',false
+							window.scene.remove window.videoCube
+							window.videoCube = null
+							window.video = null
 							Meteor.setTimeout(->
 								Session.set 'timer', momentTimer
 							,1000)
@@ -839,21 +861,24 @@ if Meteor.isClient
 
 		Template.timelineMinuteScroller.rendered = ->
 			#log 'TIMELINEMINUTESSCROLLER RENDERED',this
-			fview = FView.from(this)
+			#fview = FView.from(this)
 			#log 'TIMELINEMINUTESSCROLLER FVIEW',fview
-			target = fview.surface || fview.view._eventInput
+			#target = fview.surface || fview.view._eventInput
 			#log 'TIMELINEMINUTESSCROLLER TARGET',target
-			scrollView = fview.children[0].view._eventInput
+			#scrollView = fview.children[0].view._eventInput
 			#log 'SCROLLVIEW?!',scrollView
-			window.timelineMinuteScroller = fview.children[0].view
+			#window.timelineMinuteScroller = fview.children[0].view
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
-			window.timelineMinuteSequence = window.timelineMinuteScroller._node
-			window.timelineMinuteSequence._.loop = true
+			#window.timelineMinuteSequence = window.timelineMinuteScroller._node
+			#window.timelineMinuteSequence._.loop = true
 
 			timelineMinuteScrollerFView = FView.byId('timelineMinuteScroller')
 			timelineMinuteScrollerFView.modifier.setOrigin [0.5,0.5]
 
-			scrollView.on('start', (e) ->
+			#Pipe scroll events to the engine
+			Engine.pipe timelineMinuteScrollerFView.view
+
+			#scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
 				#log 'getCurrentIndex',this.getCurrentIndex()
 				#log 'clientX',e.clientX
@@ -864,8 +889,8 @@ if Meteor.isClient
 				#log 'position',e.position
 				#log 'slip',e.slip
 				#log 'velocity',e.velocity
-			)
-			scrollView.on('update', (e) ->
+			#)
+			#scrollView.on('update', (e) ->
 				#log 'UPDATING!!!!',this,e
 				#log 'getCurrentIndex',this.getCurrentIndex()
 				#log 'clientX',e.clientX
@@ -877,8 +902,8 @@ if Meteor.isClient
 				#timelineMinuteScroller.setPosition(400)
 				#log 'slip',e.slip
 				#log 'velocity',e.velocity
-			)
-			scrollView.on('end', (e) ->
+			#)
+			#scrollView.on('end', (e) ->
 				#log 'ENDING!!!!!!!',this, this._cachedIndex
 				#log 'getCurrentIndex',this.getCurrentIndex()
 				#log 'clientX',e.clientX
@@ -889,26 +914,26 @@ if Meteor.isClient
 				#log 'position',e.position
 				#log 'slip',e.slip
 				#log 'velocity',e.velocity
-			)
+			#)
 
 			@autorun((computation)->
-				currentMinute = Session.get('currentMinute')
-				previousMinute = window.timelineMinuteScroller.getCurrentIndex()
-				totalAmount = window.timelineMinuteScroller._node._.array.length
-				amountMidPoint = totalAmount / 2
+				#currentMinute = Session.get('currentMinute')
+				#previousMinute = window.timelineMinuteScroller.getCurrentIndex()
+				#totalAmount = window.timelineMinuteScroller._node._.array.length
+				#amountMidPoint = totalAmount / 2
 
-				log '====================================================================='
+				#log '====================================================================='
 
 				#What is the previousMinute?
-				log 'previousMinute',previousMinute
+				#log 'previousMinute',previousMinute
 				#What is the currentMinute?
-				log 'currentMinute',currentMinute
+				#log 'currentMinute',currentMinute
 
-				scrollStart = 0
+				#scrollStart = 0
 				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
 
 				#Get the Template instance
-				instance = Template.instance()
+				#instance = Template.instance()
 				#log 'AUTORUN INSTANCE',instance
 				timelineActive = Session.get 'timelineActive'
 				if timelineActive is true
@@ -916,21 +941,21 @@ if Meteor.isClient
 					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(1,1,1),
 						method: 'spring'
 						period: 1000
-						dampingRatio: 0.6
+						dampingRatio: 0.8
 					timelineMinuteScrollerFView.modifier.setOpacity 1,
 						method: 'spring'
 						period: 1000
-						dampingRatio: 0.6
+						dampingRatio: 0.8
 				else
 					timelineMinuteScrollerFView.modifier.halt()
 					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(3,3,3),
 						method: 'spring'
 						period: 600
-						dampingRatio: 0.6
+						dampingRatio: 0.8
 					timelineMinuteScrollerFView.modifier.setOpacity 0,
 						method: 'spring'
 						period: 600
-						dampingRatio: 0.6
+						dampingRatio: 0.8
 
 				# Trigger smart scrolling XXX: Fix this later
 				disableThisDebugStyle = false
