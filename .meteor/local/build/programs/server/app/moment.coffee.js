@@ -82,7 +82,8 @@ if (Meteor.isClient) {
         });
         session.on('streamDestroyed', function(event) {
           event.preventDefault();
-          return log('Another streamDestroyed!', event);
+          log('Another streamDestroyed!', event);
+          return Session.set('subscribed', false);
         });
         return session.connect(result.token, function(err) {
           if (err) {
@@ -108,11 +109,7 @@ if (Meteor.isClient) {
     Transitionable.registerMethod('snap', SpringTransition);
     Session.setDefault('backgroundTranslation', 0);
     Session.setDefault('overlayTranslation', 0);
-    Session.setDefault('introTranslation', 0);
-    Session.setDefault('momentButtonTranslation', 1);
     Session.setDefault('ppLogoTranslation', -20);
-    Session.setDefault('timerTranslation', 300);
-    Session.setDefault('questionTranslation', -200);
     Session.setDefault('timelineActive', false);
     Session.setDefault('canSubscribeToStream', false);
     Session.setDefault('userCanPublish', false);
@@ -122,6 +119,7 @@ if (Meteor.isClient) {
     Session.setDefault('now', TimeSync.serverTime());
     Session.setDefault('blur', 100);
     Session.setDefault('grayscale', false);
+    Session.setDefault('bloom', 1);
 
     /*Engine.on('prerender', () ->
     			if window.timelineMinuteScroller
@@ -134,10 +132,10 @@ if (Meteor.isClient) {
     		)
      */
     Engine.on('postrender', function() {
-      var canvasSize, light, size, video, videoGeometry, videoMaterial;
+      var FAR, NEAR, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_ANGLE, axisHelper, canvasSize, effectBloom, effectCopy, effectHorizBlur, effectVertiBlur, light, renderModel, size, video, videoGeometry, videoMaterial;
       if (window.canvas && !window.context) {
-        size = [320, 240];
-        canvasSize = [640, 480];
+        size = FView.mainCtx.getSize();
+        canvasSize = [size[0] * 2, size[1] * 2];
         window.canvas.setSize(size, canvasSize);
         window.context = window.canvas.getContext('webgl');
         window.renderer = new THREE.WebGLRenderer({
@@ -147,30 +145,29 @@ if (Meteor.isClient) {
           context: window.context
         });
         window.scene = new THREE.Scene();
-        window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-        window.camera.position.x = 0;
-        window.camera.position.y = 0;
-        window.camera.position.z = 1000;
-
-        /*rectLength = 640
-        				rectWidth = 480
-        				rectShape = new THREE.Shape()
-        				rectShape.moveTo 0, 0
-        				rectShape.lineTo 0, rectWidth
-        				rectShape.lineTo rectLength, rectWidth
-        				rectShape.lineTo rectLength, 0
-        				rectShape.lineTo 0, 0
-        
-        				 * Create the rectangle shape
-        				rectGeom = new THREE.ShapeGeometry(rectShape)
-        
-        				rectMaterial = new THREE.MeshBasicMaterial
-        					color: 0x66FF66
-        				rectMesh = new THREE.Mesh(rectGeom, rectMaterial)
-        
-        				 * Add the video rectangle to the scene
-        				window.scene.add rectMesh
-         */
+        VIEW_ANGLE = 45;
+        SCREEN_WIDTH = window.innerWidth;
+        SCREEN_HEIGHT = window.innerHeight;
+        NEAR = 0.01;
+        FAR = 100;
+        window.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR);
+        window.camera.position.set(0, 0, 3);
+        window.camera.lookAt(window.scene.position);
+        THREEx.WindowResize(window.renderer, window.camera);
+        window.composer = new THREE.EffectComposer(window.renderer);
+        renderModel = new THREE.RenderPass(window.scene, window.camera);
+        effectBloom = new THREE.BloomPass(Session.get('bloom'));
+        effectCopy = new THREE.ShaderPass(THREE.CopyShader);
+        effectHorizBlur = new THREE.ShaderPass(THREE.HorizontalBlurShader);
+        effectVertiBlur = new THREE.ShaderPass(THREE.VerticalBlurShader);
+        effectHorizBlur.uniforms["h"].value = 1 / window.innerWidth;
+        effectVertiBlur.uniforms["v"].value = 1 / window.innerHeight;
+        effectVertiBlur.renderToScreen = true;
+        window.composer.addPass(renderModel);
+        window.composer.addPass(effectHorizBlur);
+        window.composer.addPass(effectVertiBlur);
+        axisHelper = new THREE.AxisHelper(1);
+        scene.add(axisHelper);
       }
       if ((window.publisher && Session.equals('userIsPublishing', true && !window.videoCube)) || (window.subscriber && Session.equals('subscribed', true && !window.videoCube))) {
         video = document.querySelector('video');
@@ -178,27 +175,33 @@ if (Meteor.isClient) {
         window.videoTexture.wrapS = THREE.RepeatWrapping;
         window.videoTexture.wrapT = THREE.RepeatWrapping;
         window.videoTexture.repeat.set(1, 1);
-        videoGeometry = new THREE.BoxGeometry(5, 5, 5);
+        videoGeometry = new THREE.BoxGeometry(3, 3, 3);
         videoMaterial = new THREE.MeshLambertMaterial({
           map: window.videoTexture,
           shading: THREE.FlatShading
         });
         window.videoCube = new THREE.Mesh(videoGeometry, videoMaterial);
         window.scene.add(videoCube);
-        window.camera.position.z = 6;
+        window.camera.position.z = 3;
         light = new THREE.AmbientLight("rgb(255,255,255)");
         window.scene.add(light);
       }
       if (window.renderer && window.scene && window.camera) {
         if (window.videoCube) {
-          window.videoCube.rotation.x += 0.01;
-          window.videoCube.rotation.y += 0.01;
           window.videoTexture.needsUpdate = true;
         }
         if (window.easterEggModel) {
-          window.easterEggModel.rotation.y += 0.01;
+          window.easterEggModel.rotation.y += 0.001;
         }
-        return window.renderer.render(window.scene, window.camera);
+        if (window.controls) {
+          window.controls.update();
+        }
+        if (window.composer) {
+          window.renderer.clear();
+          return window.composer.render();
+        } else {
+          return window.renderer.render(window.scene, window.camera);
+        }
       }
     });
     Template.registerHelper('minutes', function() {
@@ -288,11 +291,7 @@ if (Meteor.isClient) {
       backgroundStyles: function() {
         var styles;
         return styles = {
-          backgroundColor: '#f5f5f5',
-          backgroundImage: 'url(img/performers/01.jpg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: '50% 50%',
-          backgroundSize: 'cover'
+          backgroundColor: '#000'
         };
       },
       overlayStyles: function() {
@@ -301,40 +300,47 @@ if (Meteor.isClient) {
           backgroundImage: 'radial-gradient(rgba(0,0,0,0) 45%, rgba(0,0,0,0.4) 46%), radial-gradient(rgba(0,0,0,0) 45%, rgba(0,0,0,0.4) 46%)',
           backgroundPosition: '0 0, 2px 2px',
           backgroundSize: '4px 4px, 4px 4px, 100% 100%',
-          backgroundRepeat: 'repeat, repeat, no-repeat'
+          backgroundRepeat: 'repeat, repeat, no-repeat',
+          pointerEvents: 'none'
         };
       },
       introStyles: function() {
-        var styles;
-        return styles = {
+        return {
           textAlign: 'center',
           fontSize: '36px',
-          fontFamily: 'ralewayheavy',
+          fontFamily: 'ziamimi-bold',
           color: '#ffffff'
         };
       },
       momentButtonStyles: function() {
-        var styles;
-        return styles = {
+        return {
           border: '1px solid #ffffff',
           textAlign: 'center',
+          fontSize: '14px',
+          fontFamily: 'ziamimi-light',
           color: '#ffffff',
-          lineHeight: '40px'
+          lineHeight: '44px',
+          cursor: 'pointer'
         };
       },
       ppLogoStyles: function() {
-        var styles;
-        return styles = {};
+        return {
+          cursor: 'pointer'
+        };
       },
       timerStyles: function() {
         return {
           textAlign: 'center',
+          fontSize: '72px',
+          fontFamily: 'ziamimi-light',
           color: '#ffffff'
         };
       },
       questionStyles: function() {
         return {
           textAlign: 'center',
+          fontSize: '24px',
+          fontFamily: 'ziamimi-light',
           color: '#ffffff'
         };
       },
@@ -344,7 +350,8 @@ if (Meteor.isClient) {
           borderRadius: '50%',
           textAlign: 'center',
           color: '#ffffff',
-          zIndex: '999'
+          zIndex: '999',
+          cursor: 'pointer'
         };
       },
       timelineOverlayStyles: function() {
@@ -375,108 +382,59 @@ if (Meteor.isClient) {
       log('Set videoWrapper layout!', fview);
       videoWrapper = this.find('#videoWrapper');
       log('videoWrapper', videoWrapper);
-      window.layout = TB.initLayoutContainer(videoWrapper, {
-        bigFixedRatio: false
-      }).layout;
-      log('layout', layout);
       window.canvasParent = fview;
       window.canvas = fview.view;
       log('Ready?', FView.isReady);
       log('Canvas!', this.$('canvas'));
       easterEgg = new Konami(function() {
-        var loader, loaderMTL, loaderModel, loaderTexture, manager, onDocumentMouseMove, onError, onProgress, texture, windowHalfX, windowHalfY;
+        var SkywardSwordLink, SkywardSwordLinkDAE, TwilightPrincessLink, TwilightPrincessLinkDAE, WindWakerLink, YoungLink, loader, threePointLighting;
         log('Trigger Model Viewer!');
-        windowHalfX = window.innerWidth / 2;
-        windowHalfY = window.innerHeight / 2;
-        onDocumentMouseMove = function(event) {
-          window.mouseX = (event.clientX - windowHalfX) / 2;
-          return window.mouseY = (event.clientY - windowHalfY) / 2;
-        };
-        document.addEventListener("mousemove", onDocumentMouseMove, false);
-        window.camera.position.y = 10;
-        window.camera.position.z = 200;
-        window.directionalLight = new THREE.DirectionalLight(0xffeedd);
-        window.directionalLight.position.set(0, 0, 1);
-        scene.add(window.directionalLight);
-        window.byLight = new THREE.DirectionalLight(0xffeedd);
-        window.byLight.position.set(0, 1, 0);
-        scene.add(window.byLight);
-        manager = new THREE.LoadingManager();
-        manager.onProgress = function(item, loaded, total) {
-          return log(item, loaded, total);
-        };
-        texture = new THREE.Texture();
-        onProgress = function(xhr) {
-          var percentComplete;
-          if (xhr.lengthComputable) {
-            percentComplete = xhr.loaded / xhr.total * 100;
-            return log(Math.round(percentComplete, 2) + "% downloaded");
-          }
-        };
-        onError = function(xhr) {
-          return log('xhr error!', xhr);
-        };
-        loader = new THREE.ImageLoader(manager);
-        loaderTexture = 'models/YoungLink/YoungLink_grp.png';
-        loader.load(loaderTexture, function(image) {
-          texture.image = image;
-          texture.needsUpdate = true;
-        });
-        loader = new THREE.OBJMTLLoader(manager);
-        loaderModel = 'models/YoungLink/YoungLinkEquipped.obj';
-        loaderMTL = 'models/YoungLink/YoungLinkEquipped.mtl';
-        return loader.load(loaderModel, loaderMTL, (function(object) {
-          object.traverse(function(child) {
-            if (child instanceof THREE.Mesh) {
-              return child.material.map = texture;
-            }
-          });
-          object.position.y = -10;
+        threePointLighting = new THREEx.ThreePointsLighting();
+        window.scene.add(threePointLighting);
+        loader = new THREEx.UniversalLoader();
+        YoungLink = ['models/YoungLink/YoungLinkEquipped.obj', 'models/YoungLink/YoungLinkEquipped.mtl'];
+        WindWakerLink = ['models/WindWakerLink/link.obj', 'models/WindWakerLink/link.mtl'];
+        SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae';
+        SkywardSwordLink = ['models/SkywardSwordLink/Link.obj', 'models/SkywardSwordLink/Link.mtl'];
+        TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae';
+        TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj', 'models/TwilightPrincessLink/Link.mtl'];
+        return loader.load(YoungLink, function(object) {
+          var boundingBox, scaleScalar, size;
+          log('MODEL LOADED!', object);
+          boundingBox = new THREE.Box3().setFromObject(object);
+          window.link = boundingBox;
+          log('boundingBox!', boundingBox);
+          size = boundingBox.size();
+          log('size', size);
+          scaleScalar = Math.max(size.x, Math.max(size.y, size.z));
+          log('scaleScalar', scaleScalar);
+          object.scale.divideScalar(scaleScalar);
+          boundingBox = new THREE.Box3().setFromObject(object);
+          object.position.copy(boundingBox.center().negate());
           window.easterEggModel = object;
-          return scene.add(window.easterEggModel);
-        }), onProgress, onError);
+          return scene.add(object);
+        });
       });
-
-      /*setTimeout(->
-      				 * Set canvas size
-      				size = window.canvas.getSize()
-      				canvasSize = [size[0] * 2, size[1] * 2];
-      				window.canvas.setSize(size, canvasSize);
-      
-      				 * Get the context
-      				window.context = window.canvas.getContext('2d')
-      				log 'context!!!',window.context
-      			, 20)
-       */
-      window.onresize = function() {
-        var resizeTimeout;
-        clearTimeout(resizeTimeout);
-        return resizeTimeout = setTimeout(function() {
-          return log('Layouting!');
-        }, 20);
-      };
       target = fview.surface || fview.view || fview.view._eventInput;
       target.on('click', function() {
         return log('BACKGROUND TARGET CLICKED', fview, target);
       });
       return this.autorun(function(computation) {
-        var timelineActive;
-        timelineActive = Session.get('timelineActive');
-        if (timelineActive === true) {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.scale(0.8, 0.8, 1), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        } else {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.scale(1, 1, 1), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        }
+
+        /*timelineActive = Session.get('timelineActive')
+        				if timelineActive is true
+        					fview.modifier.halt()
+        					fview.modifier.setTransform Transform.scale(0.5,0.5,1),
+        						method: 'spring'
+        						period: 500
+        						dampingRatio: 0.5
+        				else
+        					fview.modifier.halt()
+        					fview.modifier.setTransform Transform.scale(1,1,1),
+        						method: 'spring'
+        						period: 500
+        						dampingRatio: 0.5
+         */
       });
     };
     Template.overlay.rendered = function() {
@@ -488,30 +446,51 @@ if (Meteor.isClient) {
       });
     };
     Template.intro.rendered = function() {
-      var fview, target;
+      var fview, introFView, target;
       fview = FView.from(this);
+      introFView = FView.byId('intro');
       target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        if (Session.equals('introTranslation', 0)) {
-          Session.set('introTranslation', 150);
+      target.on('click', function() {
+        return log('INTRO CLICKED', fview, target);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive, userIsPublishing;
+        timelineActive = Session.get('timelineActive');
+        userIsPublishing = Session.get('userIsPublishing');
+        if (timelineActive === true || userIsPublishing === true) {
+          introFView.modifier.halt();
+          introFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return introFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         } else {
-          Session.set('introTranslation', 0);
+          introFView.modifier.halt();
+          introFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return introFView.modifier.setOpacity(1, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         }
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(0, Session.get('introTranslation')), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
       });
     };
     Template.momentButton.rendered = function() {
-      var fview, target;
+      var fview, momentButtonFView, target;
       fview = FView.from(this);
+      momentButtonFView = FView.byId('momentButton');
       target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
+      target.on('click', function() {
+        log('MOMENT BUTTON CLICKED', fview, target);
         if (session.capabilities.publish === 1) {
           log('User can publish!');
           window.publisher = OT.initPublisher('video', {
@@ -527,60 +506,6 @@ if (Meteor.isClient) {
             streamCreated: function(event) {
               log('publishStream created!', event);
               Session.set('userIsPublishing', true);
-
-              /*output = () ->
-              								size = [320,240]
-              								canvasSize = [640,480]
-              								imgData = window.publisher.getImgData()
-              								 *Only output to canvas if there's image data
-              								if imgData and imgData.length > 10
-              									 *log 'imgData exists!'
-              									img = new Image()
-              									img.src = 'data:image/png;base64,' + imgData
-              									img.onload = () ->
-              										 *log 'Stream image loaded!!!'
-              										 *log 'Stream image!',img
-              										 *Output the stream to canvas!
-              										 *window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
-              										window.context.drawImage(img, 0, 0, 640,480)
-              										 *Get the canvasData
-              										if Session.equals 'grayscale',true
-              											canvasData = window.context.getImageData(0,0,canvasSize[0],canvasSize[1])
-              											data = canvasData.data
-              											 *Iterate through the pixels
-              											i = 0
-              											while i < data.length
-              												r = data[i]
-              												g = data[i + 1]
-              												b = data[i + 2]
-              												brightness = parseInt((r + g + b) / 3)
-              												data[i] = brightness
-              												data[i + 1] = brightness
-              												data[i + 2] = brightness
-              												i += 4
-              											canvasData.data = data
-              											filteredData = canvasData
-              											window.context.putImageData filteredData,0,0
-              										if !Session.equals 'blur',0
-              											 *Blur the canvas
-              											stackBlurCanvasRGB 'canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get 'blur'
-              								Timer.setTimeout(output,20)
-              							output()
-               */
-
-              /*canvasSize = window.canvas.getSize()
-              							imgData = window.publisher.getImgData()
-              							 *Only output to canvas if there's image data
-              							if imgData and imgData.length > 10
-              								log 'imgData exists!'
-              								img = new Image()
-              								img.src = 'data:image/png;base64,' + imgData
-              								img.onload = () ->
-              									log 'Stream image loaded!!!'
-              									log 'Stream image!',img
-              									 *Output the stream to canvas!
-              									window.context.drawImage(img,canvasSize[0]/2,canvasSize[1]/2)
-               */
               return Meteor.call('createMoment', function(err, result) {
                 var archive, clock, interval, timeLeft;
                 if (err) {
@@ -604,10 +529,15 @@ if (Meteor.isClient) {
                       Session.set('timer', clock);
                       log(clock);
                       if (clock === 0) {
-                        return log("That's All Folks, let's cancel this clientside session");
+                        log("That's All Folks, let's cancel this clientside session");
+                        session.unpublish(publisher);
+                        Session.set('userIsPublishing', false);
+                        return Meteor.clearInterval(interval);
                       }
                     } else {
                       log("Uhhh else");
+                      session.unpublish(publisher);
+                      Session.set('userIsPublishing', false);
                       return Meteor.clearInterval(interval);
                     }
                   };
@@ -618,6 +548,7 @@ if (Meteor.isClient) {
             streamDestroyed: function(event) {
               event.preventDefault();
               log('publishStream destroyed!', event);
+              Session.set('userIsPublishing', false);
               return Meteor.setTimeout(function() {
                 return Session.set('timer', momentTimer);
               }, 1000);
@@ -626,21 +557,40 @@ if (Meteor.isClient) {
           if (window.subscriber) {
             session.unsubscribe(window.subscriber);
           }
-          session.publish(publisher);
+          return session.publish(publisher);
         } else {
-          log('Nope!');
+          return log('Nope!');
         }
-        if (Session.equals('momentButtonTranslation', 1)) {
-          Session.set('momentButtonTranslation', 1.3);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive, userIsPublishing;
+        timelineActive = Session.get('timelineActive');
+        userIsPublishing = Session.get('userIsPublishing');
+        if (timelineActive === true || userIsPublishing === true) {
+          momentButtonFView.modifier.halt();
+          momentButtonFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return momentButtonFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         } else {
-          Session.set('momentButtonTranslation', 1);
+          momentButtonFView.modifier.halt();
+          momentButtonFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return momentButtonFView.modifier.setOpacity(1, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         }
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.scale(Session.get('momentButtonTranslation')), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
       });
     };
     Template.ppLogo.rendered = function() {
@@ -676,22 +626,41 @@ if (Meteor.isClient) {
       });
     };
     Template.timer.rendered = function() {
-      var fview, target;
+      var fview, target, timerFView;
       fview = FView.from(this);
+      timerFView = FView.byId('timer');
       target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        if (Session.equals('timerTranslation', 300)) {
-          Session.set('timerTranslation', 100);
+      target.on('click', function() {
+        return log('TIMER CLICKED', fview, target);
+      });
+      return this.autorun(function(computation) {
+        var userIsPublishing;
+        userIsPublishing = Session.get('userIsPublishing');
+        if (userIsPublishing === true) {
+          timerFView.modifier.halt();
+          timerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return timerFView.modifier.setOpacity(1, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         } else {
-          Session.set('timerTranslation', 300);
+          timerFView.modifier.halt();
+          timerFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return timerFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         }
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(0, Session.get('timerTranslation')), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
       });
     };
     Template.timer.helpers({
@@ -700,46 +669,88 @@ if (Meteor.isClient) {
       }
     });
     Template.question.rendered = function() {
-      var fview, target;
+      var fview, questionFView, target;
       fview = FView.from(this);
+      questionFView = FView.byId('question');
       target = fview.surface || fview.view._eventInput;
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
-        if (Session.equals('questionTranslation', -200)) {
-          Session.set('questionTranslation', 0);
+      target.on('click', function() {
+        return log('QUESTION CLICKED', fview, target);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive, userIsPublishing;
+        timelineActive = Session.get('timelineActive');
+        userIsPublishing = Session.get('userIsPublishing');
+        if (timelineActive === true || userIsPublishing === true) {
+          questionFView.modifier.halt();
+          questionFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return questionFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         } else {
-          Session.set('questionTranslation', -200);
+          questionFView.modifier.halt();
+          questionFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return questionFView.modifier.setOpacity(1, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         }
-        fview.modifier.halt();
-        return fview.modifier.setTransform(Transform.translate(0, Session.get('questionTranslation')), {
-          method: 'spring',
-          period: 1000,
-          dampingRatio: 0.3
-        });
       });
     };
     Template.timelineToggle.rendered = function() {
-      var fview, target, zoomTransition;
+      var fview, target, timelineToggleFView, zoomTransition;
       fview = FView.from(this);
+      timelineToggleFView = FView.byId('timelineToggle');
       target = fview.surface || fview.view;
       zoomTransition = {
         duration: 500,
         curve: Easing.inOutSine
       };
-      return target.on('click', function() {
-        log('TARGET CLICKED', fview, target);
+      target.on('click', function() {
+        log('TIMELINE TOGGLE CLICKED', fview, target);
         if (Session.equals('timelineActive', false)) {
           return Session.set('timelineActive', true);
-
-          /*fview.modifier.halt()
-          					fview.modifier.setTransform Transform.scale(1.5, 1.5, 999), zoomTransition
-           */
         } else {
           return Session.set('timelineActive', false);
-
-          /*fview.modifier.halt()
-          					fview.modifier.setTransform Transform.scale(1, 1, 999), zoomTransition
-           */
+        }
+      });
+      return this.autorun(function(computation) {
+        var userIsPublishing;
+        userIsPublishing = Session.get('userIsPublishing');
+        if (userIsPublishing === true) {
+          timelineToggleFView.modifier.halt();
+          timelineToggleFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return timelineToggleFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+        } else {
+          timelineToggleFView.modifier.halt();
+          timelineToggleFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          return timelineToggleFView.modifier.setOpacity(.14, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         }
       });
     };
@@ -761,7 +772,7 @@ if (Meteor.isClient) {
           padding: '0 10px 0 10px',
           fontSize: '72px',
           color: '#ffffff',
-          fontFamily: 'ralewayregular',
+          fontFamily: 'ziamimi-bold',
           textTransform: 'uppercase',
           textAlign: 'center'
         };
@@ -774,8 +785,27 @@ if (Meteor.isClient) {
       target = fview.surface || fview.view || fview.view._eventInput;
       log('TIMELINESEARCH TARGET', target);
       window.timelineSearch = target;
-      return target.on('keyup', function(e) {
+      target.on('keyup', function(e) {
         return log('TIMELINESEARCH KEYUP', e);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        } else {
+          fview.modifier.halt();
+          return fview.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        }
       });
     };
     Session.setDefault('currentSecond', 0);
@@ -792,18 +822,20 @@ if (Meteor.isClient) {
     Session.setDefault('epochMonth', moment(Session.get('epoch')).month());
     Session.setDefault('epochYear', moment(Session.get('epoch')).year());
     Template.timelineMinuteScroller.rendered = function() {
-      var fview, scrollView, target;
+      var fview, scrollView, target, timelineMinuteScrollerFView;
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
       scrollView = fview.children[0].view._eventInput;
       window.timelineMinuteScroller = fview.children[0].view;
       window.timelineMinuteSequence = window.timelineMinuteScroller._node;
       window.timelineMinuteSequence._.loop = true;
+      timelineMinuteScrollerFView = FView.byId('timelineMinuteScroller');
+      timelineMinuteScrollerFView.modifier.setOrigin([0.5, 0.5]);
       scrollView.on('start', function(e) {});
       scrollView.on('update', function(e) {});
       scrollView.on('end', function(e) {});
       return this.autorun(function(computation) {
-        var amountMidPoint, currentMinute, i, instance, previousMinute, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
+        var amountMidPoint, currentMinute, disableThisDebugStyle, i, instance, previousMinute, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l, _results, _results1, _results2, _results3;
         currentMinute = Session.get('currentMinute');
         previousMinute = window.timelineMinuteScroller.getCurrentIndex();
         totalAmount = window.timelineMinuteScroller._node._.array.length;
@@ -812,53 +844,105 @@ if (Meteor.isClient) {
         log('previousMinute', previousMinute);
         log('currentMinute', currentMinute);
         scrollStart = 0;
-        if (previousMinute > amountMidPoint && currentMinute < amountMidPoint) {
-          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
-          scrollDistance = totalAmount + currentMinute - previousMinute;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('##############currentMinute distance from previousMinute##############', scrollDistance);
-          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
-            window.timelineMinuteScroller.goToNextPage();
-          }
-        } else if (previousMinute < amountMidPoint && currentMinute > amountMidPoint) {
-          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)');
-          scrollDistance = totalAmount + previousMinute - currentMinute;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@', scrollDistance);
-          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
-            window.timelineMinuteScroller.goToPreviousPage();
-          }
+        instance = Template.instance();
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          timelineMinuteScrollerFView.modifier.halt();
+          timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+          timelineMinuteScrollerFView.modifier.setOpacity(1, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
         } else {
-          log('Just scroll as normal!');
-          scrollDistance = previousMinute - currentMinute;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          if (previousMinute < currentMinute) {
-            log('!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!', scrollDistance);
-            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
-              window.timelineMinuteScroller.goToNextPage();
+          timelineMinuteScrollerFView.modifier.halt();
+          timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(3, 3, 3), {
+            method: 'spring',
+            period: 600,
+            dampingRatio: 0.6
+          });
+          timelineMinuteScrollerFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 600,
+            dampingRatio: 0.6
+          });
+        }
+        disableThisDebugStyle = false;
+        if (disableThisDebugStyle) {
+          if (previousMinute > amountMidPoint && currentMinute < amountMidPoint) {
+            log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
+            scrollDistance = totalAmount + currentMinute - previousMinute;
+            if (scrollDistance < 0) {
+              scrollDistance = scrollDistance * -1;
             }
+            log('##############currentMinute distance from previousMinute##############', scrollDistance);
+            _results = [];
+            for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
+              _results.push(window.timelineMinuteScroller.goToNextPage());
+            }
+            return _results;
+          } else if (previousMinute < amountMidPoint && currentMinute > amountMidPoint) {
+            log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)');
+            scrollDistance = totalAmount + previousMinute - currentMinute;
+            if (scrollDistance < 0) {
+              scrollDistance = scrollDistance * -1;
+            }
+            log('@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@', scrollDistance);
+            _results1 = [];
+            for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
+              _results1.push(window.timelineMinuteScroller.goToPreviousPage());
+            }
+            return _results1;
           } else {
-            log('!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!', scrollDistance);
-            if (previousMinute === currentMinute) {
-              log('Scrolling back one to cover this edgecase!');
-              window.timelineMinuteScroller.goToPreviousPage();
+            log('Just scroll as normal!');
+            scrollDistance = previousMinute - currentMinute;
+            if (scrollDistance < 0) {
+              scrollDistance = scrollDistance * -1;
+            }
+            if (previousMinute < currentMinute) {
+              log('!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!', scrollDistance);
+              _results2 = [];
+              for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
+                _results2.push(window.timelineMinuteScroller.goToNextPage());
+              }
+              return _results2;
             } else {
-              for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
-                window.timelineMinuteScroller.goToPreviousPage();
+              log('!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!', scrollDistance);
+              if (previousMinute === currentMinute) {
+                log('Scrolling back one to cover this edgecase!');
+                return window.timelineMinuteScroller.goToPreviousPage();
+              } else {
+                _results3 = [];
+                for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
+                  _results3.push(window.timelineMinuteScroller.goToPreviousPage());
+                }
+                return _results3;
               }
             }
           }
         }
-        return instance = Template.instance();
       });
     };
     Template.timelineMinuteScroller.helpers({
+      timelineMinuteScrollerStyles: function() {
+        var styles, timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive) {
+          log('Auto!');
+          return styles = {
+            pointerEvents: 'auto'
+          };
+        } else {
+          log('None!');
+          return styles = {
+            pointerEvents: 'none'
+          };
+        }
+      },
       moments: function() {
         var i, moment, moments, self, _i, _ref;
         self = this;
@@ -874,13 +958,31 @@ if (Meteor.isClient) {
         return moments;
       },
       timelineMomentStyles: function() {
-        return {
-          textAlign: 'center',
-          color: '#ffffff',
-          fontFamily: 'ralewaylight',
-          textTransform: 'uppercase',
-          overflow: 'hidden'
-        };
+        var styles, timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive) {
+          return styles = {
+            textAlign: 'center',
+            color: '#ffffff',
+            fontFamily: 'ziamimi-bold',
+            textTransform: 'uppercase',
+            overflow: 'hidden',
+            lineHeight: '180px',
+            cursor: 'pointer',
+            pointerEvents: 'auto'
+          };
+        } else {
+          return styles = {
+            textAlign: 'center',
+            color: '#ffffff',
+            fontFamily: 'ziamimi-bold',
+            textTransform: 'uppercase',
+            overflow: 'hidden',
+            lineHeight: '180px',
+            cursor: 'pointer',
+            pointerEvents: 'none'
+          };
+        }
       },
       timelineMinuteTitleIndex: function() {
         return 'timelineMinuteTitle' + this.index;
@@ -927,7 +1029,7 @@ if (Meteor.isClient) {
           textAlign: 'center',
           color: '#ffffff',
           fontSize: '36px',
-          fontFamily: 'ralewayheavy',
+          fontFamily: 'ziamimi-bold',
           zIndex: '1'
         };
       },
@@ -938,7 +1040,7 @@ if (Meteor.isClient) {
           textAlign: 'center',
           color: '#ffffff',
           fontSize: '24px',
-          fontFamily: 'ralewayheavy',
+          fontFamily: 'ziamimi-bold',
           zIndex: '1'
         };
       }
@@ -983,37 +1085,40 @@ if (Meteor.isClient) {
     Template.timelineMinute.helpers({
       minute: function() {
         var fview, fviewHeight, fviewSize, instance, mainCtx, mainCtxHeight, mainCtxSize;
-        mainCtx = FView.mainCtx;
-        mainCtxSize = mainCtx.getSize();
-        mainCtxHeight = mainCtxSize[1];
-        instance = Template.instance();
-        fview = FView.from(instance);
-        if (this.index > 57 && this.index < 59) {
-          fviewSize = fview.getSize();
-          fviewHeight = fviewSize[1];
-        }
+        if (FView.mainCtx) {
+          mainCtx = FView.mainCtx;
+          mainCtxSize = mainCtx.getSize();
+          mainCtxHeight = mainCtxSize[1];
+          instance = Template.instance();
+          fview = FView.from(instance);
+          if (this.index > 57 && this.index < 59) {
+            fviewSize = fview.getSize();
+            fviewHeight = fviewSize[1];
+          }
 
-        /*if this.index + 1 > 59
-        					log 'I am greater than 59! I\'m gonna go back to 0',this.index
-        				else if this.index - 1 < 0
-        					log 'I am less than 0! I\'m gonna go back to 59',this.index
-         */
+          /*if this.index + 1 > 59
+          						log 'I am greater than 59! I\'m gonna go back to 0',this.index
+          					else if this.index - 1 < 0
+          						log 'I am less than 0! I\'m gonna go back to 59',this.index
+           */
+        }
         return this;
       }
     });
     Template.timelineDayScroller.rendered = function() {
-      var fview, scrollView, target;
+      var fview, scrollView, target, timelineDayScrollerFView;
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
       scrollView = fview.children[1].view._eventInput;
       window.timelineDayScroller = fview.children[1].view;
       window.timelineDaySequence = window.timelineDayScroller._node;
       window.timelineDaySequence._.loop = true;
+      timelineDayScrollerFView = FView.byId('timelineDayScroller');
       scrollView.on('start', function(e) {});
       scrollView.on('update', function(e) {});
       scrollView.on('end', function(e) {});
       return this.autorun(function(computation) {
-        var amountMidPoint, currentDay, i, instance, previousDay, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
+        var amountMidPoint, currentDay, i, instance, previousDay, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l;
         currentDay = Session.get('currentDay');
         previousDay = window.timelineDayScroller.getCurrentIndex();
         totalAmount = window.timelineDayScroller._node._.array.length;
@@ -1022,6 +1127,21 @@ if (Meteor.isClient) {
         log('previousDay', previousDay);
         log('currentDay', currentDay);
         scrollStart = 0;
+
+        /*timelineActive = Session.get('timelineActive')
+        				if timelineActive is true
+        					fview.modifier.halt()
+        					fview.modifier.setTransform Transform.scale(1,1,1),
+        						method: 'spring'
+        						period: 500
+        						dampingRatio: 0.5
+        				else
+        					fview.modifier.halt()
+        					fview.modifier.setTransform Transform.scale(0,0,0),
+        						method: 'spring'
+        						period: 500
+        						dampingRatio: 0.5
+         */
         if (previousDay > amountMidPoint && currentDay < amountMidPoint) {
           log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
           scrollDistance = totalAmount + currentDay - previousDay;
@@ -1066,7 +1186,23 @@ if (Meteor.isClient) {
             }
           }
         }
-        return instance = Template.instance();
+        instance = Template.instance();
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          timelineDayScrollerFView.modifier.halt();
+          return timelineDayScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        } else {
+          timelineDayScrollerFView.modifier.halt();
+          return timelineDayScrollerFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        }
       });
     };
     Template.timelineDayScroller.helpers({
@@ -1080,7 +1216,7 @@ if (Meteor.isClient) {
             backgroundColor: 'green',
             backgroundColor: 'transparent',
             color: '#ffffff',
-            fontFamily: 'ralewaythin',
+            fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'right',
@@ -1091,7 +1227,7 @@ if (Meteor.isClient) {
             backgroundColor: 'aqua',
             backgroundColor: 'transparent',
             color: '#ffffff',
-            fontFamily: 'ralewaythin',
+            fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'right',
@@ -1143,18 +1279,19 @@ if (Meteor.isClient) {
       }
     });
     Template.timelineMonthScroller.rendered = function() {
-      var fview, scrollView, target;
+      var fview, scrollView, target, timelineMonthScrollerFView;
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
       scrollView = fview.children[2].view._eventInput;
       window.timelineMonthScroller = fview.children[2].view;
       window.timelineMonthSequence = window.timelineMonthScroller._node;
       window.timelineMonthSequence._.loop = true;
+      timelineMonthScrollerFView = FView.byId('timelineMonthScroller');
       scrollView.on('start', function(e) {});
       scrollView.on('update', function(e) {});
       scrollView.on('end', function(e) {});
       return this.autorun(function(computation) {
-        var amountMidPoint, currentMonth, i, instance, previousMonth, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
+        var amountMidPoint, currentMonth, i, instance, previousMonth, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l;
         currentMonth = Session.get('currentMonth');
         previousMonth = window.timelineMonthScroller.getCurrentIndex();
         totalAmount = window.timelineMonthScroller._node._.array.length;
@@ -1206,7 +1343,23 @@ if (Meteor.isClient) {
             }
           }
         }
-        return instance = Template.instance();
+        instance = Template.instance();
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          timelineMonthScrollerFView.modifier.halt();
+          return timelineMonthScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        } else {
+          timelineMonthScrollerFView.modifier.halt();
+          return timelineMonthScrollerFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        }
       });
     };
     Template.timelineMonthScroller.helpers({
@@ -1220,7 +1373,7 @@ if (Meteor.isClient) {
             backgroundColor: 'brown',
             backgroundColor: 'transparent',
             color: '#ffffff',
-            fontFamily: 'ralewaythin',
+            fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'right',
@@ -1231,7 +1384,7 @@ if (Meteor.isClient) {
             backgroundColor: 'purple',
             backgroundColor: 'transparent',
             color: '#ffffff',
-            fontFamily: 'ralewaythin',
+            fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'right',
@@ -1284,18 +1437,19 @@ if (Meteor.isClient) {
       }
     });
     Template.timelineYearScroller.rendered = function() {
-      var fview, scrollView, target;
+      var fview, scrollView, target, timelineYearScrollerFView;
       fview = FView.from(this);
       target = fview.surface || fview.view._eventInput;
       scrollView = fview.children[3].view._eventInput;
       window.timelineYearScroller = fview.children[3].view;
       window.timelineYearSequence = window.timelineYearScroller._node;
       window.timelineYearSequence._.loop = true;
+      timelineYearScrollerFView = FView.byId('timelineYearScroller');
       scrollView.on('start', function(e) {});
       scrollView.on('update', function(e) {});
       scrollView.on('end', function(e) {});
       return this.autorun(function(computation) {
-        var amountMidPoint, currentYear, i, instance, previousYear, scrollDistance, scrollStart, totalAmount, _i, _j, _k, _l;
+        var amountMidPoint, currentYear, i, instance, previousYear, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l;
         currentYear = Session.get('currentYear');
         previousYear = window.timelineYearScroller.getCurrentIndex();
         totalAmount = window.timelineYearScroller._node._.array.length;
@@ -1342,7 +1496,24 @@ if (Meteor.isClient) {
             }
           }
         }
-        return instance = Template.instance();
+        instance = Template.instance();
+        timelineActive = Session.get('timelineActive');
+        log('TIMELINE YEAR FVIEW', fview);
+        if (timelineActive === true) {
+          timelineYearScrollerFView.modifier.halt();
+          return timelineYearScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        } else {
+          timelineYearScrollerFView.modifier.halt();
+          return timelineYearScrollerFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        }
       });
     };
     Template.timelineYearScroller.helpers({
@@ -1356,7 +1527,7 @@ if (Meteor.isClient) {
             backgroundColor: 'gray',
             backgroundColor: 'transparent',
             color: '#ffffff',
-            fontFamily: 'ralewaythin',
+            fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'center'
@@ -1366,7 +1537,7 @@ if (Meteor.isClient) {
             backgroundColor: 'orange',
             backgroundColor: 'transparent',
             color: '#ffffff',
-            fontFamily: 'ralewaythin',
+            fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
             textAlign: 'center'
@@ -1448,38 +1619,52 @@ if (Meteor.isClient) {
         timelineMomentBackground.modifier.halt();
         return timelineMomentBackground.modifier.setTransform(Transform.scale(1, 1, 1), zoomTransition);
       });
-      target.on('click', function() {
-        return log('TIMELINE MOMENT CLICKED', fview, target);
+      return target.on('click', function() {
+        log('TIMELINE MOMENT CLICKED', fview, target);
+        Session.set('timelineActive', false);
+        return Session.set('viewingArchivedMoment', true);
       });
-      return this.autorun(function(computation) {
-        var timelineActive;
-        timelineActive = Session.get('timelineActive');
-        if (timelineActive === true) {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.scale(1, 1, 1), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        } else {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.scale(0, 0, 0), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        }
-      });
+
+      /*@autorun((computation)->
+      				timelineActive = Session.get('timelineActive')
+      				if timelineActive is true
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.scale(1,1,1),
+      						method: 'spring'
+      						period: 500
+      						dampingRatio: 0.5
+      				else
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.scale(0,0,0),
+      						method: 'spring'
+      						period: 500
+      						dampingRatio: 0.5
+      			)
+       */
     };
     return Template.timelineMoment.helpers({
       timelineMomentImageStyles: function() {
-        return {
-          backgroundSize: 'cover',
-          backgroundPosition: '50% 50%',
-          backgroundRepeat: 'no-repeat',
-          backgroundColor: 'rgba(255,255,255,1)',
-          backgroundImage: 'url(http://placekitten.com/g/320/180)'
-        };
+        var styles, timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive) {
+          return styles = {
+            backgroundSize: 'cover',
+            backgroundPosition: '50% 50%',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: 'rgba(255,255,255,1)',
+            backgroundImage: 'url(http://placekitten.com/g/320/180)',
+            pointerEvents: 'auto'
+          };
+        } else {
+          return styles = {
+            backgroundSize: 'cover',
+            backgroundPosition: '50% 50%',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: 'rgba(255,255,255,1)',
+            backgroundImage: 'url(http://placekitten.com/g/320/180)',
+            pointerEvents: 'none'
+          };
+        }
       },
       moment: function() {
         var data, instance;

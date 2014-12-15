@@ -382,7 +382,22 @@
       "path": "packages/global-imports.js"
     },
     {
-      "path": "app/compatibility/konami.js"
+      "path": "app/lib/THREEx.js"
+    },
+    {
+      "path": "app/compatibility/THREE/ColladaLoader.js"
+    },
+    {
+      "path": "app/compatibility/THREEx/BasicLighting.js"
+    },
+    {
+      "path": "app/compatibility/THREEx/UniversalLoader.js"
+    },
+    {
+      "path": "app/compatibility/THREEx/WindowResize.js"
+    },
+    {
+      "path": "app/compatibility/Konami.js"
     },
     {
       "sourceMap": "app/moment.coffee.js.map",

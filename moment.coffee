@@ -75,11 +75,10 @@ if Meteor.isClient
 							log 'Subscribed to stream!'
 							Session.set 'subscribed',true
 
-					#layout()
-
 				session.on 'streamDestroyed', (event) ->
 					event.preventDefault()
 					log 'Another streamDestroyed!',event
+					Session.set 'subscribed',false
 
 				# Connect to the session
 				session.connect result.token, (err) ->
@@ -111,11 +110,7 @@ if Meteor.isClient
 		#Default Session States
 		Session.setDefault 'backgroundTranslation', 0
 		Session.setDefault 'overlayTranslation', 0
-		Session.setDefault 'introTranslation', 0
-		Session.setDefault 'momentButtonTranslation', 1
 		Session.setDefault 'ppLogoTranslation', -20
-		Session.setDefault 'timerTranslation', 300
-		Session.setDefault 'questionTranslation', -200
 		Session.setDefault 'timelineActive',false
 		Session.setDefault 'canSubscribeToStream', false
 		Session.setDefault 'userCanPublish', false
@@ -127,6 +122,7 @@ if Meteor.isClient
 		#Filters
 		Session.setDefault 'blur', 100
 		Session.setDefault 'grayscale', false
+		Session.setDefault 'bloom', 1
 
 		# Parallax Scrolling Capabilities
 		###Engine.on('prerender', () ->
@@ -142,14 +138,13 @@ if Meteor.isClient
 		Engine.on('postrender', () ->
 			if window.canvas and not window.context
 				#log 'MAKE CANVAS!!!!'
-				#size = FView.mainCtx.getSize()
-				#canvasSize = [size[0] * 2, size[1] * 2];
-				size = [320,240]
-				canvasSize = [640,480]
+				size = FView.mainCtx.getSize()
+				canvasSize = [size[0] * 2, size[1] * 2];
+				#size = [320,240]
+				#canvasSize = [640,480]
 				window.canvas.setSize(size, canvasSize);
 
 				# Get the context
-				#window.context = window.canvas.getContext('2d')
 				window.context = window.canvas.getContext('webgl')
 
 				# Create the WebGL renderer
@@ -164,49 +159,57 @@ if Meteor.isClient
 				window.scene = new THREE.Scene()
 
 				# Create the Camera
-				window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
-				window.camera.position.x = 0
-				window.camera.position.y = 0
-				window.camera.position.z = 1000
+				VIEW_ANGLE = 45
+				SCREEN_WIDTH = window.innerWidth
+				SCREEN_HEIGHT = window.innerHeight
+				NEAR = 0.01
+				FAR = 100
+				window.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
+				window.camera.position.set 0, 0, 3
+				window.camera.lookAt window.scene.position
 
-				# Create the rectangle bounds for the video input
-				###rectLength = 640
-				rectWidth = 480
-				rectShape = new THREE.Shape()
-				rectShape.moveTo 0, 0
-				rectShape.lineTo 0, rectWidth
-				rectShape.lineTo rectLength, rectWidth
-				rectShape.lineTo rectLength, 0
-				rectShape.lineTo 0, 0
+				# Handle Window Resizing
+				THREEx.WindowResize window.renderer, window.camera
 
-				# Create the rectangle shape
-				rectGeom = new THREE.ShapeGeometry(rectShape)
+				# Create a Composer for Post Processing
+				window.composer = new THREE.EffectComposer window.renderer
 
-				rectMaterial = new THREE.MeshBasicMaterial
-					color: 0x66FF66
-				rectMesh = new THREE.Mesh(rectGeom, rectMaterial)
+				# Post Processing
+				renderModel = new THREE.RenderPass window.scene, window.camera
 
-				# Add the video rectangle to the scene
-				window.scene.add rectMesh###
+				# Bloom Effect
+				effectBloom = new THREE.BloomPass Session.get 'bloom'
+				effectCopy = new THREE.ShaderPass THREE.CopyShader
 
-				# Create the geometry
-				#window.geometry = new THREE.BoxGeometry(200, 200, 200)
+				# Render effects to screen
+				#effectCopy.renderToScreen = true
 
-				# Create the material
-				#window.material = new THREE.MeshBasicMaterial(
-				#	color: 0xff0000
-				#	wireframe: true
-				#)
+				# Blur Effect
+				effectHorizBlur = new THREE.ShaderPass THREE.HorizontalBlurShader
+				effectVertiBlur = new THREE.ShaderPass THREE.VerticalBlurShader
 
-				# Create the mesh and add it to the scene
-				#window.mesh = new THREE.Mesh(window.geometry, window.material)
-				#window.scene.add window.mesh
+				# Set Blur Strength
+				effectHorizBlur.uniforms[ "h" ].value = 1 / window.innerWidth
+				effectVertiBlur.uniforms[ "v" ].value = 1 / window.innerHeight
 
-				#log 'context!!!',window.context
-			#else if window.canvas and FView.mainCtx
-			#	size = FView.mainCtx.getSize()
-			#	canvasSize = [size[0] * 2, size[1] * 2];
-			#	window.canvas.setSize(size, canvasSize);
+				# Render to screen
+				#effectHorizBlur.renderToScreen = true
+				effectVertiBlur.renderToScreen = true
+
+				# Add Post Process Effects
+				window.composer.addPass renderModel
+				#window.composer.addPass effectBloom
+				window.composer.addPass effectHorizBlur
+				window.composer.addPass effectVertiBlur
+				#window.composer.addPass effectCopy
+
+				# Create an axis to visualize position
+				axisHelper = new THREE.AxisHelper 1
+				scene.add axisHelper
+
+				# Add debug controls for mouse movement
+				#window.controls = new THREE.OrbitControls window.camera, window.renderer.domElement
+
 			if (window.publisher and Session.equals 'userIsPublishing',true and not window.videoCube) or (window.subscriber and Session.equals 'subscribed',true and not window.videoCube)
 
 				video = document.querySelector('video')
@@ -217,14 +220,14 @@ if Meteor.isClient
 				window.videoTexture.wrapT = THREE.RepeatWrapping
 				window.videoTexture.repeat.set 1, 1
 
-				videoGeometry = new THREE.BoxGeometry(5, 5, 5)
+				videoGeometry = new THREE.BoxGeometry(3, 3, 3)
 				videoMaterial = new THREE.MeshLambertMaterial(
 				  map: window.videoTexture
 				  shading: THREE.FlatShading
 				)
 				window.videoCube = new THREE.Mesh(videoGeometry, videoMaterial)
 				window.scene.add videoCube
-				window.camera.position.z = 6
+				window.camera.position.z = 3
 
 				#Add a soft light
 				light = new THREE.AmbientLight("rgb(255,255,255)") # soft white light
@@ -232,28 +235,28 @@ if Meteor.isClient
 			# Render to WebGL if the renderer is initialized - This starts the main render loop for the WebGL
 			if window.renderer and window.scene and window.camera
 
-				#window.mesh.rotation.x += 0.01
-				#window.mesh.rotation.y += 0.02
-
 				#Render the video if it exists
 				if window.videoCube
 					# Rotate the video feed like a boss
-					window.videoCube.rotation.x += 0.01
-					window.videoCube.rotation.y += 0.01
+					#window.videoCube.rotation.x += 0.01
+					#window.videoCube.rotation.y += 0.01
 					window.videoTexture.needsUpdate = true
 
-				#Render the easter egg model if it exists
+				# Easter Egg Model
 				if window.easterEggModel
-					# Allow for mouse rotation of the model
-					#window.camera.position.x += (window.mouseX - window.camera.position.x) * .05
-					#window.camera.position.y += (-window.mouseY - window.camera.position.y) * .05
-					#window.camera.lookAt scene.position
+					window.easterEggModel.rotation.y += 0.001
 
-					# Rotate the model like a boss
-					window.easterEggModel.rotation.y += 0.01
+				if window.controls
+					#Update the controls position
+					window.controls.update()
 
-				# Render the scene
-				window.renderer.render window.scene, window.camera
+				# Render PostProcessing Effects if they exist
+				if window.composer
+					window.renderer.clear()
+					window.composer.render()
+				else
+					# Render the scene normally
+					window.renderer.render window.scene, window.camera
 		)
 
 		#Global Template Helpers
@@ -340,11 +343,7 @@ if Meteor.isClient
 		Template.about.helpers
 			backgroundStyles: ->
 				styles =
-					backgroundColor: '#f5f5f5'
-					backgroundImage: 'url(img/performers/01.jpg)'
-					backgroundRepeat: 'no-repeat'
-					backgroundPosition: '50% 50%'
-					backgroundSize: 'cover'
+					backgroundColor: '#000'
 			overlayStyles: ->
 				styles =
 					#backgroundColor: 'rgba(0,0,0,0.4)'
@@ -352,28 +351,34 @@ if Meteor.isClient
 					backgroundPosition: '0 0, 2px 2px'
 					backgroundSize: '4px 4px, 4px 4px, 100% 100%'
 					backgroundRepeat: 'repeat, repeat, no-repeat'
+					pointerEvents: 'none'
 			introStyles: ->
-				styles =
-					#backgroundColor: '#e5e5e5'
-					textAlign: 'center'
-					fontSize: '36px'
-					fontFamily: 'ralewayheavy'
-					color: '#ffffff'
+				#backgroundColor: '#e5e5e5'
+				textAlign: 'center'
+				fontSize: '36px'
+				fontFamily: 'ziamimi-bold'
+				color: '#ffffff'
 			momentButtonStyles: ->
-				styles =
-					border: '1px solid #ffffff'
-					textAlign: 'center'
-					color: '#ffffff'
-					lineHeight: '40px'
+				border: '1px solid #ffffff'
+				textAlign: 'center'
+				fontSize: '14px'
+				fontFamily: 'ziamimi-light'
+				color: '#ffffff'
+				lineHeight: '44px'
+				cursor: 'pointer'
 			ppLogoStyles: ->
-				styles = {}
+				cursor: 'pointer'
 			timerStyles: ->
 				#backgroundColor: '#dddddd'
 				textAlign: 'center'
+				fontSize: '72px'
+				fontFamily: 'ziamimi-light'
 				color: '#ffffff'
 			questionStyles: ->
 				#backgroundColor: '#666666'
 				textAlign: 'center'
+				fontSize: '24px'
+				fontFamily: 'ziamimi-light'
 				color: '#ffffff'
 			timelineToggleStyles: ->
 				backgroundColor: '#ffffff'
@@ -381,6 +386,7 @@ if Meteor.isClient
 				textAlign: 'center'
 				color: '#ffffff'
 				zIndex: '999'
+				cursor: 'pointer'
 			timelineOverlayStyles: ->
 				backgroundColor: '#000000'
 
@@ -410,10 +416,6 @@ if Meteor.isClient
 			log 'Set videoWrapper layout!',fview
 			videoWrapper = this.find '#videoWrapper'
 			log 'videoWrapper',videoWrapper
-			window.layout = TB.initLayoutContainer(videoWrapper,
-				bigFixedRatio: false
-			).layout
-			log 'layout',layout
 			window.canvasParent = fview
 			window.canvas = fview.view
 
@@ -425,100 +427,40 @@ if Meteor.isClient
 			easterEgg = new Konami () ->
 				log 'Trigger Model Viewer!'
 
-				windowHalfX = window.innerWidth / 2
-				windowHalfY = window.innerHeight / 2
+				# Add basic three point lighting
+				threePointLighting = new THREEx.ThreePointsLighting()
+				window.scene.add threePointLighting
 
-				#Mousemove
-				onDocumentMouseMove = (event) ->
-					window.mouseX = (event.clientX - windowHalfX) / 2
-					window.mouseY = (event.clientY - windowHalfY) / 2
+				# Create a universal loader
+				loader = new THREEx.UniversalLoader()
 
-				#Add an event listener to the mousemove
-				document.addEventListener "mousemove", onDocumentMouseMove, false
+				# Model Assets
+				YoungLink = ['models/YoungLink/YoungLinkEquipped.obj','models/YoungLink/YoungLinkEquipped.mtl']
+				WindWakerLink = ['models/WindWakerLink/link.obj','models/WindWakerLink/link.mtl']
+				SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae'
+				SkywardSwordLink = ['models/SkywardSwordLink/Link.obj','models/SkywardSwordLink/Link.mtl']
+				TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae'
+				TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj','models/TwilightPrincessLink/Link.mtl']
 
-				#Change the camera position to view the model better
-				#window.camera.position.z = 30 #Crash
-				window.camera.position.y = 10 #Link
-				window.camera.position.z = 200 #Link
+				# Load the Model
+				loader.load YoungLink, (object) ->
+					log 'MODEL LOADED!',object
 
-				#Add a directional light
-				window.directionalLight = new THREE.DirectionalLight(0xffeedd)
-				window.directionalLight.position.set 0, 0, 1
-				scene.add window.directionalLight
+					# Normalize the scale
+					boundingBox = new THREE.Box3().setFromObject(object)
+					window.link = boundingBox
+					log 'boundingBox!',boundingBox
+					size = boundingBox.size()
+					log 'size',size
+					scaleScalar = Math.max(size.x, Math.max(size.y, size.z))
+					log 'scaleScalar',scaleScalar
+					object.scale.divideScalar scaleScalar
 
-				#Add a second directional light
-				window.byLight = new THREE.DirectionalLight(0xffeedd)
-				#window.byLight.position.set 1, 0, 1
-				window.byLight.position.set 0, 1, 0
-				scene.add window.byLight
-
-				#Create a load manager
-				manager = new THREE.LoadingManager()
-				manager.onProgress = (item, loaded, total) ->
-					log item, loaded, total
-				texture = new THREE.Texture()
-				onProgress = (xhr) ->
-					if xhr.lengthComputable
-						percentComplete = xhr.loaded / xhr.total * 100
-						log Math.round(percentComplete, 2) + "% downloaded"
-				onError = (xhr) ->
-					log 'xhr error!',xhr
-
-				#Instantiate the loader
-				loader = new THREE.ImageLoader(manager)
-				#loaderTexture = 'models/Crash/crash.png'
-				#loaderTexture = 'models/Link/body.png'
-				loaderTexture = 'models/YoungLink/YoungLink_grp.png'
-				loader.load loaderTexture, (image) ->
-					texture.image = image
-					texture.needsUpdate = true
-					return
-
-				#Import the model
-				loader = new THREE.OBJMTLLoader(manager)
-				#loaderModel = 'models/Crash/Crash.obj'
-				#loaderMTL = 'models/Crash/Crash.mtl'
-				#loaderModel = 'models/Link/link.obj'
-				#loaderMTL = 'models/Link/link.mtl'
-				loaderModel = 'models/YoungLink/YoungLinkEquipped.obj'
-				loaderMTL = 'models/YoungLink/YoungLinkEquipped.mtl'
-				loader.load loaderModel, loaderMTL, ((object) ->
-					object.traverse (child) ->
-						child.material.map = texture  if child instanceof THREE.Mesh
-					#object.position.y = 0 #Default
-					object.position.y = -10
+					# Normalize the position
+					boundingBox = new THREE.Box3().setFromObject(object)
+					object.position.copy boundingBox.center().negate()
 					window.easterEggModel = object
-					scene.add window.easterEggModel
-				), onProgress, onError
-
-
-			#window.requestAnimationFrame ->
-			#size = window.canvas.getSize()
-			#canvasSize = [size[0] * 2, size[1] * 2];
-			#window.canvas.setSize(size, canvasSize);
-
-			# Get the context
-			#window.context = window.canvas.getContext('2d')
-			#log 'context!!!',window.context
-
-			###setTimeout(->
-				# Set canvas size
-				size = window.canvas.getSize()
-				canvasSize = [size[0] * 2, size[1] * 2];
-				window.canvas.setSize(size, canvasSize);
-
-				# Get the context
-				window.context = window.canvas.getContext('2d')
-				log 'context!!!',window.context
-			, 20)###
-
-			# Recalculate layout on resize
-			window.onresize = ->
-				clearTimeout resizeTimeout
-				resizeTimeout = setTimeout(->
-					log 'Layouting!'
-					#layout()
-				, 20)
+					scene.add object
 
 			target = fview.surface || fview.view || fview.view._eventInput
 			target.on('click', () ->
@@ -526,10 +468,10 @@ if Meteor.isClient
 			)
 
 			@autorun((computation)->
-				timelineActive = Session.get('timelineActive')
+				###timelineActive = Session.get('timelineActive')
 				if timelineActive is true
 					fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(0.8,0.8,1),
+					fview.modifier.setTransform Transform.scale(0.5,0.5,1),
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
@@ -538,7 +480,7 @@ if Meteor.isClient
 					fview.modifier.setTransform Transform.scale(1,1,1),
 						method: 'spring'
 						period: 500
-						dampingRatio: 0.5
+						dampingRatio: 0.5###
 			)
 
 		Template.overlay.rendered = ->
@@ -552,25 +494,45 @@ if Meteor.isClient
 		Template.intro.rendered = ->
 			fview = FView.from(this)
 
+			introFView = FView.byId('intro')
+
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
-				if Session.equals 'introTranslation', 0 then Session.set 'introTranslation', 150 else Session.set 'introTranslation', 0
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(0, Session.get 'introTranslation'),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+				log 'INTRO CLICKED',fview, target
+			)
+			@autorun((computation)->
+				timelineActive = Session.get 'timelineActive'
+				userIsPublishing = Session.get 'userIsPublishing'
+				if timelineActive is true or userIsPublishing is true
+					introFView.modifier.halt()
+					introFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					introFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+				else
+					introFView.modifier.halt()
+					introFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					introFView.modifier.setOpacity 1,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
 			)
 
 		Template.momentButton.rendered = ->
 			fview = FView.from(this)
 
+			momentButtonFView = FView.byId('momentButton')
+
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
+				log 'MOMENT BUTTON CLICKED',fview, target
 
 				#Set up the session connection
 				if session.capabilities.publish is 1
@@ -589,65 +551,6 @@ if Meteor.isClient
 						streamCreated: (event) ->
 							log 'publishStream created!',event
 							Session.set 'userIsPublishing',true
-							###output = () ->
-								size = [320,240]
-								canvasSize = [640,480]
-								imgData = window.publisher.getImgData()
-								#Only output to canvas if there's image data
-								if imgData and imgData.length > 10
-									#log 'imgData exists!'
-									img = new Image()
-									img.src = 'data:image/png;base64,' + imgData
-									img.onload = () ->
-										#log 'Stream image loaded!!!'
-										#log 'Stream image!',img
-										#Output the stream to canvas!
-										#window.context.clearRect(0, 0, canvasSize[0], canvasSize[1]);
-										window.context.drawImage(img, 0, 0, 640,480)
-										#Get the canvasData
-										if Session.equals 'grayscale',true
-											canvasData = window.context.getImageData(0,0,canvasSize[0],canvasSize[1])
-											data = canvasData.data
-											#Iterate through the pixels
-											i = 0
-											while i < data.length
-												r = data[i]
-												g = data[i + 1]
-												b = data[i + 2]
-												brightness = parseInt((r + g + b) / 3)
-												data[i] = brightness
-												data[i + 1] = brightness
-												data[i + 2] = brightness
-												i += 4
-											canvasData.data = data
-											filteredData = canvasData
-											window.context.putImageData filteredData,0,0
-										if !Session.equals 'blur',0
-											#Blur the canvas
-											stackBlurCanvasRGB 'canvas', 0, 0, canvasSize[0], canvasSize[1], Session.get 'blur'
-								Timer.setTimeout(output,20)
-							output()###
-
-							###canvasSize = window.canvas.getSize()
-							imgData = window.publisher.getImgData()
-							#Only output to canvas if there's image data
-							if imgData and imgData.length > 10
-								log 'imgData exists!'
-								img = new Image()
-								img.src = 'data:image/png;base64,' + imgData
-								img.onload = () ->
-									log 'Stream image loaded!!!'
-									log 'Stream image!',img
-									#Output the stream to canvas!
-									window.context.drawImage(img,canvasSize[0]/2,canvasSize[1]/2)###
-							#Hacky
-							#video = event.target.element.children[0].children[2]
-							#log 'Video!',video
-
-							#video.addEventListener('play', () ->
-							#	log 'DRAWING!!!'
-						    #    #draw(this,context,cw,ch);
-    						#,false)
 
 							Meteor.call('createMoment', (err,result)->
 								if err
@@ -678,34 +581,52 @@ if Meteor.isClient
 											log clock
 											if clock is 0
 												log "That's All Folks, let's cancel this clientside session"
-												#session.unpublish publisher
-												#Meteor.clearInterval interval
+												session.unpublish publisher
+												Session.set 'userIsPublishing',false
+												Meteor.clearInterval interval
 										else
 											log "Uhhh else"
-											#session.unpublish publisher
+											session.unpublish publisher
+											Session.set 'userIsPublishing',false
 											Meteor.clearInterval interval
 									interval = Meteor.setInterval(timeLeft, 1000)
 							)
 						streamDestroyed: (event) ->
 							event.preventDefault()
 							log 'publishStream destroyed!',event
-							#Session.set 'userIsPublishing',false
+							Session.set 'userIsPublishing',false
 							Meteor.setTimeout(->
 								Session.set 'timer', momentTimer
 							,1000)
 					if window.subscriber then session.unsubscribe window.subscriber
 					session.publish publisher
-					#layout()
 				else
 					log 'Nope!'
+			)
 
-				if Session.equals 'momentButtonTranslation', 1 then Session.set 'momentButtonTranslation', 1.3 else Session.set 'momentButtonTranslation', 1
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.scale(Session.get 'momentButtonTranslation'),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+			@autorun((computation)->
+				timelineActive = Session.get 'timelineActive'
+				userIsPublishing = Session.get 'userIsPublishing'
+				if timelineActive is true or userIsPublishing is true
+					momentButtonFView.modifier.halt()
+					momentButtonFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					momentButtonFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+				else
+					momentButtonFView.modifier.halt()
+					momentButtonFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					momentButtonFView.modifier.setOpacity 1,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
 			)
 
 		Template.ppLogo.rendered = ->
@@ -743,17 +664,34 @@ if Meteor.isClient
 		Template.timer.rendered = ->
 			fview = FView.from(this)
 
+			timerFView = FView.byId('timer')
+
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
-				if Session.equals 'timerTranslation', 300 then Session.set 'timerTranslation', 100 else Session.set 'timerTranslation', 300
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(0, Session.get('timerTranslation')),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+				log 'TIMER CLICKED',fview, target
+			)
+			@autorun((computation)->
+				userIsPublishing = Session.get('userIsPublishing')
+				if userIsPublishing is true
+					timerFView.modifier.halt()
+					timerFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					timerFView.modifier.setOpacity 1,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+				else
+					timerFView.modifier.halt()
+					timerFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					timerFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
 			)
 
 		Template.timer.helpers
@@ -763,21 +701,41 @@ if Meteor.isClient
 		Template.question.rendered = ->
 			fview = FView.from(this)
 
+			questionFView = FView.byId('question')
+
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
-				if Session.equals 'questionTranslation', -200 then Session.set 'questionTranslation', 0 else Session.set 'questionTranslation', -200
-
-				fview.modifier.halt()
-				fview.modifier.setTransform Transform.translate(0, Session.get('questionTranslation')),
-					method: 'spring'
-					period: 1000
-					dampingRatio: 0.3
+				log 'QUESTION CLICKED',fview, target
+			)
+			@autorun((computation)->
+				timelineActive = Session.get 'timelineActive'
+				userIsPublishing = Session.get 'userIsPublishing'
+				if timelineActive is true or userIsPublishing is true
+					questionFView.modifier.halt()
+					questionFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					questionFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+				else
+					questionFView.modifier.halt()
+					questionFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					questionFView.modifier.setOpacity 1,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
 			)
 
 		Template.timelineToggle.rendered = ->
 			fview = FView.from(this)
+
+			timelineToggleFView = FView.byId('timelineToggle')
 
 			target = fview.surface || fview.view
 
@@ -786,16 +744,34 @@ if Meteor.isClient
 				curve: Easing.inOutSine
 
 			target.on('click', () ->
-				log 'TARGET CLICKED',fview, target
-
+				log 'TIMELINE TOGGLE CLICKED',fview, target
 				if Session.equals 'timelineActive', false
 					Session.set 'timelineActive',true
-					###fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(1.5, 1.5, 999), zoomTransition###
 				else
 					Session.set 'timelineActive',false
-					###fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(1, 1, 999), zoomTransition###
+			)
+			@autorun((computation)->
+				userIsPublishing = Session.get 'userIsPublishing'
+				if userIsPublishing is true
+					timelineToggleFView.modifier.halt()
+					timelineToggleFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					timelineToggleFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+				else
+					timelineToggleFView.modifier.halt()
+					timelineToggleFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					timelineToggleFView.modifier.setOpacity .14,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
 			)
 
 		#Timeline Search
@@ -815,7 +791,7 @@ if Meteor.isClient
 				padding: '0 10px 0 10px'
 				fontSize: '72px'
 				color: '#ffffff'
-				fontFamily: 'ralewayregular'
+				fontFamily: 'ziamimi-bold'
 				textTransform: 'uppercase'
 				textAlign: 'center'
 
@@ -827,6 +803,21 @@ if Meteor.isClient
 			window.timelineSearch = target
 			target.on('keyup', (e) ->
 				log 'TIMELINESEARCH KEYUP',e
+			)
+			@autorun((computation)->
+				timelineActive = Session.get('timelineActive')
+				if timelineActive is true
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 			)
 
 
@@ -858,6 +849,9 @@ if Meteor.isClient
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
 			window.timelineMinuteSequence = window.timelineMinuteScroller._node
 			window.timelineMinuteSequence._.loop = true
+
+			timelineMinuteScrollerFView = FView.byId('timelineMinuteScroller')
+			timelineMinuteScrollerFView.modifier.setOrigin [0.5,0.5]
 
 			scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
@@ -913,49 +907,84 @@ if Meteor.isClient
 				scrollStart = 0
 				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
 
-				if previousMinute > amountMidPoint and currentMinute < amountMidPoint
-					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
-					#Calculate the forwards sroll distance
-					scrollDistance = totalAmount + currentMinute - previousMinute
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '##############currentMinute distance from previousMinute##############',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineMinuteScroller.goToNextPage()
-				else if previousMinute < amountMidPoint and currentMinute > amountMidPoint
-					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)'
-					#Calculate the backwards scroll distance
-					scrollDistance = totalAmount + previousMinute - currentMinute
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineMinuteScroller.goToPreviousPage()
-				else
-					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					log 'Just scroll as normal!'
-					scrollDistance = previousMinute - currentMinute
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					if previousMinute < currentMinute
-						log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance
-						#We need to add a +1 here so that we'll scroll to the proper top element, because of indexes.
-						#scrollDistance = scrollDistance + 1
-						for i in [0...scrollDistance]
-							window.timelineMinuteScroller.goToNextPage()
-					else
-						log '!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!',scrollDistance
-						#Check for an edge case where the user has clicked on a different index but it won't change to that one because of an overflow issue
-						if previousMinute is currentMinute
-							log 'Scrolling back one to cover this edgecase!'
-							window.timelineMinuteScroller.goToPreviousPage()
-						else
-							for i in [0...scrollDistance]
-								window.timelineMinuteScroller.goToPreviousPage()
-
 				#Get the Template instance
 				instance = Template.instance()
 				#log 'AUTORUN INSTANCE',instance
+				timelineActive = Session.get 'timelineActive'
+				if timelineActive is true
+					timelineMinuteScrollerFView.modifier.halt()
+					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+					timelineMinuteScrollerFView.modifier.setOpacity 1,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+				else
+					timelineMinuteScrollerFView.modifier.halt()
+					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(3,3,3),
+						method: 'spring'
+						period: 600
+						dampingRatio: 0.6
+					timelineMinuteScrollerFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 600
+						dampingRatio: 0.6
+
+				# Trigger smart scrolling XXX: Fix this later
+				disableThisDebugStyle = false
+				if disableThisDebugStyle
+					if previousMinute > amountMidPoint and currentMinute < amountMidPoint
+						log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
+						#Calculate the forwards sroll distance
+						scrollDistance = totalAmount + currentMinute - previousMinute
+						if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+						log '##############currentMinute distance from previousMinute##############',scrollDistance
+						for i in [0...scrollDistance]
+							window.timelineMinuteScroller.goToNextPage()
+					else if previousMinute < amountMidPoint and currentMinute > amountMidPoint
+						log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)'
+						#Calculate the backwards scroll distance
+						scrollDistance = totalAmount + previousMinute - currentMinute
+						if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+						log '@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@',scrollDistance
+						for i in [0...scrollDistance]
+							window.timelineMinuteScroller.goToPreviousPage()
+					else
+						#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
+						log 'Just scroll as normal!'
+						scrollDistance = previousMinute - currentMinute
+						if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
+						if previousMinute < currentMinute
+							log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance
+							#We need to add a +1 here so that we'll scroll to the proper top element, because of indexes.
+							#scrollDistance = scrollDistance + 1
+							for i in [0...scrollDistance]
+								window.timelineMinuteScroller.goToNextPage()
+						else
+							log '!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!',scrollDistance
+							#Check for an edge case where the user has clicked on a different index but it won't change to that one because of an overflow issue
+							if previousMinute is currentMinute
+								log 'Scrolling back one to cover this edgecase!'
+								window.timelineMinuteScroller.goToPreviousPage()
+							else
+								for i in [0...scrollDistance]
+									window.timelineMinuteScroller.goToPreviousPage()
+
 			)
 
 		Template.timelineMinuteScroller.helpers
+			timelineMinuteScrollerStyles: ->
+				timelineActive = Session.get 'timelineActive'
+				if timelineActive
+					log 'Auto!'
+					styles =
+						pointerEvents: 'auto'
+				else
+					log 'None!'
+					styles =
+						pointerEvents: 'none'
 			moments: ->
 				self = this
 				#Iterate enough items based on the current index for stub issues right now
@@ -968,11 +997,27 @@ if Meteor.isClient
 					moments.push moment
 				moments
 			timelineMomentStyles: ->
-				textAlign: 'center'
-				color: '#ffffff'
-				fontFamily: 'ralewaylight'
-				textTransform: 'uppercase'
-				overflow: 'hidden'
+				timelineActive = Session.get 'timelineActive'
+				if timelineActive
+					styles =
+						textAlign: 'center'
+						color: '#ffffff'
+						fontFamily: 'ziamimi-bold'
+						textTransform: 'uppercase'
+						overflow: 'hidden'
+						lineHeight: '180px'
+						cursor: 'pointer'
+						pointerEvents: 'auto'
+				else
+					styles =
+						textAlign: 'center'
+						color: '#ffffff'
+						fontFamily: 'ziamimi-bold'
+						textTransform: 'uppercase'
+						overflow: 'hidden'
+						lineHeight: '180px'
+						cursor: 'pointer'
+						pointerEvents: 'none'
 			timelineMinuteTitleIndex: ->
 				'timelineMinuteTitle' + this.index
 			timelineMinuteIndex: ->
@@ -1014,7 +1059,7 @@ if Meteor.isClient
 				textAlign: 'center'
 				color: '#ffffff'
 				fontSize: '36px'
-				fontFamily: 'ralewayheavy'
+				fontFamily: 'ziamimi-bold'
 				zIndex: '1'
 			timelineMinuteTimeStyles: ->
 				backgroundColor: 'orange'
@@ -1022,7 +1067,7 @@ if Meteor.isClient
 				textAlign: 'center'
 				color: '#ffffff'
 				fontSize: '24px'
-				fontFamily: 'ralewayheavy'
+				fontFamily: 'ziamimi-bold'
 				zIndex: '1'
 
 		Template.timelineMinute.rendered = ->
@@ -1077,33 +1122,34 @@ if Meteor.isClient
 				#this.formattedMinute = this.momentMinute.format('h:mm A')
 
 				#Get the viewport height dimensions
-				mainCtx = FView.mainCtx
-				mainCtxSize = mainCtx.getSize()
-				mainCtxHeight = mainCtxSize[1]
-				#log 'mainCtxHeight',mainCtxHeight
+				if FView.mainCtx
+					mainCtx = FView.mainCtx
+					mainCtxSize = mainCtx.getSize()
+					mainCtxHeight = mainCtxSize[1]
+					#log 'mainCtxHeight',mainCtxHeight
 
-				#Get the famous template from this helper instance!
-				instance = Template.instance()
-				fview = FView.from(instance)
+					#Get the famous template from this helper instance!
+					instance = Template.instance()
+					fview = FView.from(instance)
 
-				if this.index > 57 and this.index < 59
-					#log 'Index!',this.index
-					#log 'instance',instance
-					#log 'fview',fview
-					#Get the famous template height!
-					fviewSize = fview.getSize()
-					fviewHeight = fviewSize[1]
-					#log 'famous index and height!',this.index, fviewHeight
+					if this.index > 57 and this.index < 59
+						#log 'Index!',this.index
+						#log 'instance',instance
+						#log 'fview',fview
+						#Get the famous template height!
+						fviewSize = fview.getSize()
+						fviewHeight = fviewSize[1]
+						#log 'famous index and height!',this.index, fviewHeight
 
-					#Figure out where you are in the array
-					#log 'momentMinute',this.momentMinute
-					#log 'formattedMinute',this.formattedMinute
-				###if this.index + 1 > 59
-					log 'I am greater than 59! I\'m gonna go back to 0',this.index
-				else if this.index - 1 < 0
-					log 'I am less than 0! I\'m gonna go back to 59',this.index###
-				#else
-					#log 'I am in between 0 and 59!',this.index
+						#Figure out where you are in the array
+						#log 'momentMinute',this.momentMinute
+						#log 'formattedMinute',this.formattedMinute
+					###if this.index + 1 > 59
+						log 'I am greater than 59! I\'m gonna go back to 0',this.index
+					else if this.index - 1 < 0
+						log 'I am less than 0! I\'m gonna go back to 59',this.index###
+					#else
+						#log 'I am in between 0 and 59!',this.index
 
 				this
 
@@ -1119,6 +1165,8 @@ if Meteor.isClient
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
 			window.timelineDaySequence = window.timelineDayScroller._node
 			window.timelineDaySequence._.loop = true
+
+			timelineDayScrollerFView = FView.byId('timelineDayScroller')
 
 			scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
@@ -1170,6 +1218,20 @@ if Meteor.isClient
 				scrollStart = 0
 				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
 
+				###timelineActive = Session.get('timelineActive')
+				if timelineActive is true
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					fview.modifier.halt()
+					fview.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5###
+
 				if previousDay > amountMidPoint and currentDay < amountMidPoint
 					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
 					#Calculate the forwards sroll distance
@@ -1211,6 +1273,19 @@ if Meteor.isClient
 				#Get the Template instance
 				instance = Template.instance()
 				#log 'AUTORUN INSTANCE',instance
+				timelineActive = Session.get 'timelineActive'
+				if timelineActive is true
+					timelineDayScrollerFView.modifier.halt()
+					timelineDayScrollerFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					timelineDayScrollerFView.modifier.halt()
+					timelineDayScrollerFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 			)
 
 		Template.timelineDayScroller.helpers
@@ -1225,7 +1300,7 @@ if Meteor.isClient
 					backgroundColor: 'green'
 					backgroundColor: 'transparent'
 					color: '#ffffff'
-					fontFamily: 'ralewaythin'
+					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'right'
@@ -1234,7 +1309,7 @@ if Meteor.isClient
 					backgroundColor: 'aqua'
 					backgroundColor: 'transparent'
 					color: '#ffffff'
-					fontFamily: 'ralewaythin'
+					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'right'
@@ -1299,6 +1374,8 @@ if Meteor.isClient
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
 			window.timelineMonthSequence = window.timelineMonthScroller._node
 			window.timelineMonthSequence._.loop = true
+
+			timelineMonthScrollerFView = FView.byId('timelineMonthScroller')
 
 			scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
@@ -1389,6 +1466,19 @@ if Meteor.isClient
 
 				#Get the Template instance
 				instance = Template.instance()
+				timelineActive = Session.get 'timelineActive'
+				if timelineActive is true
+					timelineMonthScrollerFView.modifier.halt()
+					timelineMonthScrollerFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					timelineMonthScrollerFView.modifier.halt()
+					timelineMonthScrollerFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 				#log 'AUTORUN INSTANCE',instance
 			)
 
@@ -1404,7 +1494,7 @@ if Meteor.isClient
 					backgroundColor: 'brown'
 					backgroundColor: 'transparent'
 					color: '#ffffff'
-					fontFamily: 'ralewaythin'
+					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'right'
@@ -1413,7 +1503,7 @@ if Meteor.isClient
 					backgroundColor: 'purple'
 					backgroundColor: 'transparent'
 					color: '#ffffff'
-					fontFamily: 'ralewaythin'
+					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'right'
@@ -1478,6 +1568,7 @@ if Meteor.isClient
 			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
 			window.timelineYearSequence = window.timelineYearScroller._node
 			window.timelineYearSequence._.loop = true
+			timelineYearScrollerFView = FView.byId('timelineYearScroller')
 
 			scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
@@ -1569,6 +1660,20 @@ if Meteor.isClient
 				#Get the Template instance
 				instance = Template.instance()
 				#log 'AUTORUN INSTANCE',instance
+				timelineActive = Session.get('timelineActive')
+				log 'TIMELINE YEAR FVIEW',fview
+				if timelineActive is true
+					timelineYearScrollerFView.modifier.halt()
+					timelineYearScrollerFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					timelineYearScrollerFView.modifier.halt()
+					timelineYearScrollerFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 			)
 
 		Template.timelineYearScroller.helpers
@@ -1583,7 +1688,7 @@ if Meteor.isClient
 					backgroundColor: 'gray'
 					backgroundColor: 'transparent'
 					color: '#ffffff'
-					fontFamily: 'ralewaythin'
+					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'center'
@@ -1591,7 +1696,7 @@ if Meteor.isClient
 					backgroundColor: 'orange'
 					backgroundColor: 'transparent'
 					color: '#ffffff'
-					fontFamily: 'ralewaythin'
+					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
 					textAlign: 'center'
@@ -1682,8 +1787,10 @@ if Meteor.isClient
 			)
 			target.on('click', () ->
 				log 'TIMELINE MOMENT CLICKED',fview, target
+				Session.set 'timelineActive',false
+				Session.set 'viewingArchivedMoment',true
 			)
-			@autorun((computation)->
+			###@autorun((computation)->
 				timelineActive = Session.get('timelineActive')
 				if timelineActive is true
 					fview.modifier.halt()
@@ -1697,15 +1804,27 @@ if Meteor.isClient
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
-			)
+			)###
 
 		Template.timelineMoment.helpers
 			timelineMomentImageStyles: ->
-				backgroundSize: 'cover'
-				backgroundPosition: '50% 50%'
-				backgroundRepeat: 'no-repeat'
-				backgroundColor: 'rgba(255,255,255,1)'
-				backgroundImage: 'url(http://placekitten.com/g/320/180)'
+				timelineActive = Session.get 'timelineActive'
+				if timelineActive
+					styles =
+						backgroundSize: 'cover'
+						backgroundPosition: '50% 50%'
+						backgroundRepeat: 'no-repeat'
+						backgroundColor: 'rgba(255,255,255,1)'
+						backgroundImage: 'url(http://placekitten.com/g/320/180)'
+						pointerEvents: 'auto'
+				else
+					styles =
+						backgroundSize: 'cover'
+						backgroundPosition: '50% 50%'
+						backgroundRepeat: 'no-repeat'
+						backgroundColor: 'rgba(255,255,255,1)'
+						backgroundImage: 'url(http://placekitten.com/g/320/180)'
+						pointerEvents: 'none'
 			moment: ->
 				instance = Template.instance()
 				#log 'timelineMoment instance!',instance

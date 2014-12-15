@@ -4,6 +4,58 @@
 		"selected_items":
 		[
 			[
+				"userI",
+				"userIsPublishing"
+			],
+			[
+				"timelineMInu",
+				"timelineMinuteScroller"
+			],
+			[
+				"timelineYear",
+				"timelineYearScrollerFView"
+			],
+			[
+				"inner",
+				"innerHeight"
+			],
+			[
+				"three",
+				"threePointLighting"
+			],
+			[
+				"Twl",
+				"TwilightPrincessLink"
+			],
+			[
+				"SCRE",
+				"SCREEN_HEIGHT"
+			],
+			[
+				"SCREEN",
+				"SCREEN_WIDTH"
+			],
+			[
+				"Win",
+				"WindWakerLink"
+			],
+			[
+				"easter",
+				"easterEggModel"
+			],
+			[
+				"video",
+				"videoTexture"
+			],
+			[
+				"rectM",
+				"rectMaterial"
+			],
+			[
+				"Mesh",
+				"MeshBasicMaterial"
+			],
+			[
 				"sub",
 				"subscriber"
 			],
@@ -67,74 +119,58 @@
 			"file": "moment.jade",
 			"settings":
 			{
-				"buffer_size": 10080,
+				"buffer_size": 10341,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "compatibility/konami.js",
+			"settings":
+			{
+				"buffer_size": 3649,
+				"line_ending": "Windows"
 			}
 		},
 		{
 			"file": "moment.coffee",
 			"settings":
 			{
-				"buffer_size": 70478,
+				"buffer_size": 74851,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "//TODO: Find canvas from Meteor/Famous instead of DOM\nvar canvasElement = document.querySelector('canvas');\n\n//Initialize a ThreeJS scene in the Famo.us canvas\nvar renderer = new THREE.WebGLRenderer({\n	canvas: window.canvas._currentTarget,\n	antialias: true,\n	devicePixelRatio: window.devicePixelRatio,\n	context: window.context\n});\n\n//Set the renderer size (May not be needed?)\nrenderer.setSize(640,480);\n\n\nvar scene = new THREE.Scene();\n\n        var camera = new THREE.PerspectiveCamera(\n            35,             // Field of view\n            800 / 600,      // Aspect ratio\n            0.1,            // Near plane\n            10000           // Far plane\n        );\n        camera.position.set( -15, 10, 10 );\n        camera.lookAt( scene.position );\n\n        var geometry = new THREE.CubeGeometry( 5, 5, 5 );\n        var material = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );\n        var mesh = new THREE.Mesh( geometry, material );\n        scene.add( mesh );\n\n        var light = new THREE.PointLight( 0xFFFF00 );\n        light.position.set( 10, 0, 10 );\n        scene.add( light );\n\n        renderer.render( scene, camera );\n\n\n\n\n\n//Initialize a ThreeJS scene in the Famo.us canvas\nvar renderer = new THREE.WebGLRenderer({\n    canvas: window.canvas._currentTarget,\n    antialias: true,\n    devicePixelRatio: window.devicePixelRatio,\n    context: window.context\n});\n\n//Set the renderer size (May not be needed?)\nrenderer.setSize(640,480);\n\n//Create a THREE.JS scene\nvar scene = new THREE.Scene();\n\n//Create a camera\nvar camera = new THREE.PerspectiveCamera(\n	35, //Field of View\n	640/480, //Aspect Ratio\n	0.1, //Near Plane\n	10000 //Far Plane\n);\ncamera.position.set( -15, 10, 10 );\ncamera.lookAt ( scene.position );\n\n//Create some geometry to view\nvar geometry = new THREE.CubeGeometry( 5, 5, 5 );\nvar material = new THREE.MeshLambertMaterial({ color: 0xFF0000 });\nvar mesh = new THREE.Mesh ( geometry, material );\nscene.add( mesh );\n\n//Create a light\nvar light = new THREE.PointLight( 0xFF0000 );\nlight.position.set( 10, 0, 10 );\nscene.add( light );\n\n//Render it\nrenderer.render( scene, camera );\n\nvideo = document.querySelector('video');\nvideoTexture = new THREE.Texture(video);\n\n\n//Rotating cube scene",
+			"contents": "FView.byId('timelineYearScroller').modifier.setTransform(Transform.scale(0,0,0),\n{\n	method: 'spring',\n	period: 500,\n	dampingRatio: 0.5\n});",
 			"settings":
 			{
-				"buffer_size": 2219,
-				"line_ending": "Unix",
-				"name": "//TODO: Find canvas from Meteor/Famous instead of"
-			}
-		},
-		{
-			"contents": "6a6462 -> 333\n\nbab8b7 -> 666",
-			"settings":
-			{
-				"buffer_size": 28,
-				"line_ending": "Unix",
-				"name": "6a6462 -> 333"
-			}
-		},
-		{
-			"contents": "i = 0\n\nblur = function() {\n	if (i < 100) {\n		i+= 7\n		Session.set('blur',i)\n		setTimeout(blur);\n	} else {\n		clearTimeout(blur);\n		console.log('Blurred!');\n	}\n}\nblur();\n\nunblur = function() {\n	if (i > 0) {\n		i-= 7\n		Session.set('blur',i)\n		setTimeout(unblur);\n	} else {\n		clearTimeout(unblur);\n		console.log('Unblurred!');\n	}\n}\nunblur();\n\n\n",
-			"settings":
-			{
-				"buffer_size": 338,
-				"line_ending": "Unix",
-				"name": "i = 0"
-			}
-		},
-		{
-			"file": "compatibility/blur.js",
-			"settings":
-			{
-				"buffer_size": 17181,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"contents": "size = FView.mainCtx.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.canvas.setSize(size, canvasSize);",
-			"settings":
-			{
-				"buffer_size": 112,
+				"buffer_size": 138,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "var context = this.canvas.getContext('2d');\nvar size = this.getSize();\nvar canvasSize = [size[0] * 2, size[1] * 2];\nthis.canvas.setSize(size, canvasSize);\n\n// Do canvas drawing here...\ncontext.clearRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.fillStyle = this.options.backgroundColor;\ncontext.fillRect(0, 0, canvasSize[0], canvasSize[1]);\ncontext.lineWidth = 1;\ncontext.strokeStyle = this.options.borderColor;\ncontext.strokeRect(0, 0, canvasSize[0], canvasSize[1]);\n...\n\n// Call super\nreturn this._node.render();\n\n\n\n// Output to Canvas\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Clear Background\n//window.context.clearRect(0,0,canvasSize[0],canvasSize[1]);\nwindow.context.fillStyle = 'red';\nwindow.context.fillRect(20,20,150,200);\n/*window.context.lineWidth = 1;\nwindow.context.strokeStyle = 'green'\nwindow.context.strokeRect(0,0,canvasSize[0],canvasSize[1]);*/\n\n//window.canvasParent.render()\n\n// Works\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size [1] * 2];\nwindow.canvas.setSize(size, canvasSize);\ncontext = window.canvas.getContext('2d');\n\n// Draw\ncontext.fillStyle = 'red';\ncontext.fillRect(20,20,150,200);\n\n\n// Doesn't work\n\n// Prepare\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.canvas.setSize(size, canvasSize);\n\n// Draw\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n\n// Works with Delay\n// Draw\nsize = window.canvas.getSize()\ncanvasSize = [size[0] * 2, size[1] * 2];\nwindow.context.clearRect(0,0,canvasSize[0],canvasSize[1]);\nwindow.context.fillStyle = 'blue';\nwindow.context.fillRect(400,20,150,200);\n\n\n###setTimeout(->\n    # Set canvas size\n    size = window.canvas.getSize()\n    canvasSize = [size[0] * 2, size[1] * 2];\n    window.canvas.setSize(size, canvasSize);\n\n    # Get the context\n    window.context = window.canvas.getContext('2d')\n    log 'context!!!',window.context\n, 20)###\n\n\nvideo = document.querySelector('video');\n\nvideo.addEventListener('play', function(){\n    console.log('Streaming!');\n},false);",
+			"contents": "bloom/*\n	Three.js \"tutorials by example\"\n	Author: Lee Stemkoski\n	Date: July 2013 (three.js v59dev)\n*/\n\n// MAIN\n\n// standard global variables\nvar container, scene, camera, renderer, controls, stats;\nvar keyboard = new THREEx.KeyboardState();\nvar clock = new THREE.Clock();\n// custom global variables\nvar cube, gui;\nvar shaderActive = \"none\";\n\n// variables for shader\nvar composer, finalPass;\n\ninit();\nanimate();\n\n// FUNCTIONS 		\nfunction init() \n{\n	// SCENE\n	scene = new THREE.Scene();\n	// CAMERA\n	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;\n	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;\n	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);\n	scene.add(camera);\n	camera.position.set(0,150,400);\n	camera.lookAt(scene.position);	\n	// RENDERER\n	if ( Detector.webgl )\n		renderer = new THREE.WebGLRenderer( {antialias:true} );\n	else\n		renderer = new THREE.CanvasRenderer(); \n	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);\n	container = document.getElementById( 'ThreeJS' );\n	container.appendChild( renderer.domElement );\n	// EVENTS\n	THREEx.WindowResize(renderer, camera);\n	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });\n	// CONTROLS\n	controls = new THREE.OrbitControls( camera, renderer.domElement );\n	// STATS\n	stats = new Stats();\n	stats.domElement.style.position = 'absolute';\n	stats.domElement.style.bottom = '0px';\n	stats.domElement.style.zIndex = 100;\n	container.appendChild( stats.domElement );\n	// LIGHT\n	var light = new THREE.PointLight(0xffffff);\n	light.position.set(0,250,0);\n	scene.add(light);\n	// FLOOR\n	var floorTexture = new THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' );\n	floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; \n	floorTexture.repeat.set( 10, 10 );\n	var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );\n	var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);\n	var floor = new THREE.Mesh(floorGeometry, floorMaterial);\n	floor.position.y = -0.5;\n	floor.rotation.x = Math.PI / 2;\n	scene.add(floor);\n	\n	// SKYBOX/FOG\n	var materialArray = [];\n	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'images/dawnmountain-xpos.png' ) }));\n	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'images/dawnmountain-xneg.png' ) }));\n	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'images/dawnmountain-ypos.png' ) }));\n	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'images/dawnmountain-yneg.png' ) }));\n	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'images/dawnmountain-zpos.png' ) }));\n	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'images/dawnmountain-zneg.png' ) }));\n	for (var i = 0; i < 6; i++)\n	   materialArray[i].side = THREE.BackSide;\n	var skyboxMaterial = new THREE.MeshFaceMaterial( materialArray );\n	\n	var skyboxGeom = new THREE.CubeGeometry( 5000, 5000, 5000, 1, 1, 1 );\n	\n	var skybox = new THREE.Mesh( skyboxGeom, skyboxMaterial );\n	scene.add( skybox );	\n\n	\n	////////////\n	// CUSTOM //\n	////////////\n	var cubeGeometry = new THREE.CubeGeometry( 50, 50, 50 );\n	var crateTexture = new THREE.ImageUtils.loadTexture( 'images/crate.gif' );\n	var crateMaterial = new THREE.MeshBasicMaterial( { map: crateTexture } );\n	cube = new THREE.Mesh( cubeGeometry, crateMaterial );\n	cube.position.set(-50,26,0);\n	scene.add(cube);\n	\n	var sphereGeometry = new THREE.SphereGeometry( 50, 32, 16 ); \n	var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} ); \n	var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);\n	sphere.position.set(50, 50, -50);\n	scene.add(sphere);\n\n	\n	/////////////////////\n	// POST-PROCESSING //\n	/////////////////////\n	\n	// GUI setup\n	\n	gui = new dat.GUI();\n	\n	parameters = \n	{\n		x: 0, y: 30, z: 0,\n		sepiaAmount: 0.9,\n		vignetteOffset: 1.5, vignetteDarkness: 1.6,\n		dotscreenAngle: 0.5, dotscreenScale: 0.8,\n		bloomStrength: 1.3, bloomFactor: 1.0,\n		horizBlur: 1.25, vertiBlur: 1.25,\n		useShaderNone:      function() { setupShaderNone();      },\n		useShaderSepia:     function() { setupShaderSepia();     },\n		useShaderVignette:  function() { setupShaderVignette();  },\n		useShaderDotScreen: function() { setupShaderDotScreen(); },\n		useShaderBloom:     function() { setupShaderBloom();     },\n		useShaderBlur:      function() { setupShaderBlur();      }\n		\n	};\n	\n	gui.add( parameters, 'useShaderNone' ).name(\"Display Original Scene\");\n	\n	var folderSepia = gui.addFolder('Sepia');\n	var sepiaAmountGUI = folderSepia.add( parameters, 'sepiaAmount' ).min(0).max(1).step(0.01).name(\"Amount\").listen();\n	sepiaAmountGUI.onChange(\n		function(value)\n		{   setupShaderSepia();   }\n	);\n	folderSepia.add( parameters, 'useShaderSepia' ).name(\"Use Sepia Shader\");\n	folderSepia.open();\n	\n	var folderVignette = gui.addFolder('Vignette');\n	var vignetteOffsetGUI = folderVignette.add( parameters, 'vignetteOffset' ).min(0).max(3).step(0.01).name(\"Offset\").listen();\n	vignetteOffsetGUI.onChange(\n		function(value)\n		{   setupShaderVignette();   }\n	);\n	var vignetteDarknessGUI = folderVignette.add( parameters, 'vignetteDarkness' ).min(0).max(3).step(0.01).name(\"Darkness\").listen();\n	vignetteDarknessGUI.onChange(\n		function(value)\n		{   setupShaderVignette();   }\n	);\n	folderVignette.add( parameters, 'useShaderVignette' ).name(\"Use Vignette Shader\");\n	folderVignette.open();\n	\n	var folderDotScreen = gui.addFolder('Dot Screen');\n	var dotScreenAngleGUI = folderDotScreen.add( parameters, 'dotscreenAngle' ).min(0).max(3.14).step(0.01).name(\"Angle\").listen();\n	dotScreenAngleGUI.onChange(\n		function(value)\n		{   setupShaderDotScreen();   }\n	);\n	var dotScreenScaleGUI = folderDotScreen.add( parameters, 'dotscreenScale' ).min(0).max(2).step(0.01).name(\"Scale\").listen();\n	dotScreenScaleGUI.onChange(\n		function(value)\n		{   setupShaderDotScreen();   }\n	);\n	folderDotScreen.add( parameters, 'useShaderDotScreen' ).name(\"Use DotScreen Shader\");\n	folderDotScreen.open();\n	\n	var folderBloom = gui.addFolder('Bloom');\n	var bloomStrengthGUI = folderBloom.add( parameters, 'bloomStrength' ).min(0).max(3).step(0.01).name(\"Strength\").listen();\n	bloomStrengthGUI.onChange(\n		function(value)\n		{   setupShaderBloom();   }\n	);\n	var bloomFactorGUI = folderBloom.add( parameters, 'bloomFactor' ).min(0.1).max(2.0).step(0.01).name(\"Factor\").listen();\n	bloomFactorGUI.onChange(\n		function(value)\n		{   setupShaderBloom();   }\n	);\n	folderBloom.add( parameters, 'useShaderBloom' ).name(\"Use Bloom Shader\");\n	folderBloom.open();\n	\n	var folderBlur = gui.addFolder('Blur');\n	var horizBlurGUI = folderBlur.add( parameters, 'horizBlur' ).min(0.0).max(3.0).step(0.01).name(\"Horizontal Blur\").listen();\n	horizBlurGUI.onChange(\n		function(value)\n		{   setupShaderBlur();   }\n	);\n	var vertiBlurGUI = folderBlur.add( parameters, 'vertiBlur' ).min(0.0).max(3.0).step(0.01).name(\"Vertical Blur\").listen();\n	vertiBlurGUI.onChange(\n		function(value)\n		{   setupShaderBlur();   }\n	);\n	folderBlur.add( parameters, 'useShaderBlur' ).name(\"Use Blur Shader\");\n	folderBlur.open();\n	\n	setupShaderNone();\n	\n	\n}\n\nfunction setupShaderNone()\n{\n	shaderActive = \"none\";\n}\n\nfunction setupShaderSepia()\n{\n	composer = new THREE.EffectComposer( renderer );\n	composer.addPass( new THREE.RenderPass( scene, camera ) );\n	\n	var shaderSepia = THREE.SepiaShader;\n	var effectSepia = new THREE.ShaderPass( shaderSepia );\n	effectSepia.uniforms[ \"amount\" ].value = parameters.sepiaAmount;\n	effectSepia.renderToScreen = true;\n	composer.addPass(effectSepia);\n	shaderActive = \"sepia\";	\n}\n\nfunction setupShaderVignette()\n{\n	composer = new THREE.EffectComposer( renderer );\n	composer.addPass( new THREE.RenderPass( scene, camera ) );\n	\n	var shaderVignette = THREE.VignetteShader;\n	var effectVignette = new THREE.ShaderPass( shaderVignette );\n	// larger values = darker closer to center\n	// darkness < 1  => lighter edges\n	effectVignette.uniforms[ \"offset\" ].value = parameters.vignetteOffset;\n	effectVignette.uniforms[ \"darkness\" ].value = parameters.vignetteDarkness;\n	effectVignette.renderToScreen = true;\n	composer.addPass(effectVignette);\n	shaderActive = \"vignette\";\n}\n\nfunction setupShaderDotScreen()\n{\n	composer = new THREE.EffectComposer( renderer );\n	composer.addPass( new THREE.RenderPass( scene, camera ) );\n	\n	var effectDotScreen = new THREE.DotScreenPass( new THREE.Vector2(0,0), parameters.dotscreenAngle, parameters.dotscreenScale ); \n	effectDotScreen.renderToScreen = true; \n	composer.addPass(effectDotScreen); \n	shaderActive = \"dotscreen\";\n}\n\nfunction setupShaderBloom()\n{\n	composer = new THREE.EffectComposer( renderer );\n	composer.addPass( new THREE.RenderPass( scene, camera ) );\n	\n	// https://github.com/mrdoob/three.js/issues/1065\n	// this method changes default kernel/sigma values by the same factor\n	var effectBloom = new THREE.BloomPass( parameters.bloomStrength, parameters.bloomFactor * 25, parameters.bloomFactor * 4.0 );\n	composer.addPass( effectBloom );\n	\n	var effectCopy = new THREE.ShaderPass( THREE.CopyShader );\n	effectCopy.renderToScreen = true;\n	composer.addPass( effectCopy );\n	shaderActive = \"bloom\";\n}\n\nfunction setupShaderBlur()\n{\n	composer = new THREE.EffectComposer( renderer );\n	composer.addPass( new THREE.RenderPass( scene, camera ) );\n	\n	// http://devmaster.net/posts/3100/shader-effects-glow-bloom	\n	// http://www.neilblevins.com/cg_education/specular_bloom/specular_bloom.htm\n	var effectHorizBlur = new THREE.ShaderPass( THREE.HorizontalBlurShader );\n	var effectVertiBlur = new THREE.ShaderPass( THREE.VerticalBlurShader );\n	effectHorizBlur.uniforms[ \"h\" ].value = parameters.horizBlur / window.innerWidth;\n	effectVertiBlur.uniforms[ \"v\" ].value = parameters.vertiBlur / window.innerHeight;\n	effectVertiBlur.renderToScreen = true;\n	\n	composer.addPass( effectHorizBlur );\n	composer.addPass( effectVertiBlur );\n	shaderActive = \"blur\";\n}\n\nfunction animate() \n{\n    requestAnimationFrame( animate );\n	render();		\n	update();\n}\n\nfunction update()\n{\n	if ( keyboard.pressed(\"z\") ) \n	{ \n		// do something\n	}\n	\n	controls.update();\n	stats.update();\n}\n\nfunction render() \n{\n	if ( shaderActive == \"none\" )\n		renderer.render( scene, camera );\n	else\n		composer.render();\n}",
 			"settings":
 			{
-				"buffer_size": 2112,
+				"buffer_size": 10275,
 				"line_ending": "Unix"
 			}
 		},
 		{
+			"contents": "\n\n			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();\n\n			var container;\n\n			var camera, scene, renderer;\n\n			var video, texture, material, mesh;\n\n			var composer;\n\n			var mouseX = 0;\n			var mouseY = 0;\n\n			var windowHalfX = window.innerWidth / 2;\n			var windowHalfY = window.innerHeight / 2;\n\n			var cube_count,\n\n				meshes = [],\n				materials = [],\n\n				xgrid = 20,\n				ygrid = 10;\n\n			init();\n			animate();\n\n			function init() {\n\n				container = document.createElement( 'div' );\n				document.body.appendChild( container );\n\n				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );\n				camera.position.z = 500;\n\n				scene = new THREE.Scene();\n\n				var light = new THREE.DirectionalLight( 0xffffff );\n				light.position.set( 0.5, 1, 1 ).normalize();\n				scene.add( light );\n\n				renderer = new THREE.WebGLRenderer( { antialias: false } );\n				renderer.setSize( window.innerWidth, window.innerHeight );\n\n				container.appendChild( renderer.domElement );\n\n				video = document.getElementById( 'video' );\n\n				texture = new THREE.VideoTexture( video );\n				texture.minFilter = THREE.LinearFilter;\n				texture.magFilter = THREE.LinearFilter;\n				texture.format = THREE.RGBFormat;\n\n				//\n\n				var i, j, ux, uy, ox, oy,\n					geometry,\n					xsize, ysize;\n\n				ux = 1 / xgrid;\n				uy = 1 / ygrid;\n\n				xsize = 480 / xgrid;\n				ysize = 204 / ygrid;\n\n				var parameters = { color: 0xffffff, map: texture };\n\n				cube_count = 0;\n\n				for ( i = 0; i < xgrid; i ++ )\n				for ( j = 0; j < ygrid; j ++ ) {\n\n					ox = i;\n					oy = j;\n\n					geometry = new THREE.BoxGeometry( xsize, ysize, xsize );\n					\n					change_uvs( geometry, ux, uy, ox, oy );\n\n					materials[ cube_count ] = new THREE.MeshLambertMaterial( parameters );\n\n					material = materials[ cube_count ];\n\n					material.hue = i/xgrid;\n					material.saturation = 1 - j/ygrid;\n\n					material.color.setHSL( material.hue, material.saturation, 0.5 );\n\n					mesh = new THREE.Mesh( geometry, material );\n\n					mesh.position.x =   ( i - xgrid/2 ) * xsize;\n					mesh.position.y =   ( j - ygrid/2 ) * ysize;\n					mesh.position.z = 0;\n\n					mesh.scale.x = mesh.scale.y = mesh.scale.z = 1;\n\n					scene.add( mesh );\n\n					mesh.dx = 0.001 * ( 0.5 - Math.random() );\n					mesh.dy = 0.001 * ( 0.5 - Math.random() );\n\n					meshes[ cube_count ] = mesh;\n\n					cube_count += 1;\n\n				}\n\n				renderer.autoClear = false;\n\n				document.addEventListener( 'mousemove', onDocumentMouseMove, false );\n\n				// postprocessing\n\n				var renderModel = new THREE.RenderPass( scene, camera );\n				var effectBloom = new THREE.BloomPass( 1.3 );\n				var effectCopy = new THREE.ShaderPass( THREE.CopyShader );\n\n				effectCopy.renderToScreen = true;\n\n				composer = new THREE.EffectComposer( renderer );\n\n				composer.addPass( renderModel );\n				composer.addPass( effectBloom );\n				composer.addPass( effectCopy );\n\n				//\n\n				window.addEventListener( 'resize', onWindowResize, false );\n\n			}\n\n			function onWindowResize() {\n\n				windowHalfX = window.innerWidth / 2;\n				windowHalfY = window.innerHeight / 2;\n\n				camera.aspect = window.innerWidth / window.innerHeight;\n				camera.updateProjectionMatrix();\n\n				renderer.setSize( window.innerWidth, window.innerHeight );\n				composer.reset();\n\n			}\n\n			function change_uvs( geometry, unitx, unity, offsetx, offsety ) {\n\n				var faceVertexUvs = geometry.faceVertexUvs[ 0 ];\n\n				for ( var i = 0; i < faceVertexUvs.length; i ++ ) {\n\n					var uvs = faceVertexUvs[ i ];\n\n					for ( var j = 0; j < uvs.length; j ++ ) {\n\n						var uv = uvs[ j ];\n\n						uv.x = ( uv.x + offsetx ) * unitx;\n						uv.y = ( uv.y + offsety ) * unity;\n\n					}\n\n				}\n\n			}\n\n\n			function onDocumentMouseMove(event) {\n\n				mouseX = ( event.clientX - windowHalfX );\n				mouseY = ( event.clientY - windowHalfY ) * 0.3;\n\n			}\n\n			//\n\n			function animate() {\n\n				requestAnimationFrame( animate );\n\n				render();\n\n			}\n\n			var h, counter = 1;\n\n			function render() {\n\n				var time = Date.now() * 0.00005;\n\n				camera.position.x += ( mouseX - camera.position.x ) * 0.05;\n				camera.position.y += ( - mouseY - camera.position.y ) * 0.05;\n\n				camera.lookAt( scene.position );\n\n				for ( i = 0; i < cube_count; i ++ ) {\n\n					material = materials[ i ];\n\n					h = ( 360 * ( material.hue + time ) % 360 ) / 360;\n					material.color.setHSL( h, material.saturation, 0.5 );\n\n				}\n\n				if ( counter % 1000 > 200 ) {\n\n					for ( i = 0; i < cube_count; i ++ ) {\n\n						mesh = meshes[ i ];\n\n						mesh.rotation.x += 10 * mesh.dx;\n						mesh.rotation.y += 10 * mesh.dy;\n\n						mesh.position.x += 200 * mesh.dx;\n						mesh.position.y += 200 * mesh.dy;\n						mesh.position.z += 400 * mesh.dx;\n\n					}\n\n				}\n\n				if ( counter % 1000 === 0 ) {\n\n					for ( i = 0; i < cube_count; i ++ ) {\n\n						mesh = meshes[ i ];\n\n						mesh.dx *= -1;\n						mesh.dy *= -1;\n\n					}\n\n				}\n\n				counter ++;\n\n				renderer.clear();\n				composer.render();\n\n			}\n\n\n		",
+			"settings":
+			{
+				"buffer_size": 4902,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "absolute-full()\n	position absolute\n	top 0\n	right 0\n	bottom 0\n	left 0\n\n/* CSS declarations go here */\n*\n	user-select none\n	-webkit-user-select none\n	padding 0\n	margin 0\n	list-style none\n	border none\n	outline none\n	-webkit-appearance none\nhtml, body\n	margin 0\n	padding 0\n	background black\n.icon\n	absolute-full()\n	width 100%\n	height 100%\n#pFirst\n	fill #fff\n#pFirstFill\n	fill #fff\n#pLast\n	fill #fff\n#pLastFill\n	fill #fff\n#videoWrapper\n	absolute-full()\n#video\n	absolute-full()\n\n/* Hide Video Elements */\nvideo, .OT_publisher, .OT_root\n	display none!important\n\n/* Upscale canvas for performance sakes */\ncanvas\n	position absolute!important\n	top 0!important\n	right 0!important\n	bottom 0!important\n	left 0!important\n	width 100%!important\n	height 100%!important\n\n/*Temporary Styles for Testing p tag centering*/\np\n	line-height 40px\ninput\n	border none\n	outline none\n	-webkit-appearance none\n\n/* Fonts */\n@font-face\n	font-family 'ralewayextralight'\n	src url('assets/fonts/raleway-extralight-webfont.eot')\n	src url('assets/fonts/raleway-extralight-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-extralight-webfont.woff') format('woff'), url('assets/fonts/raleway-extralight-webfont.ttf') format('truetype'), url('assets/fonts/raleway-extralight-webfont.svg#ralewayextralight') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewaythin'\n	src url('assets/fonts/raleway-thin-webfont.eot')\n	src url('assets/fonts/raleway-thin-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-thin-webfont.woff') format('woff'), url('assets/fonts/raleway-thin-webfont.ttf') format('truetype'), url('assets/fonts/raleway-thin-webfont.svg#ralewaythin') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewaylight'\n	src url('assets/fonts/raleway-light-webfont.eot')\n	src url('assets/fonts/raleway-light-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-light-webfont.woff') format('woff'), url('assets/fonts/raleway-light-webfont.ttf') format('truetype'), url('assets/fonts/raleway-light-webfont.svg#ralewaylight') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewayregular'\n	src url('assets/fonts/raleway-regular-webfont.eot')\n	src url('assets/fonts/raleway-regular-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-regular-webfont.woff') format('woff'), url('assets/fonts/raleway-regular-webfont.ttf') format('truetype'), url('assets/fonts/raleway-regular-webfont.svg#ralewayregular') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewaymedium'\n	src url('assets/fonts/raleway-medium-webfont.eot')\n	src url('assets/fonts/raleway-medium-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-medium-webfont.woff') format('woff'), url('assets/fonts/raleway-medium-webfont.ttf') format('truetype'), url('assets/fonts/raleway-medium-webfont.svg#ralewaymedium') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewaysemibold'\n	src url('assets/fonts/raleway-semibold-webfont.eot')\n	src url('assets/fonts/raleway-semibold-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-semibold-webfont.woff') format('woff'), url('assets/fonts/raleway-semibold-webfont.ttf') format('truetype'), url('assets/fonts/raleway-semibold-webfont.svg#ralewaysemibold') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewaybold'\n	src url('assets/fonts/raleway-bold-webfont.eot')\n	src url('assets/fonts/raleway-bold-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-bold-webfont.woff') format('woff'), url('assets/fonts/raleway-bold-webfont.ttf') format('truetype'), url('assets/fonts/raleway-bold-webfont.svg#ralewaybold') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewayextrabold'\n	src url('assets/fonts/raleway-extrabold-webfont.eot')\n	src url('assets/fonts/raleway-extrabold-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-extrabold-webfont.woff') format('woff'), url('assets/fonts/raleway-extrabold-webfont.ttf') format('truetype'), url('assets/fonts/raleway-extrabold-webfont.svg#ralewayextrabold') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ralewayheavy'\n	src url('assets/fonts/raleway-heavy-webfont.eot')\n	src url('assets/fonts/raleway-heavy-webfont.eot?#iefix') format('embedded-opentype'), url('assets/fonts/raleway-heavy-webfont.woff') format('woff'), url('assets/fonts/raleway-heavy-webfont.ttf') format('truetype'), url('assets/fonts/raleway-heavy-webfont.svg#ralewayheavy') format('svg')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'damier-light'\n	src url(\"../fonts/DamierLight.otf\") format('opentype')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'damier-regular'\n	src url(\"../fonts/DamierRegular.otf\") format('opentype')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ziamimi-light'\n	src url(\"../fonts/ZiamimiLight.otf\") format('opentype')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ziamimi-regular'\n	src url(\"../fonts/ZiamimiRegular.otf\") format('opentype')\n	font-weight normal\n	font-style normal\n\n@font-face\n	font-family 'ziamimi-bold'\n	src url(\"../fonts/ZiamimiBold.otf\") format('opentype')\n	font-weight normal\n	font-style normal",
 			"file": "moment.styl",
+			"file_size": 5441,
+			"file_write_time": 130630097800000000,
 			"settings":
 			{
-				"buffer_size": 4756,
+				"buffer_size": 5441,
 				"line_ending": "Unix"
 			}
 		}
@@ -142,9 +178,13 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 273.0,
+		"height": 400.0,
 		"selected_items":
 		[
+			[
+				"ja",
+				"Set Syntax: JavaScript"
+			],
 			[
 				"java",
 				"Set Syntax: JavaScript"
@@ -182,7 +222,7 @@
 				"Package Control: Install Package"
 			]
 		],
-		"width": 457.0
+		"width": 475.0
 	},
 	"console":
 	{
@@ -208,9 +248,27 @@
 	],
 	"file_history":
 	[
+		"/Users/Pawka/Developer/Parker/Resume/css/main.css",
+		"/Users/Pawka/Developer/Parker/Moment/.meteor/local/build/programs/server/node_modules/node-inspector/front-end/TimelineGrid.js",
+		"/Users/Pawka/Developer/Parker/LightningGame/phaser/src/pixi/loaders/ImageLoader.js",
+		"/Users/Pawka/Developer/Beep/BeepAndroid/plugins/org.apache.cordova.file/src/android/InvalidModificationException.java",
+		"/Users/Pawka/Developer/Beep/BeepWebsite/img/icon-mic.svg",
+		"/Users/Pawka/Developer/Beep/BeepAndroid/ionic.project",
+		"/Users/Pawka/Developer/Parker/Moment/public/models/WindWakerLink/link.mtl",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/THREEx/BasicLighting.js",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/THREE/ColladaLoader.js",
+		"/Users/Pawka/Developer/Parker/Moment/public/models/WindWakerLink/link.obj",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/ThreeX/UniversalLoader.js",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/ThreeX/WindowResize.js",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/ThreeX/THREEx.js",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/blur.js",
+		"/Users/Pawka/Developer/Experiments/threejs-video-cube/scripts/main.js",
+		"/Users/Pawka/Developer/Parker/Moment/compatibility/konami.js",
+		"/Users/Pawka/Developer/Parker/Moment/konami.coffee",
+		"/Users/Pawka/Developer/Experiments/threejs-video-cube/index.html",
+		"/Users/Pawka/Developer/Experiments/video/index.html",
 		"/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/AppView.js",
 		"/Users/Pawka/Developer/Experiments/famous-lagometer/Lagometer.js",
-		"/Users/Pawka/Developer/Parker/Moment/compatibility/blur.js",
 		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
 		"/Users/Pawka/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/Users/Pawka/Developer/Experiments/famous-lagometer/examples/demo/index.html",
@@ -254,6 +312,60 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"timelineActive",
+			"momentButton",
+			"dampingRatio",
+			"blur",
+			"setOpacity",
+			"publisher",
+			"raleway",
+			"ralewaythin",
+			"raleway",
+			"  ",
+			":",
+			";",
+			"scrollerFView",
+			"timelineActive",
+			"layout",
+			"timelineMinuteTitle",
+			"bloom'",
+			"blur'",
+			"scale",
+			"timelineMoment",
+			"'bloom'",
+			"get 'bloom'",
+			"parameters",
+			"parameters.horizBlur",
+			"composer.addPass",
+			"blur",
+			"setupShaderBlur",
+			"useShaderBlur",
+			"blur",
+			"bloom'",
+			"bloom.",
+			"bloom",
+			"Session.setDefau",
+			"renderer = ",
+			"window.controls",
+			"window.renderer",
+			"composer",
+			"videoCube",
+			"easterEggModel",
+			"easterEggModal",
+			".z =",
+			"spotlight",
+			"useMtl",
+			"EASTEREGGMODEL",
+			"postrender",
+			"window.subscriber",
+			"onDocument",
+			"camera",
+			"render(",
+			"ox",
+			"rect",
+			"onresize = ",
+			"webGL",
+			"renderer",
 			"context ",
 			"drawImage",
 			"setTimeout",
@@ -350,15 +462,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10080,
+						"buffer_size": 10341,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1027,
-								1027
+								2255,
+								2255
 							]
 						],
 						"settings":
@@ -367,149 +479,27 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 2,
-			"sheets":
-			[
-				{
-					"buffer": 1,
-					"file": "moment.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 70478,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4608,
-								4608
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 2145.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2219,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1382,
-								1382
-							]
-						],
-						"settings":
-						{
-							"auto_name": "//TODO: Find canvas from Meteor/Famous instead of",
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 257.0,
+						"translation.y": 68.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 3,
+					"buffer": 1,
+					"file": "compatibility/konami.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 28,
+						"buffer_size": 3649,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								28,
-								28
-							]
-						],
-						"settings":
-						{
-							"auto_name": "6a6462 -> 333",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 338,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								338,
-								338
-							]
-						],
-						"settings":
-						{
-							"auto_name": "i = 0",
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "compatibility/blur.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 17181,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								11580,
-								11580
+								2971,
+								2971
 							]
 						],
 						"settings":
@@ -519,26 +509,61 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 739.0,
+						"translation.y": 1181.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 6,
 					"type": "text"
-				},
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
 				{
-					"buffer": 6,
+					"buffer": 2,
+					"file": "moment.coffee",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 112,
+						"buffer_size": 74851,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								112,
-								112
+								19459,
+								19459
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 9884.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 138,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								138,
+								138
 							]
 						],
 						"settings":
@@ -549,36 +574,65 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 8,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
-					"buffer": 7,
+					"buffer": 4,
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 2112,
+						"buffer_size": 10275,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2112,
-								2112
+								9713,
+								9723
 							]
 						],
 						"settings":
 						{
+							"auto_name": "",
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 781.0,
+						"translation.y": 4814.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4902,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2825,
+								2827
+							]
+						],
+						"settings":
+						{
+							"auto_name": "",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2147.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
 					"type": "text"
 				}
 			]
@@ -588,20 +642,20 @@
 			"sheets":
 			[
 				{
-					"buffer": 8,
+					"buffer": 6,
 					"file": "moment.styl",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4756,
+						"buffer_size": 5441,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								394,
-								394
+								5207,
+								5192
 							]
 						],
 						"settings":
@@ -611,10 +665,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2143.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 6,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -711,7 +765,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 0,
+	"selected_group": 1,
 	"settings":
 	{
 	},
