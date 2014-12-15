@@ -21,7 +21,7 @@ this.Seconds = new Mongo.Collection('seconds');
 
 this.openTokApiKey = '45020262';
 
-this.momentTimer = 10;
+this.momentTimer = 100;
 
 this.log = function() {
   log.history = log.history || [];
@@ -366,7 +366,8 @@ if (Meteor.isClient) {
       },
       timelineOverlayStyles: function() {
         return {
-          backgroundColor: '#000000'
+          backgroundColor: '#000000',
+          pointerEvents: 'none'
         };
       }
     });
@@ -448,11 +449,41 @@ if (Meteor.isClient) {
       });
     };
     Template.overlay.rendered = function() {
-      var fview, target;
+      var fview, overlayFView, target;
       fview = FView.from(this);
+      overlayFView = FView.byId('overlay');
       target = fview.surface || fview.view._eventInput;
       return target.on('click', function() {
         return log('OVERLAY CLICKED', fview, target);
+      });
+    };
+    Template.timelineOverlay.rendered = function() {
+      var fview, target, timelineOverlayFView;
+      Template.overlay.rendered = function() {};
+      fview = FView.from(this);
+      timelineOverlayFView = FView.byId('timelineOverlay');
+      target = fview.surface || fview.view._eventInput;
+      target.on('click', function() {
+        return log('TIMELINE OVERLAY CLICKED', fview, target);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          timelineOverlayFView.modifier.halt();
+          return timelineOverlayFView.modifier.setOpacity(.8, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+        } else {
+          timelineOverlayFView.modifier.halt();
+          return timelineOverlayFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 1000,
+            dampingRatio: 0.6
+          });
+        }
       });
     };
     Template.intro.rendered = function() {

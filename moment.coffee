@@ -13,7 +13,7 @@ Router.map ->
 
 # API Keys
 @openTokApiKey = '45020262'
-@momentTimer = 10
+@momentTimer = 100
 
 @log = ->
 	log.history = log.history or [] # store logs to an array for reference
@@ -401,6 +401,7 @@ if Meteor.isClient
 				cursor: 'pointer'
 			timelineOverlayStyles: ->
 				backgroundColor: '#000000'
+				pointerEvents: 'none'
 
 		#Template.views_Scrollview.rendered = ->
 		#	log 'SCROLLVIEW RENDERED'
@@ -498,9 +499,37 @@ if Meteor.isClient
 		Template.overlay.rendered = ->
 			fview = FView.from(this)
 
+			overlayFView = FView.byId('overlay')
+
 			target = fview.surface || fview.view._eventInput
 			target.on('click', () ->
 				log 'OVERLAY CLICKED',fview, target
+			)
+
+		Template.timelineOverlay.rendered = ->
+			Template.overlay.rendered = ->
+			fview = FView.from(this)
+
+			timelineOverlayFView = FView.byId('timelineOverlay')
+
+			target = fview.surface || fview.view._eventInput
+			target.on('click', () ->
+				log 'TIMELINE OVERLAY CLICKED',fview, target
+			)
+			@autorun((computation)->
+				timelineActive = Session.get 'timelineActive'
+				if timelineActive is true
+					timelineOverlayFView.modifier.halt()
+					timelineOverlayFView.modifier.setOpacity .8,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
+				else
+					timelineOverlayFView.modifier.halt()
+					timelineOverlayFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 1000
+						dampingRatio: 0.6
 			)
 
 		Template.intro.rendered = ->

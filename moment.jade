@@ -18,6 +18,7 @@ template(name='about')
 		//-+timelineSearchHolder
 		+CanvasSurface template='background' id='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
 		+Surface template='overlay' id='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=overlayStyles
+		+Surface template='timelineOverlay' id='timelineOverlay' size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,0]' opacity='0' properties=timelineOverlayStyles
 		+Surface template='intro' id='intro' size='[200,200]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=introStyles
 		+Surface template='question' id='question' size='[300,80]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=questionStyles
 		+StateModifier translate='[0,30,0]'
@@ -26,7 +27,6 @@ template(name='about')
 		+Surface template='timer' id='timer' size='[60,60]' origin='[0.5,1]' align='[0.5,0.5]' translate='[0,0,0]' opacity='0' properties=timerStyles
 		+StateModifier translate='[0,20,100]'
 			+Surface template='timelineToggle' id='timelineToggle' size='[60,60]' origin='[0.5,0]' align='[0.5,0]' opacity='0.14' properties=timelineToggleStyles
-		//-+Surface template='timelineOverlay' size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,0]' opacity='0.75' properties=timelineOverlayStyles
 
 template(name='timelineSearchHolder')
 	+InputSurface template='timelineSearch' id='timelineSearch' size='[undefined,100]' origin='[0.5,0]' align='[0.5,0]' translate='[0,0,8]' properties=timelineSearchStyles placeholder='Hello Search' opacity='0'
@@ -34,7 +34,7 @@ template(name='timelineSearchHolder')
 template(name='timelineSearch')
 
 template(name='timelineMinuteScroller')
-	+StateModifier origin='[0.5,0]' align='[0.5,0]' translate='[0,0,1]'
+	+StateModifier origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,1]'
 		+Scrollview id='timelineMinuteScroller' size='[undefined,undefined]' opacity='0' properties=timelineMinuteScrollerStyles
 			+FlexGrid id='timelineMinuteGrid' marginTop=10 marginSide=100 gutterCol=20 gutterRow=20 itemSize='[320,180]'
 				+famousEach minutes

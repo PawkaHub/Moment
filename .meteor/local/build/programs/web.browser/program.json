@@ -752,9 +752,9 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?709155b0f726ade0275bf10ac6c8644b028e42a2",
-      "size": 23376,
-      "hash": "709155b0f726ade0275bf10ac6c8644b028e42a2"
+      "url": "/moment.jade.js?c96650b645a3bbb360b9e463ad48f2725de0aeff",
+      "size": 23942,
+      "hash": "c96650b645a3bbb360b9e463ad48f2725de0aeff"
     },
     {
       "path": "app/lib/THREEx.js",
@@ -815,11 +815,11 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?77d1841379ae02cb55163f9735cde9d44a4eefe0",
+      "url": "/moment.coffee.js?99339f79008301f653841bf5e4bc2f851020ffe4",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/77d1841379ae02cb55163f9735cde9d44a4eefe0.map",
-      "size": 88424,
-      "hash": "77d1841379ae02cb55163f9735cde9d44a4eefe0"
+      "sourceMapUrl": "/99339f79008301f653841bf5e4bc2f851020ffe4.map",
+      "size": 89564,
+      "hash": "99339f79008301f653841bf5e4bc2f851020ffe4"
     },
     {
       "path": "packages/service-configuration.js",

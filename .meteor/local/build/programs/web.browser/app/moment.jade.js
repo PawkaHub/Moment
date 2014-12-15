@@ -56,6 +56,19 @@ Template["about"] = new Template("Template.about", (function() {
         return Spacebars.include(view.lookupTemplate("Surface"));
       }), Blaze._TemplateWith(function() {
         return {
+          template: Spacebars.call("timelineOverlay"),
+          id: Spacebars.call("timelineOverlay"),
+          size: Spacebars.call("[undefined,undefined]"),
+          origin: Spacebars.call("[0,0]"),
+          align: Spacebars.call("[0,0]"),
+          translate: Spacebars.call("[0,0,0]"),
+          opacity: Spacebars.call("0"),
+          properties: Spacebars.call(view.lookup("timelineOverlayStyles"))
+        };
+      }, function() {
+        return Spacebars.include(view.lookupTemplate("Surface"));
+      }), Blaze._TemplateWith(function() {
+        return {
           template: Spacebars.call("intro"),
           id: Spacebars.call("intro"),
           size: Spacebars.call("[200,200]"),
@@ -146,7 +159,7 @@ Template["about"] = new Template("Template.about", (function() {
             return Spacebars.include(view.lookupTemplate("Surface"));
           });
         });
-      }), null ];
+      }) ];
     });
   });
 }));
@@ -182,8 +195,8 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
   var view = this;
   return Blaze._TemplateWith(function() {
     return {
-      origin: Spacebars.call("[0.5,0]"),
-      align: Spacebars.call("[0.5,0]"),
+      origin: Spacebars.call("[0.5,0.5]"),
+      align: Spacebars.call("[0.5,0.5]"),
       translate: Spacebars.call("[0,0,1]")
     };
   }, function() {
