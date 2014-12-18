@@ -752,9 +752,9 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.jade.js?c96650b645a3bbb360b9e463ad48f2725de0aeff",
-      "size": 23942,
-      "hash": "c96650b645a3bbb360b9e463ad48f2725de0aeff"
+      "url": "/moment.jade.js?6621465003310f3775192de1e28554df2841bc3b",
+      "size": 25499,
+      "hash": "6621465003310f3775192de1e28554df2841bc3b"
     },
     {
       "path": "app/lib/THREEx.js",
@@ -815,11 +815,11 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/moment.coffee.js?99339f79008301f653841bf5e4bc2f851020ffe4",
+      "url": "/moment.coffee.js?a794e5a451b3921f2874b40493bdcc583c6d91de",
       "sourceMap": "app/moment.coffee.js.map",
-      "sourceMapUrl": "/99339f79008301f653841bf5e4bc2f851020ffe4.map",
-      "size": 89564,
-      "hash": "99339f79008301f653841bf5e4bc2f851020ffe4"
+      "sourceMapUrl": "/a794e5a451b3921f2874b40493bdcc583c6d91de.map",
+      "size": 82180,
+      "hash": "a794e5a451b3921f2874b40493bdcc583c6d91de"
     },
     {
       "path": "packages/service-configuration.js",
@@ -1706,6 +1706,15 @@
       "url": "/models/Crash/eyelidtop.png",
       "size": 399,
       "hash": "82ba068006792867c13ef0f51500d1300ff4475d"
+    },
+    {
+      "path": "app/models/Monster/Monster.dae",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/models/Monster/Monster.dae",
+      "size": 588999,
+      "hash": "5c3791688c5594550ede90fcfb24664eca90b63e"
     },
     {
       "path": "app/models/SkywardSwordLink/Link.dae",

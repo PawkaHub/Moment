@@ -127,6 +127,7 @@ if Meteor.isClient
 		Session.setDefault 'subscribed',false
 		Session.setDefault 'timer', momentTimer
 		Session.setDefault 'now', TimeSync.serverTime()
+		Session.setDefault 'easterEggActive',false
 
 		#Filters
 		Session.setDefault 'blur', 100
@@ -198,8 +199,8 @@ if Meteor.isClient
 				effectVertiBlur = new THREE.ShaderPass THREE.VerticalBlurShader
 
 				# Set Blur Strength
-				effectHorizBlur.uniforms[ "h" ].value = 1 / window.innerWidth
-				effectVertiBlur.uniforms[ "v" ].value = 1 / window.innerHeight
+				effectHorizBlur.uniforms[ "h" ].value = 0 / window.innerWidth
+				effectVertiBlur.uniforms[ "v" ].value = 0 / window.innerHeight
 
 				# Render to screen
 				#effectHorizBlur.renderToScreen = true
@@ -439,41 +440,46 @@ if Meteor.isClient
 			#Initialize the Konami Code easter egg ;)
 			easterEgg = new Konami () ->
 				log 'Trigger Model Viewer!'
+				easterEggActive = Session.get 'easterEggActive'
 
-				# Add basic three point lighting
-				threePointLighting = new THREEx.ThreePointsLighting()
-				window.scene.add threePointLighting
+				if !easterEggActive
 
-				# Create a universal loader
-				loader = new THREEx.UniversalLoader()
+					Session.set 'easterEggActive',true
 
-				# Model Assets
-				YoungLink = ['models/YoungLink/YoungLinkEquipped.obj','models/YoungLink/YoungLinkEquipped.mtl']
-				WindWakerLink = ['models/WindWakerLink/link.obj','models/WindWakerLink/link.mtl']
-				SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae'
-				SkywardSwordLink = ['models/SkywardSwordLink/Link.obj','models/SkywardSwordLink/Link.mtl']
-				TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae'
-				TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj','models/TwilightPrincessLink/Link.mtl']
+					# Add basic three point lighting
+					threePointLighting = new THREEx.ThreePointsLighting()
+					window.scene.add threePointLighting
 
-				# Load the Model
-				loader.load YoungLink, (object) ->
-					log 'MODEL LOADED!',object
+					# Create a universal loader
+					loader = new THREEx.UniversalLoader()
 
-					# Normalize the scale
-					boundingBox = new THREE.Box3().setFromObject(object)
-					window.link = boundingBox
-					log 'boundingBox!',boundingBox
-					size = boundingBox.size()
-					log 'size',size
-					scaleScalar = Math.max(size.x, Math.max(size.y, size.z))
-					log 'scaleScalar',scaleScalar
-					object.scale.divideScalar scaleScalar
+					# Model Assets
+					YoungLink = ['models/YoungLink/YoungLinkEquipped.obj','models/YoungLink/YoungLinkEquipped.mtl']
+					WindWakerLink = ['models/WindWakerLink/link.obj','models/WindWakerLink/link.mtl']
+					SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae'
+					SkywardSwordLink = ['models/SkywardSwordLink/Link.obj','models/SkywardSwordLink/Link.mtl']
+					TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae'
+					TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj','models/TwilightPrincessLink/Link.mtl']
 
-					# Normalize the position
-					boundingBox = new THREE.Box3().setFromObject(object)
-					object.position.copy boundingBox.center().negate()
-					window.easterEggModel = object
-					scene.add object
+					# Load the Model
+					loader.load YoungLink, (object) ->
+						log 'MODEL LOADED!',object
+
+						# Normalize the scale
+						boundingBox = new THREE.Box3().setFromObject(object)
+						window.link = boundingBox
+						log 'boundingBox!',boundingBox
+						size = boundingBox.size()
+						log 'size',size
+						scaleScalar = Math.max(size.x, Math.max(size.y, size.z))
+						log 'scaleScalar',scaleScalar
+						object.scale.divideScalar scaleScalar
+
+						# Normalize the position
+						boundingBox = new THREE.Box3().setFromObject(object)
+						object.position.copy boundingBox.center().negate()
+						window.easterEggModel = object
+						scene.add object
 
 			target = fview.surface || fview.view || fview.view._eventInput
 			target.on('click', () ->
@@ -827,12 +833,27 @@ if Meteor.isClient
 
 		#Timeline Search
 		Template.timelineSearchHolder.rendered = ->
-			fview = FView.from(this)
-			log 'TIMELINESEARCHHOLDER FVIEW',fview
-			target = fview.surface || fview.view._eventInput
+			timelineSearchFView = FView.byId('timelineSearch')
+			log 'TIMELINESEARCHHOLDER FVIEW',timelineSearchFView
+			target = timelineSearchFView.surface || timelineSearchFView.view._eventInput
 			log 'TIMELINESEARCHHOLDER TARGET',target
 			target.on('keyup', (e) ->
 				log 'TIMELINESEARCHHOLDER KEYUP',e
+			)
+			@autorun((computation)->
+				timelineActive = Session.get('timelineActive')
+				if timelineActive is true
+					timelineSearchFView.modifier.halt()
+					timelineSearchFView.modifier.setTransform Transform.scale(1,1,1),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+				else
+					timelineSearchFView.modifier.halt()
+					timelineSearchFView.modifier.setTransform Transform.scale(0,0,0),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 			)
 
 		Template.timelineSearchHolder.helpers
@@ -840,9 +861,9 @@ if Meteor.isClient
 				backgroundColor: 'cadetblue'
 				backgroundColor: 'transparent'
 				padding: '0 10px 0 10px'
-				fontSize: '72px'
+				fontSize: '40px'
 				color: '#ffffff'
-				fontFamily: 'ziamimi-bold'
+				fontFamily: 'ziamimi-light'
 				textTransform: 'uppercase'
 				textAlign: 'center'
 
@@ -851,25 +872,27 @@ if Meteor.isClient
 			log 'TIMELINESEARCH FVIEW',fview
 			target = fview.surface || fview.view || fview.view._eventInput
 			log 'TIMELINESEARCH TARGET',target
+			timelineSearchFView = FView.byId('timelineSearch')
 			window.timelineSearch = target
 			target.on('keyup', (e) ->
 				log 'TIMELINESEARCH KEYUP',e
 			)
-			@autorun((computation)->
+
+			###@autorun((computation)->
 				timelineActive = Session.get('timelineActive')
 				if timelineActive is true
-					fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(1,1,1),
+					timelineSearchFView.modifier.halt()
+					timelineSearchFView.modifier.setTransform Transform.scale(1,1,1),
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
 				else
-					fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(0,0,0),
+					timelineSearchFView.modifier.halt()
+					timelineSearchFView.modifier.setTransform Transform.scale(0,0,0),
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
-			)
+			)###
 
 
 		#Timeline code
@@ -1208,125 +1231,23 @@ if Meteor.isClient
 				this
 
 		Template.timelineDayScroller.rendered = ->
-			#log 'TIMELINEDAYSCROLLER RENDERED',this
-			fview = FView.from(this)
-			#log 'TIMELINEDAYSCROLLER FVIEW',fview
-			target = fview.surface || fview.view._eventInput
-			#log 'TIMELINEDAYSCROLLER TARGET',target
-			scrollView = fview.children[1].view._eventInput
-			#log 'SCROLLVIEW?!',scrollView
-			window.timelineDayScroller = fview.children[1].view
-			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
+			timelineDayScrollerFView = FView.byId('timelineDayScroller')
+			scrollView = timelineDayScrollerFView.view._eventInput
+			window.timelineDayScroller = timelineDayScrollerFView.view
+			#Set the viewSequence within the scrollView to be a loop
 			window.timelineDaySequence = window.timelineDayScroller._node
 			window.timelineDaySequence._.loop = true
 
-			timelineDayScrollerFView = FView.byId('timelineDayScroller')
-
-			scrollView.on('start', (e) ->
+			###scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
 			)
 			scrollView.on('update', (e) ->
 				#log 'UPDATING!!!!',this
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#timelineDayScroller.setPosition(400)
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
 			)
 			scrollView.on('end', (e) ->
 				#log 'ENDING!!!!!!!',this, this._cachedIndex
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
-			)
+			)###
 			@autorun((computation)->
-				currentDay = Session.get('currentDay')
-				previousDay = window.timelineDayScroller.getCurrentIndex()
-				totalAmount = window.timelineDayScroller._node._.array.length
-				amountMidPoint = totalAmount / 2
-
-				log '*********************************************************************'
-
-				#What is the previousDay?
-				log 'previousDay',previousDay
-				#What is the currentDay?
-				log 'currentDay',currentDay
-
-				scrollStart = 0
-				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
-
-				###timelineActive = Session.get('timelineActive')
-				if timelineActive is true
-					fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(1,1,1),
-						method: 'spring'
-						period: 500
-						dampingRatio: 0.5
-				else
-					fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(0,0,0),
-						method: 'spring'
-						period: 500
-						dampingRatio: 0.5###
-
-				if previousDay > amountMidPoint and currentDay < amountMidPoint
-					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
-					#Calculate the forwards sroll distance
-					scrollDistance = totalAmount + currentDay - previousDay
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '##############currentDay distance from previousDay##############',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineDayScroller.goToNextPage()
-				else if previousDay < amountMidPoint and currentDay > amountMidPoint
-					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
-					#Calculate the backwards scroll distance
-					scrollDistance = totalAmount + previousDay - currentDay
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '@@@@@@@@@@@@@@currentDay distance from previousDay@@@@@@@@@@@@@@',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineDayScroller.goToPreviousPage()
-				else
-					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					log 'Just scroll as normal!'
-					scrollDistance = previousDay - currentDay
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					if previousDay < currentDay
-						log '!!!!!!!!!!!!!currentDay distance from previousDay!(forwards)!!!!',scrollDistance
-						for i in [0...scrollDistance]
-							window.timelineDayScroller.goToNextPage()
-					else
-						log '!!!!!!!!!!!!currentDay distance from previousDay!(backwards)!!!!',scrollDistance
-						if previousDay is currentDay
-							log 'Scrolling back one to cover this edgecase!'
-							window.timelineDayScroller.goToPreviousPage()
-						else
-							log 'HURP SCROLL BACK NORMALLY'
-							for i in [0...scrollDistance]
-								window.timelineDayScroller.goToPreviousPage()
-
-						#for i in [0...scrollDistance]
-							#window.timelineDayScroller.goToPreviousPage()
-
-				#Get the Template instance
-				instance = Template.instance()
-				#log 'AUTORUN INSTANCE',instance
 				timelineActive = Session.get 'timelineActive'
 				if timelineActive is true
 					timelineDayScrollerFView.modifier.halt()
@@ -1334,9 +1255,17 @@ if Meteor.isClient
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
+					timelineDayScrollerFView.modifier.setOpacity .6,
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 				else
 					timelineDayScrollerFView.modifier.halt()
-					timelineDayScrollerFView.modifier.setTransform Transform.scale(0,0,0),
+					timelineDayScrollerFView.modifier.setTransform Transform.scale(3,3,3),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+					timelineDayScrollerFView.modifier.setOpacity 0,
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
@@ -1357,8 +1286,7 @@ if Meteor.isClient
 					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
-					textAlign: 'right'
-					paddingRight: '190px'
+					textAlign: 'center'
 				else
 					backgroundColor: 'aqua'
 					backgroundColor: 'transparent'
@@ -1366,8 +1294,7 @@ if Meteor.isClient
 					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
 					fontSize: '12px'
-					textAlign: 'right'
-					paddingRight: '190px'
+					textAlign: 'center'
 
 		Template.timelineDay.rendered = ->
 			fview = FView.from(this)
@@ -1393,7 +1320,7 @@ if Meteor.isClient
 				Session.set('currentDay',data.index)
 			)
 
-			@autorun((computation)->
+			###@autorun((computation)->
 				currentDay = Session.get('currentDay')
 				#Get the Template instance
 				instance = Template.instance()
@@ -1410,116 +1337,31 @@ if Meteor.isClient
 						method: 'spring'
 						period: 1000
 						dampingRatio: 0.3
-			)
+			)###
 
 		Template.timelineDay.helpers
 			day: ->
 				this
 
 		Template.timelineMonthScroller.rendered = ->
-			#log 'timelineMonthScroller RENDERED',this
-			fview = FView.from(this)
-			#log 'timelineMonthScroller FVIEW',fview
-			target = fview.surface || fview.view._eventInput
-			#log 'timelineMonthScroller TARGET',target
-			scrollView = fview.children[2].view._eventInput
-			#log 'SCROLLVIEW?!',scrollView
-			window.timelineMonthScroller = fview.children[2].view
-			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
+			timelineMonthScrollerFView = FView.byId('timelineMonthScroller')
+			log 'timelineMonthScrollerFView',timelineMonthScrollerFView
+			scrollView = timelineMonthScrollerFView.view._eventInput
+			window.timelineMonthScroller = timelineMonthScrollerFView.view
+			#Set the viewSequence within the scrollView to be a loop
 			window.timelineMonthSequence = window.timelineMonthScroller._node
 			window.timelineMonthSequence._.loop = true
 
-			timelineMonthScrollerFView = FView.byId('timelineMonthScroller')
-
-			scrollView.on('start', (e) ->
+			###scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
 			)
 			scrollView.on('update', (e) ->
 				#log 'UPDATING!!!!',this
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#timelineMonthScroller.setPosition(400)
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
 			)
 			scrollView.on('end', (e) ->
 				#log 'ENDING!!!!!!!',this, this._cachedIndex
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
-			)
+			)###
 			@autorun((computation)->
-				currentMonth = Session.get('currentMonth')
-				previousMonth = window.timelineMonthScroller.getCurrentIndex()
-				totalAmount = window.timelineMonthScroller._node._.array.length
-				amountMidPoint = totalAmount / 2
-
-				log '*********************************************************************'
-
-				#What is the previousMonth?
-				log 'previousMonth',previousMonth
-				#What is the currentMonth?
-				log 'currentMonth',currentMonth
-
-				scrollStart = 0
-				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
-
-				if previousMonth > amountMidPoint and currentMonth < amountMidPoint
-					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
-					#Calculate the forwards sroll distance
-					scrollDistance = totalAmount + currentMonth - previousMonth
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '##############currentMonth distance from previousMonth##############',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineMonthScroller.goToNextPage()
-				else if previousMonth < amountMidPoint and currentMonth > amountMidPoint
-					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
-					#Calculate the backwards scroll distance
-					scrollDistance = totalAmount + previousMonth - currentMonth
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '@@@@@@@@@@@@@@currentMonth distance from previousMonth@@@@@@@@@@@@@@',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineMonthScroller.goToPreviousPage()
-				else
-					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					log 'Just scroll as normal!'
-					scrollDistance = previousMonth - currentMonth
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					if previousMonth < currentMonth
-						log '!!!!!!!!!!!!!currentMonth distance from previousMonth!(forwards)!!!!',scrollDistance
-						for i in [0...scrollDistance]
-							window.timelineMonthScroller.goToNextPage()
-					else
-						log '!!!!!!!!!!!!currentMonth distance from previousMonth!(backwards)!!!!',scrollDistance
-						if previousMonth is currentMonth
-							log 'Scrolling back one to cover this edgecase!'
-							window.timelineMonthScroller.goToPreviousPage()
-						else
-							for i in [0...scrollDistance]
-								window.timelineMonthScroller.goToPreviousPage()
-
-						#for i in [0...scrollDistance]
-						#	window.timelineMonthScroller.goToPreviousPage()
-
-				#Get the Template instance
-				instance = Template.instance()
 				timelineActive = Session.get 'timelineActive'
 				if timelineActive is true
 					timelineMonthScrollerFView.modifier.halt()
@@ -1527,13 +1369,20 @@ if Meteor.isClient
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
-				else
-					timelineMonthScrollerFView.modifier.halt()
-					timelineMonthScrollerFView.modifier.setTransform Transform.scale(0,0,0),
+					timelineMonthScrollerFView.modifier.setOpacity .6,
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
-				#log 'AUTORUN INSTANCE',instance
+				else
+					timelineMonthScrollerFView.modifier.halt()
+					timelineMonthScrollerFView.modifier.setTransform Transform.scale(3,3,3),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+					timelineMonthScrollerFView.modifier.setOpacity 0,
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 			)
 
 		Template.timelineMonthScroller.helpers
@@ -1550,18 +1399,16 @@ if Meteor.isClient
 					color: '#ffffff'
 					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
-					fontSize: '12px'
-					textAlign: 'right'
-					paddingRight: '90px'
+					fontSize: '14px'
+					textAlign: 'center'
 				else
 					backgroundColor: 'purple'
 					backgroundColor: 'transparent'
 					color: '#ffffff'
 					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
-					fontSize: '12px'
-					textAlign: 'right'
-					paddingRight: '90px'
+					fontSize: '14px'
+					textAlign: 'center'
 
 		Template.timelineMonth.rendered = ->
 			fview = FView.from(this)
@@ -1587,7 +1434,7 @@ if Meteor.isClient
 				Session.set('currentMonth',data.index)
 			)
 
-			@autorun((computation)->
+			###@autorun((computation)->
 				currentMonth = Session.get('currentMonth')
 				#Get the Template instance
 				instance = Template.instance()
@@ -1604,127 +1451,48 @@ if Meteor.isClient
 						method: 'spring'
 						period: 1000
 						dampingRatio: 0.3
-			)
+			)###
 
 		Template.timelineMonth.helpers
 			month: ->
 				this
 
 		Template.timelineYearScroller.rendered = ->
-			#log 'timelineYearSCROLLER RENDERED',this
-			fview = FView.from(this)
-			#log 'timelineYearSCROLLER FVIEW',fview
-			target = fview.surface || fview.view._eventInput
-			#log 'timelineYearSCROLLER TARGET',target
-			scrollView = fview.children[3].view._eventInput
-			#log 'SCROLLVIEW?!',scrollView
-			window.timelineYearScroller = fview.children[3].view
-			#Set the viewSequence within the scrollView to be a loop - XXX: Figure out a better way to do this by accessing Viewsequence
+			timelineYearScrollerFView = FView.byId('timelineYearScroller')
+			scrollView = timelineYearScrollerFView.view._eventInput
+			window.timelineYearScroller = timelineYearScrollerFView.view
+			#Set the viewSequence within the scrollView to be a loop
 			window.timelineYearSequence = window.timelineYearScroller._node
 			window.timelineYearSequence._.loop = true
-			timelineYearScrollerFView = FView.byId('timelineYearScroller')
 
-			scrollView.on('start', (e) ->
+			###scrollView.on('start', (e) ->
 				#log 'STARTING!!!!!!',this
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
 			)
 			scrollView.on('update', (e) ->
 				#log 'UPDATING!!!!',this
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#timelineYearScroller.setPosition(400)
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
 			)
 			scrollView.on('end', (e) ->
 				#log 'ENDING!!!!!!!',this, this._cachedIndex
-				#log 'clientX',e.clientX
-				#log 'clientY',e.clientY
-				#log 'delta',e.delta
-				#log 'offsetX',e.offsetX
-				#log 'offsetY',e.offsetY
-				#log 'position',e.position
-				#log 'slip',e.slip
-				#log 'velocity',e.velocity
-			)
+			)###
 			@autorun((computation)->
-				currentYear = Session.get('currentYear')
-				previousYear = window.timelineYearScroller.getCurrentIndex()
-				totalAmount = window.timelineYearScroller._node._.array.length
-				amountMidPoint = totalAmount / 2
-
-				log '*********************************************************************'
-
-				#What is the previousYear?
-				log 'previousYear',previousYear
-				#What is the currentYear?
-				log 'currentYear',currentYear
-
-				scrollStart = 0
-				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
-
-				if previousYear > amountMidPoint and currentYear < amountMidPoint
-					log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
-					#Calculate the forwards sroll distance
-					scrollDistance = totalAmount + currentYear - previousYear
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '##############currentYear distance from previousYear##############',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineYearScroller.goToNextPage()
-				else if previousYear < amountMidPoint and currentYear > amountMidPoint
-					log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)'
-					#Calculate the backwards scroll distance
-					scrollDistance = totalAmount + previousYear - currentYear
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					log '@@@@@@@@@@@@@@currentYear distance from previousYear@@@@@@@@@@@@@@',scrollDistance
-					for i in [0...scrollDistance]
-						window.timelineYearScroller.goToPreviousPage()
-				else
-					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-					log 'Just scroll as normal!'
-					scrollDistance = previousYear - currentYear
-					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-					if previousYear < currentYear
-						log '!!!!!!!!!!!!!currentYear distance from previousYear!(forwards)!!!!',scrollDistance
-						for i in [0...scrollDistance]
-							window.timelineYearScroller.goToNextPage()
-					else
-						log '!!!!!!!!!!!!currentYear distance from previousYear!(backwards)!!!!',scrollDistance
-						#if previousYear is currentYear
-						#	log 'Scrolling back one to cover this edgecase!'
-						#	window.timelineYearScroller.goToPreviousPage()
-						#else
-						for i in [0...scrollDistance]
-							window.timelineYearScroller.goToPreviousPage()
-
-						#for i in [0...scrollDistance]
-						#	window.timelineYearScroller.goToPreviousPage()
-
-				#Get the Template instance
-				instance = Template.instance()
-				#log 'AUTORUN INSTANCE',instance
 				timelineActive = Session.get('timelineActive')
-				log 'TIMELINE YEAR FVIEW',fview
 				if timelineActive is true
 					timelineYearScrollerFView.modifier.halt()
 					timelineYearScrollerFView.modifier.setTransform Transform.scale(1,1,1),
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
+					timelineYearScrollerFView.modifier.setOpacity .6,
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
 				else
 					timelineYearScrollerFView.modifier.halt()
-					timelineYearScrollerFView.modifier.setTransform Transform.scale(0,0,0),
+					timelineYearScrollerFView.modifier.setTransform Transform.scale(3,3,3),
+						method: 'spring'
+						period: 500
+						dampingRatio: 0.5
+					timelineYearScrollerFView.modifier.setOpacity 0,
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
@@ -1744,7 +1512,7 @@ if Meteor.isClient
 					color: '#ffffff'
 					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
-					fontSize: '12px'
+					fontSize: '36px'
 					textAlign: 'center'
 				else
 					backgroundColor: 'orange'
@@ -1752,7 +1520,7 @@ if Meteor.isClient
 					color: '#ffffff'
 					fontFamily: 'ziamimi-light'
 					textTransform: 'uppercase'
-					fontSize: '12px'
+					fontSize: '36px'
 					textAlign: 'center'
 
 		Template.timelineYear.rendered = ->
@@ -1779,7 +1547,7 @@ if Meteor.isClient
 				Session.set('currentYear',data.index)
 			)
 
-			@autorun((computation)->
+			###@autorun((computation)->
 				currentYear = Session.get('currentYear')
 				#Get the Template instance
 				instance = Template.instance()
@@ -1796,7 +1564,7 @@ if Meteor.isClient
 						method: 'spring'
 						period: 1000
 						dampingRatio: 0.3
-			)
+			)###
 
 		Template.timelineYear.helpers
 			year: ->

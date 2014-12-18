@@ -12,10 +12,10 @@ template(name='layout')
 template(name='about')
 	+View size='[undefined,undefined]'
 		+timelineMinuteScroller
-		//-+timelineDayScroller
-		//-+timelineMonthScroller
-		//-+timelineYearScroller
-		//-+timelineSearchHolder
+		+timelineDayScroller
+		+timelineMonthScroller
+		+timelineYearScroller
+		+timelineSearchHolder
 		+CanvasSurface template='background' id='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
 		+Surface template='overlay' id='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=overlayStyles
 		+Surface template='timelineOverlay' id='timelineOverlay' size='[undefined,undefined]' origin='[0,0]' align='[0,0]' translate='[0,0,0]' opacity='0' properties=timelineOverlayStyles
@@ -29,12 +29,13 @@ template(name='about')
 			+Surface template='timelineToggle' id='timelineToggle' size='[60,60]' origin='[0.5,0]' align='[0.5,0]' opacity='0.14' properties=timelineToggleStyles
 
 template(name='timelineSearchHolder')
-	+InputSurface template='timelineSearch' id='timelineSearch' size='[undefined,100]' origin='[0.5,0]' align='[0.5,0]' translate='[0,0,8]' properties=timelineSearchStyles placeholder='Hello Search' opacity='0'
+	+StateModifier origin='[0.5,0]' align='[0.5,0]' translate='[0,70,9]'
+		+InputSurface template='timelineSearch' id='timelineSearch' size='[undefined,100]' properties=timelineSearchStyles placeholder='Type a date' opacity='0'
 
 template(name='timelineSearch')
 
 template(name='timelineMinuteScroller')
-	+StateModifier origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,1]'
+	+StateModifier origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,230,1]'
 		+Scrollview id='timelineMinuteScroller' size='[undefined,undefined]' opacity='0' properties=timelineMinuteScrollerStyles
 			+FlexGrid id='timelineMinuteGrid' marginTop=10 marginSide=100 gutterCol=20 gutterRow=20 itemSize='[320,180]'
 				+famousEach minutes
@@ -50,19 +51,22 @@ template(name='timelineMinuteScroller')
 					+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
 
 template(name='timelineDayScroller')
-	+Scrollview id='timelineDayScroller' size='[270,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,2]'
-		+famousEach days
-			+Surface template='timelineDay' size='[undefined,40]' origin='[0,0.5]' align='[0,0]' properties=timelineDayStyles
+	+StateModifier origin='[0,0]' align='[0,0]' translate='[0,200,2]'
+		+Scrollview id='timelineDayScroller' size='[undefined,40]' direction='0' opacity='0'
+			+famousEach days
+				+Surface template='timelineDay' size='[undefined,undefined]' origin='[0.5,0]' align='[0.5,0]' properties=timelineDayStyles
 
 template(name='timelineMonthScroller')
-	+Scrollview id='timelineMonthScroller' size='[170,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,2]'
-		+famousEach months
-			+Surface template='timelineMonth' size='[undefined,40]' origin='[0,0.5]' align='[0,0]' properties=timelineMonthStyles
+	+StateModifier origin='[0,0]' align='[0,0]' translate='[0,180,2]'
+		+Scrollview id='timelineMonthScroller' size='[undefined,40]' direction='0' opacity='0'
+			+famousEach months
+				+Surface template='timelineMonth' size='[undefined,undefined]' origin='[0.5,0]' align='[0.5,0]' properties=timelineMonthStyles
 
 template(name='timelineYearScroller')
-	+Scrollview id='timelineYearScroller' size='[80,undefined]' origin='[1,0]' align='[1,0.5]' translate='[0,0,2]'
-		+famousEach years
-			+Surface template='timelineYear' size='[undefined,40]' origin='[0,0.5]' align='[0,0]' properties=timelineYearStyles
+	+StateModifier origin='[0,0]' align='[0,0]' translate='[0,150,2]'
+		+Scrollview id='timelineYearScroller' size='[undefined,40]' direction='0' opacity='0'
+			+famousEach years
+				+Surface template='timelineYear' size='[undefined,undefined]' origin='[0.5,0]' align='[0.5,0]' properties=timelineYearStyles
 
 template(name='background')
 	//-This is the background for cycling of images

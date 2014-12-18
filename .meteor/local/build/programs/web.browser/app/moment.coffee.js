@@ -125,6 +125,7 @@ if (Meteor.isClient) {
     Session.setDefault('subscribed', false);
     Session.setDefault('timer', momentTimer);
     Session.setDefault('now', TimeSync.serverTime());
+    Session.setDefault('easterEggActive', false);
     Session.setDefault('blur', 100);
     Session.setDefault('grayscale', false);
     Session.setDefault('bloom', 1);
@@ -168,8 +169,8 @@ if (Meteor.isClient) {
         effectCopy = new THREE.ShaderPass(THREE.CopyShader);
         effectHorizBlur = new THREE.ShaderPass(THREE.HorizontalBlurShader);
         effectVertiBlur = new THREE.ShaderPass(THREE.VerticalBlurShader);
-        effectHorizBlur.uniforms["h"].value = 1 / window.innerWidth;
-        effectVertiBlur.uniforms["v"].value = 1 / window.innerHeight;
+        effectHorizBlur.uniforms["h"].value = 0 / window.innerWidth;
+        effectVertiBlur.uniforms["v"].value = 0 / window.innerHeight;
         effectVertiBlur.renderToScreen = true;
         window.composer.addPass(renderModel);
         window.composer.addPass(effectHorizBlur);
@@ -398,33 +399,37 @@ if (Meteor.isClient) {
       log('Ready?', FView.isReady);
       log('Canvas!', this.$('canvas'));
       easterEgg = new Konami(function() {
-        var SkywardSwordLink, SkywardSwordLinkDAE, TwilightPrincessLink, TwilightPrincessLinkDAE, WindWakerLink, YoungLink, loader, threePointLighting;
+        var SkywardSwordLink, SkywardSwordLinkDAE, TwilightPrincessLink, TwilightPrincessLinkDAE, WindWakerLink, YoungLink, easterEggActive, loader, threePointLighting;
         log('Trigger Model Viewer!');
-        threePointLighting = new THREEx.ThreePointsLighting();
-        window.scene.add(threePointLighting);
-        loader = new THREEx.UniversalLoader();
-        YoungLink = ['models/YoungLink/YoungLinkEquipped.obj', 'models/YoungLink/YoungLinkEquipped.mtl'];
-        WindWakerLink = ['models/WindWakerLink/link.obj', 'models/WindWakerLink/link.mtl'];
-        SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae';
-        SkywardSwordLink = ['models/SkywardSwordLink/Link.obj', 'models/SkywardSwordLink/Link.mtl'];
-        TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae';
-        TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj', 'models/TwilightPrincessLink/Link.mtl'];
-        return loader.load(YoungLink, function(object) {
-          var boundingBox, scaleScalar, size;
-          log('MODEL LOADED!', object);
-          boundingBox = new THREE.Box3().setFromObject(object);
-          window.link = boundingBox;
-          log('boundingBox!', boundingBox);
-          size = boundingBox.size();
-          log('size', size);
-          scaleScalar = Math.max(size.x, Math.max(size.y, size.z));
-          log('scaleScalar', scaleScalar);
-          object.scale.divideScalar(scaleScalar);
-          boundingBox = new THREE.Box3().setFromObject(object);
-          object.position.copy(boundingBox.center().negate());
-          window.easterEggModel = object;
-          return scene.add(object);
-        });
+        easterEggActive = Session.get('easterEggActive');
+        if (!easterEggActive) {
+          Session.set('easterEggActive', true);
+          threePointLighting = new THREEx.ThreePointsLighting();
+          window.scene.add(threePointLighting);
+          loader = new THREEx.UniversalLoader();
+          YoungLink = ['models/YoungLink/YoungLinkEquipped.obj', 'models/YoungLink/YoungLinkEquipped.mtl'];
+          WindWakerLink = ['models/WindWakerLink/link.obj', 'models/WindWakerLink/link.mtl'];
+          SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae';
+          SkywardSwordLink = ['models/SkywardSwordLink/Link.obj', 'models/SkywardSwordLink/Link.mtl'];
+          TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae';
+          TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj', 'models/TwilightPrincessLink/Link.mtl'];
+          return loader.load(YoungLink, function(object) {
+            var boundingBox, scaleScalar, size;
+            log('MODEL LOADED!', object);
+            boundingBox = new THREE.Box3().setFromObject(object);
+            window.link = boundingBox;
+            log('boundingBox!', boundingBox);
+            size = boundingBox.size();
+            log('size', size);
+            scaleScalar = Math.max(size.x, Math.max(size.y, size.z));
+            log('scaleScalar', scaleScalar);
+            object.scale.divideScalar(scaleScalar);
+            boundingBox = new THREE.Box3().setFromObject(object);
+            object.position.copy(boundingBox.center().negate());
+            window.easterEggModel = object;
+            return scene.add(object);
+          });
+        }
       });
       target = fview.surface || fview.view || fview.view._eventInput;
       target.on('click', function() {
@@ -805,13 +810,32 @@ if (Meteor.isClient) {
       });
     };
     Template.timelineSearchHolder.rendered = function() {
-      var fview, target;
-      fview = FView.from(this);
-      log('TIMELINESEARCHHOLDER FVIEW', fview);
-      target = fview.surface || fview.view._eventInput;
+      var target, timelineSearchFView;
+      timelineSearchFView = FView.byId('timelineSearch');
+      log('TIMELINESEARCHHOLDER FVIEW', timelineSearchFView);
+      target = timelineSearchFView.surface || timelineSearchFView.view._eventInput;
       log('TIMELINESEARCHHOLDER TARGET', target);
-      return target.on('keyup', function(e) {
+      target.on('keyup', function(e) {
         return log('TIMELINESEARCHHOLDER KEYUP', e);
+      });
+      return this.autorun(function(computation) {
+        var timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          timelineSearchFView.modifier.halt();
+          return timelineSearchFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        } else {
+          timelineSearchFView.modifier.halt();
+          return timelineSearchFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+        }
       });
     };
     Template.timelineSearchHolder.helpers({
@@ -820,43 +844,42 @@ if (Meteor.isClient) {
           backgroundColor: 'cadetblue',
           backgroundColor: 'transparent',
           padding: '0 10px 0 10px',
-          fontSize: '72px',
+          fontSize: '40px',
           color: '#ffffff',
-          fontFamily: 'ziamimi-bold',
+          fontFamily: 'ziamimi-light',
           textTransform: 'uppercase',
           textAlign: 'center'
         };
       }
     });
     Template.timelineSearch.rendered = function() {
-      var fview, target;
+      var fview, target, timelineSearchFView;
       fview = FView.from(this);
       log('TIMELINESEARCH FVIEW', fview);
       target = fview.surface || fview.view || fview.view._eventInput;
       log('TIMELINESEARCH TARGET', target);
+      timelineSearchFView = FView.byId('timelineSearch');
       window.timelineSearch = target;
-      target.on('keyup', function(e) {
+      return target.on('keyup', function(e) {
         return log('TIMELINESEARCH KEYUP', e);
       });
-      return this.autorun(function(computation) {
-        var timelineActive;
-        timelineActive = Session.get('timelineActive');
-        if (timelineActive === true) {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.scale(1, 1, 1), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        } else {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.scale(0, 0, 0), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        }
-      });
+
+      /*@autorun((computation)->
+      				timelineActive = Session.get('timelineActive')
+      				if timelineActive is true
+      					timelineSearchFView.modifier.halt()
+      					timelineSearchFView.modifier.setTransform Transform.scale(1,1,1),
+      						method: 'spring'
+      						period: 500
+      						dampingRatio: 0.5
+      				else
+      					timelineSearchFView.modifier.halt()
+      					timelineSearchFView.modifier.setTransform Transform.scale(0,0,0),
+      						method: 'spring'
+      						period: 500
+      						dampingRatio: 0.5
+      			)
+       */
     };
     Session.setDefault('currentSecond', 0);
     Session.setDefault('currentMinute', 0);
@@ -1139,98 +1162,46 @@ if (Meteor.isClient) {
       }
     });
     Template.timelineDayScroller.rendered = function() {
-      var fview, scrollView, target, timelineDayScrollerFView;
-      fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
-      scrollView = fview.children[1].view._eventInput;
-      window.timelineDayScroller = fview.children[1].view;
+      var scrollView, timelineDayScrollerFView;
+      timelineDayScrollerFView = FView.byId('timelineDayScroller');
+      scrollView = timelineDayScrollerFView.view._eventInput;
+      window.timelineDayScroller = timelineDayScrollerFView.view;
       window.timelineDaySequence = window.timelineDayScroller._node;
       window.timelineDaySequence._.loop = true;
-      timelineDayScrollerFView = FView.byId('timelineDayScroller');
-      scrollView.on('start', function(e) {});
-      scrollView.on('update', function(e) {});
-      scrollView.on('end', function(e) {});
-      return this.autorun(function(computation) {
-        var amountMidPoint, currentDay, i, instance, previousDay, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l;
-        currentDay = Session.get('currentDay');
-        previousDay = window.timelineDayScroller.getCurrentIndex();
-        totalAmount = window.timelineDayScroller._node._.array.length;
-        amountMidPoint = totalAmount / 2;
-        log('*********************************************************************');
-        log('previousDay', previousDay);
-        log('currentDay', currentDay);
-        scrollStart = 0;
 
-        /*timelineActive = Session.get('timelineActive')
-        				if timelineActive is true
-        					fview.modifier.halt()
-        					fview.modifier.setTransform Transform.scale(1,1,1),
-        						method: 'spring'
-        						period: 500
-        						dampingRatio: 0.5
-        				else
-        					fview.modifier.halt()
-        					fview.modifier.setTransform Transform.scale(0,0,0),
-        						method: 'spring'
-        						period: 500
-        						dampingRatio: 0.5
-         */
-        if (previousDay > amountMidPoint && currentDay < amountMidPoint) {
-          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
-          scrollDistance = totalAmount + currentDay - previousDay;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('##############currentDay distance from previousDay##############', scrollDistance);
-          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
-            window.timelineDayScroller.goToNextPage();
-          }
-        } else if (previousDay < amountMidPoint && currentDay > amountMidPoint) {
-          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)');
-          scrollDistance = totalAmount + previousDay - currentDay;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('@@@@@@@@@@@@@@currentDay distance from previousDay@@@@@@@@@@@@@@', scrollDistance);
-          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
-            window.timelineDayScroller.goToPreviousPage();
-          }
-        } else {
-          log('Just scroll as normal!');
-          scrollDistance = previousDay - currentDay;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          if (previousDay < currentDay) {
-            log('!!!!!!!!!!!!!currentDay distance from previousDay!(forwards)!!!!', scrollDistance);
-            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
-              window.timelineDayScroller.goToNextPage();
-            }
-          } else {
-            log('!!!!!!!!!!!!currentDay distance from previousDay!(backwards)!!!!', scrollDistance);
-            if (previousDay === currentDay) {
-              log('Scrolling back one to cover this edgecase!');
-              window.timelineDayScroller.goToPreviousPage();
-            } else {
-              log('HURP SCROLL BACK NORMALLY');
-              for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
-                window.timelineDayScroller.goToPreviousPage();
-              }
-            }
-          }
-        }
-        instance = Template.instance();
+      /*scrollView.on('start', (e) ->
+      				 *log 'STARTING!!!!!!',this
+      			)
+      			scrollView.on('update', (e) ->
+      				 *log 'UPDATING!!!!',this
+      			)
+      			scrollView.on('end', (e) ->
+      				 *log 'ENDING!!!!!!!',this, this._cachedIndex
+      			)
+       */
+      return this.autorun(function(computation) {
+        var timelineActive;
         timelineActive = Session.get('timelineActive');
         if (timelineActive === true) {
           timelineDayScrollerFView.modifier.halt();
-          return timelineDayScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+          timelineDayScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+          return timelineDayScrollerFView.modifier.setOpacity(.6, {
             method: 'spring',
             period: 500,
             dampingRatio: 0.5
           });
         } else {
           timelineDayScrollerFView.modifier.halt();
-          return timelineDayScrollerFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+          timelineDayScrollerFView.modifier.setTransform(Transform.scale(3, 3, 3), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+          return timelineDayScrollerFView.modifier.setOpacity(0, {
             method: 'spring',
             period: 500,
             dampingRatio: 0.5
@@ -1252,8 +1223,7 @@ if (Meteor.isClient) {
             fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
-            textAlign: 'right',
-            paddingRight: '190px'
+            textAlign: 'center'
           };
         } else {
           return {
@@ -1263,8 +1233,7 @@ if (Meteor.isClient) {
             fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
             fontSize: '12px',
-            textAlign: 'right',
-            paddingRight: '190px'
+            textAlign: 'center'
           };
         }
       }
@@ -1280,31 +1249,30 @@ if (Meteor.isClient) {
       if (momentDay.format('D') === serverMoment.format('D')) {
         Session.set('currentDay', data.index);
       }
-      target.on('click', function() {
+      return target.on('click', function() {
         log('TARGET CLICKED', fview, target);
         return Session.set('currentDay', data.index);
       });
-      return this.autorun(function(computation) {
-        var currentDay, instance;
-        currentDay = Session.get('currentDay');
-        instance = Template.instance();
-        data = instance.data;
-        if (currentDay === data.index) {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(-20, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        } else {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(0, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        }
-      });
+
+      /*@autorun((computation)->
+      				currentDay = Session.get('currentDay')
+      				 *Get the Template instance
+      				instance = Template.instance()
+      				data = instance.data
+      				if currentDay is data.index
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(-20, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      				else
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(0, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      			)
+       */
     };
     Template.timelineDay.helpers({
       day: function() {
@@ -1312,82 +1280,47 @@ if (Meteor.isClient) {
       }
     });
     Template.timelineMonthScroller.rendered = function() {
-      var fview, scrollView, target, timelineMonthScrollerFView;
-      fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
-      scrollView = fview.children[2].view._eventInput;
-      window.timelineMonthScroller = fview.children[2].view;
+      var scrollView, timelineMonthScrollerFView;
+      timelineMonthScrollerFView = FView.byId('timelineMonthScroller');
+      log('timelineMonthScrollerFView', timelineMonthScrollerFView);
+      scrollView = timelineMonthScrollerFView.view._eventInput;
+      window.timelineMonthScroller = timelineMonthScrollerFView.view;
       window.timelineMonthSequence = window.timelineMonthScroller._node;
       window.timelineMonthSequence._.loop = true;
-      timelineMonthScrollerFView = FView.byId('timelineMonthScroller');
-      scrollView.on('start', function(e) {});
-      scrollView.on('update', function(e) {});
-      scrollView.on('end', function(e) {});
+
+      /*scrollView.on('start', (e) ->
+      				 *log 'STARTING!!!!!!',this
+      			)
+      			scrollView.on('update', (e) ->
+      				 *log 'UPDATING!!!!',this
+      			)
+      			scrollView.on('end', (e) ->
+      				 *log 'ENDING!!!!!!!',this, this._cachedIndex
+      			)
+       */
       return this.autorun(function(computation) {
-        var amountMidPoint, currentMonth, i, instance, previousMonth, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l;
-        currentMonth = Session.get('currentMonth');
-        previousMonth = window.timelineMonthScroller.getCurrentIndex();
-        totalAmount = window.timelineMonthScroller._node._.array.length;
-        amountMidPoint = totalAmount / 2;
-        log('*********************************************************************');
-        log('previousMonth', previousMonth);
-        log('currentMonth', currentMonth);
-        scrollStart = 0;
-        if (previousMonth > amountMidPoint && currentMonth < amountMidPoint) {
-          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
-          scrollDistance = totalAmount + currentMonth - previousMonth;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('##############currentMonth distance from previousMonth##############', scrollDistance);
-          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
-            window.timelineMonthScroller.goToNextPage();
-          }
-        } else if (previousMonth < amountMidPoint && currentMonth > amountMidPoint) {
-          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)');
-          scrollDistance = totalAmount + previousMonth - currentMonth;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('@@@@@@@@@@@@@@currentMonth distance from previousMonth@@@@@@@@@@@@@@', scrollDistance);
-          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
-            window.timelineMonthScroller.goToPreviousPage();
-          }
-        } else {
-          log('Just scroll as normal!');
-          scrollDistance = previousMonth - currentMonth;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          if (previousMonth < currentMonth) {
-            log('!!!!!!!!!!!!!currentMonth distance from previousMonth!(forwards)!!!!', scrollDistance);
-            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
-              window.timelineMonthScroller.goToNextPage();
-            }
-          } else {
-            log('!!!!!!!!!!!!currentMonth distance from previousMonth!(backwards)!!!!', scrollDistance);
-            if (previousMonth === currentMonth) {
-              log('Scrolling back one to cover this edgecase!');
-              window.timelineMonthScroller.goToPreviousPage();
-            } else {
-              for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
-                window.timelineMonthScroller.goToPreviousPage();
-              }
-            }
-          }
-        }
-        instance = Template.instance();
+        var timelineActive;
         timelineActive = Session.get('timelineActive');
         if (timelineActive === true) {
           timelineMonthScrollerFView.modifier.halt();
-          return timelineMonthScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+          timelineMonthScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+          return timelineMonthScrollerFView.modifier.setOpacity(.6, {
             method: 'spring',
             period: 500,
             dampingRatio: 0.5
           });
         } else {
           timelineMonthScrollerFView.modifier.halt();
-          return timelineMonthScrollerFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+          timelineMonthScrollerFView.modifier.setTransform(Transform.scale(3, 3, 3), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+          return timelineMonthScrollerFView.modifier.setOpacity(0, {
             method: 'spring',
             period: 500,
             dampingRatio: 0.5
@@ -1408,9 +1341,8 @@ if (Meteor.isClient) {
             color: '#ffffff',
             fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
-            fontSize: '12px',
-            textAlign: 'right',
-            paddingRight: '90px'
+            fontSize: '14px',
+            textAlign: 'center'
           };
         } else {
           return {
@@ -1419,9 +1351,8 @@ if (Meteor.isClient) {
             color: '#ffffff',
             fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
-            fontSize: '12px',
-            textAlign: 'right',
-            paddingRight: '90px'
+            fontSize: '14px',
+            textAlign: 'center'
           };
         }
       }
@@ -1438,31 +1369,30 @@ if (Meteor.isClient) {
         log('SERVER MOMENT MONTH MATCH!!!!!', serverMoment.format('M'), momentMonth.format('M'));
         Session.set('currentMonth', data.index);
       }
-      target.on('click', function() {
+      return target.on('click', function() {
         log('TARGET CLICKED', fview, target);
         return Session.set('currentMonth', data.index);
       });
-      return this.autorun(function(computation) {
-        var currentMonth, instance;
-        currentMonth = Session.get('currentMonth');
-        instance = Template.instance();
-        data = instance.data;
-        if (currentMonth === data.index) {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(-20, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        } else {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(0, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        }
-      });
+
+      /*@autorun((computation)->
+      				currentMonth = Session.get('currentMonth')
+      				 *Get the Template instance
+      				instance = Template.instance()
+      				data = instance.data
+      				if currentMonth is data.index
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(-20, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      				else
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(0, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      			)
+       */
     };
     Template.timelineMonth.helpers({
       month: function() {
@@ -1470,78 +1400,46 @@ if (Meteor.isClient) {
       }
     });
     Template.timelineYearScroller.rendered = function() {
-      var fview, scrollView, target, timelineYearScrollerFView;
-      fview = FView.from(this);
-      target = fview.surface || fview.view._eventInput;
-      scrollView = fview.children[3].view._eventInput;
-      window.timelineYearScroller = fview.children[3].view;
+      var scrollView, timelineYearScrollerFView;
+      timelineYearScrollerFView = FView.byId('timelineYearScroller');
+      scrollView = timelineYearScrollerFView.view._eventInput;
+      window.timelineYearScroller = timelineYearScrollerFView.view;
       window.timelineYearSequence = window.timelineYearScroller._node;
       window.timelineYearSequence._.loop = true;
-      timelineYearScrollerFView = FView.byId('timelineYearScroller');
-      scrollView.on('start', function(e) {});
-      scrollView.on('update', function(e) {});
-      scrollView.on('end', function(e) {});
+
+      /*scrollView.on('start', (e) ->
+      				 *log 'STARTING!!!!!!',this
+      			)
+      			scrollView.on('update', (e) ->
+      				 *log 'UPDATING!!!!',this
+      			)
+      			scrollView.on('end', (e) ->
+      				 *log 'ENDING!!!!!!!',this, this._cachedIndex
+      			)
+       */
       return this.autorun(function(computation) {
-        var amountMidPoint, currentYear, i, instance, previousYear, scrollDistance, scrollStart, timelineActive, totalAmount, _i, _j, _k, _l;
-        currentYear = Session.get('currentYear');
-        previousYear = window.timelineYearScroller.getCurrentIndex();
-        totalAmount = window.timelineYearScroller._node._.array.length;
-        amountMidPoint = totalAmount / 2;
-        log('*********************************************************************');
-        log('previousYear', previousYear);
-        log('currentYear', currentYear);
-        scrollStart = 0;
-        if (previousYear > amountMidPoint && currentYear < amountMidPoint) {
-          log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
-          scrollDistance = totalAmount + currentYear - previousYear;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('##############currentYear distance from previousYear##############', scrollDistance);
-          for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
-            window.timelineYearScroller.goToNextPage();
-          }
-        } else if (previousYear < amountMidPoint && currentYear > amountMidPoint) {
-          log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 1439 here!%%%%%(backwards)');
-          scrollDistance = totalAmount + previousYear - currentYear;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          log('@@@@@@@@@@@@@@currentYear distance from previousYear@@@@@@@@@@@@@@', scrollDistance);
-          for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
-            window.timelineYearScroller.goToPreviousPage();
-          }
-        } else {
-          log('Just scroll as normal!');
-          scrollDistance = previousYear - currentYear;
-          if (scrollDistance < 0) {
-            scrollDistance = scrollDistance * -1;
-          }
-          if (previousYear < currentYear) {
-            log('!!!!!!!!!!!!!currentYear distance from previousYear!(forwards)!!!!', scrollDistance);
-            for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
-              window.timelineYearScroller.goToNextPage();
-            }
-          } else {
-            log('!!!!!!!!!!!!currentYear distance from previousYear!(backwards)!!!!', scrollDistance);
-            for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
-              window.timelineYearScroller.goToPreviousPage();
-            }
-          }
-        }
-        instance = Template.instance();
+        var timelineActive;
         timelineActive = Session.get('timelineActive');
-        log('TIMELINE YEAR FVIEW', fview);
         if (timelineActive === true) {
           timelineYearScrollerFView.modifier.halt();
-          return timelineYearScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+          timelineYearScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+          return timelineYearScrollerFView.modifier.setOpacity(.6, {
             method: 'spring',
             period: 500,
             dampingRatio: 0.5
           });
         } else {
           timelineYearScrollerFView.modifier.halt();
-          return timelineYearScrollerFView.modifier.setTransform(Transform.scale(0, 0, 0), {
+          timelineYearScrollerFView.modifier.setTransform(Transform.scale(3, 3, 3), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.5
+          });
+          return timelineYearScrollerFView.modifier.setOpacity(0, {
             method: 'spring',
             period: 500,
             dampingRatio: 0.5
@@ -1562,7 +1460,7 @@ if (Meteor.isClient) {
             color: '#ffffff',
             fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
-            fontSize: '12px',
+            fontSize: '36px',
             textAlign: 'center'
           };
         } else {
@@ -1572,7 +1470,7 @@ if (Meteor.isClient) {
             color: '#ffffff',
             fontFamily: 'ziamimi-light',
             textTransform: 'uppercase',
-            fontSize: '12px',
+            fontSize: '36px',
             textAlign: 'center'
           };
         }
@@ -1589,31 +1487,30 @@ if (Meteor.isClient) {
       if (momentYear.format('YYYY') === serverMoment.format('YYYY')) {
         Session.set('currentYear', data.index);
       }
-      target.on('click', function() {
+      return target.on('click', function() {
         log('TARGET CLICKED', fview, target);
         return Session.set('currentYear', data.index);
       });
-      return this.autorun(function(computation) {
-        var currentYear, instance;
-        currentYear = Session.get('currentYear');
-        instance = Template.instance();
-        data = instance.data;
-        if (currentYear === data.index) {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(-20, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        } else {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(0, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        }
-      });
+
+      /*@autorun((computation)->
+      				currentYear = Session.get('currentYear')
+      				 *Get the Template instance
+      				instance = Template.instance()
+      				data = instance.data
+      				if currentYear is data.index
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(-20, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      				else
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(0, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      			)
+       */
     };
     Template.timelineYear.helpers({
       year: function() {

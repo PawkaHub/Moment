@@ -4,6 +4,58 @@
 		"selected_items":
 		[
 			[
+				"easter",
+				"easterEggActive"
+			],
+			[
+				"eat",
+				"easterEggActive"
+			],
+			[
+				"easterE",
+				"easterEggActive"
+			],
+			[
+				"sub",
+				"subscribed"
+			],
+			[
+				"subscr",
+				"subscribed"
+			],
+			[
+				"vide",
+				"videoCube"
+			],
+			[
+				"su",
+				"subscribed"
+			],
+			[
+				"timelineMin",
+				"timelineMinuteScrollerFView"
+			],
+			[
+				"modifi",
+				"modifierChain"
+			],
+			[
+				"mod",
+				"modifierChain"
+			],
+			[
+				"Modifi",
+				"ModifierChain"
+			],
+			[
+				"timelineTo",
+				"timelineToggleFView"
+			],
+			[
+				"momentButt",
+				"momentButtonFView"
+			],
+			[
 				"userI",
 				"userIsPublishing"
 			],
@@ -40,10 +92,6 @@
 				"WindWakerLink"
 			],
 			[
-				"easter",
-				"easterEggModel"
-			],
-			[
 				"video",
 				"videoTexture"
 			],
@@ -54,10 +102,6 @@
 			[
 				"Mesh",
 				"MeshBasicMaterial"
-			],
-			[
-				"sub",
-				"subscriber"
 			],
 			[
 				"tran",
@@ -119,7 +163,15 @@
 			"file": "moment.jade",
 			"settings":
 			{
-				"buffer_size": 10341,
+				"buffer_size": 7274,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "\n\n			var SCREEN_WIDTH = window.innerWidth;\n			var SCREEN_HEIGHT = window.innerHeight;\n			var FLOOR = -250;\n\n			var container,stats;\n\n			var camera, scene;\n			var renderer;\n\n			var mesh, zmesh, geometry;\n\n			var mouseX = 0, mouseY = 0;\n\n			var windowHalfX = window.innerWidth / 2;\n			var windowHalfY = window.innerHeight / 2;\n\n			var clock = new THREE.Clock();\n\n			document.addEventListener( 'mousemove', onDocumentMouseMove, false );\n\n			init();\n			animate();\n\n			function init() {\n\n				container = document.getElementById( 'container' );\n\n				camera = new THREE.PerspectiveCamera( 35, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 5000 );\n				camera.position.z = 1900;\n\n				scene = new THREE.Scene();\n\n				scene.fog = new THREE.Fog( 0xffffff, 2000, 5000 );\n				scene.fog.color.setHSV( 0.6, 0.125, 1 );\n\n				scene.add( camera );\n\n				// GROUND\n\n				var x = document.createElement( \"canvas\" );\n				var xc = x.getContext(\"2d\");\n				x.width = x.height = 128;\n				xc.fillStyle = \"#fff\";\n				xc.fillRect(0, 0, 128, 128);\n				xc.fillStyle = \"#000\";\n				xc.fillRect(0, 0, 64, 64);\n				xc.fillStyle = \"#999\";\n				xc.fillRect(32, 32, 32, 32);\n				xc.fillStyle = \"#000\";\n				xc.fillRect(64, 64, 64, 64);\n				xc.fillStyle = \"#555\";\n				xc.fillRect(96, 96, 32, 32);\n\n				var map = new THREE.Texture( x, new THREE.UVMapping(), THREE.RepeatWrapping, THREE.RepeatWrapping );\n				map.needsUpdate = true;\n				map.repeat.set( 60, 60 );\n\n				var xm = new THREE.MeshPhongMaterial( { map: map, emissive: 0x999999, perPixel: true } );\n\n				geometry = new THREE.PlaneGeometry( 8000, 8000 );\n\n				mesh = new THREE.Mesh( geometry, xm );\n				mesh.position.set( 0, FLOOR, 0 );\n				scene.add( mesh );\n\n				mesh.receiveShadow = true;\n\n\n				// LIGHTS\n\n				var ambient = new THREE.AmbientLight( 0x222222 );\n				scene.add( ambient );\n\n\n				var light = new THREE.DirectionalLight( 0xffffff, 1.65 );\n				light.position.set( 0, 140, 500 );\n				light.position.multiplyScalar( 1.1 );\n				scene.add( light );\n\n				light.castShadow = true;\n\n				light.shadowMapWidth = 2048;\n				light.shadowMapHeight = 2048;\n\n				var d = 390;\n\n				light.shadowCameraLeft = -d * 2;\n				light.shadowCameraRight = d * 2;\n				light.shadowCameraTop = d;\n				light.shadowCameraBottom = -d;\n\n				light.shadowCameraFar = 2000;\n				//light.shadowCameraVisible = true;\n\n				// RENDERER\n\n				renderer = new THREE.WebGLRenderer( { antialias: true } );\n				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );\n				renderer.domElement.style.position = \"relative\";\n\n				renderer.setClearColor( scene.fog.color, 1 );\n\n				container.appendChild( renderer.domElement );\n\n				renderer.gammaInput = true;\n				renderer.gammaOutput = true;\n				renderer.physicallyBasedShading = true;\n\n				renderer.shadowMapEnabled = true;\n\n\n				// STATS\n\n				stats = new Stats();\n				stats.domElement.style.position = 'absolute';\n				stats.domElement.style.top = '0px';\n				stats.domElement.style.zIndex = 100;\n				container.appendChild( stats.domElement );\n\n				stats.domElement.children[ 0 ].children[ 0 ].style.color = \"#777\";\n				stats.domElement.children[ 0 ].style.background = \"transparent\";\n				stats.domElement.children[ 0 ].children[ 1 ].style.display = \"none\";\n\n				//\n\n				var scale = 7;\n\n				var loader = new THREE.JSONLoader(),\n					callback = function( geometry ) { createScene( geometry,  0, FLOOR, 0, 7 ) };\n\n				loader.load( \"models/skinned/heavy/heavy.js\", function( geometry ) { createScene( geometry,  300, FLOOR, 0, scale ) } );\n				loader.load( \"models/skinned/sniper/sniper.js\", function( geometry ) { createScene( geometry,  -250, FLOOR, 0, scale ) } );\n				loader.load( \"models/skinned/engineer/engineer.js\", function( geometry ) { createScene( geometry,  0, FLOOR, 175, scale ) } );\n				loader.load( \"models/skinned/medic/medic.js\", function( geometry ) { createScene( geometry,  -500, FLOOR, 175, scale ) } );\n				loader.load( \"models/skinned/scout/scout.js\", function( geometry ) { createScene( geometry,  400, FLOOR, 275, scale ) } );\n\n				//\n\n				window.addEventListener( 'resize', onWindowResize, false );\n\n			}\n\n			function onWindowResize() {\n\n				windowHalfX = window.innerWidth / 2;\n				windowHalfY = window.innerHeight / 2;\n\n				camera.aspect = window.innerWidth / window.innerHeight;\n				camera.updateProjectionMatrix();\n\n				renderer.setSize( window.innerWidth, window.innerHeight );\n\n			}\n\n			function ensureLoop( animation ) {\n\n				for ( var i = 0; i < animation.hierarchy.length; i ++ ) {\n\n					var bone = animation.hierarchy[ i ];\n\n					var first = bone.keys[ 0 ];\n					var last = bone.keys[ bone.keys.length - 1 ];\n\n					last.pos = first.pos;\n					last.rot = first.rot;\n					last.scl = first.scl;\n\n				}\n\n			}\n\n			function createScene( geometry, x, y, z, s ) {\n\n				ensureLoop( geometry.animation );\n\n				geometry.computeBoundingBox();\n				var bb = geometry.boundingBox;\n\n				THREE.AnimationHandler.add( geometry.animation );\n\n				for ( var i = 0; i < geometry.materials.length; i ++ ) {\n\n					var m = geometry.materials[ i ];\n					m.skinning = true;\n					m.ambient.copy( m.color );\n\n					m.wrapAround = true;\n					m.perPixel = true;\n\n				}\n\n\n				var mesh = new THREE.SkinnedMesh( geometry, new THREE.MeshFaceMaterial() );\n				mesh.position.set( x, y - bb.min.y * s, z );\n				mesh.scale.set( s, s, s );\n				scene.add( mesh );\n\n				mesh.castShadow = true;\n				mesh.receiveShadow = true;\n\n\n				animation = new THREE.Animation( mesh, geometry.animation.name );\n				animation.JITCompile = false;\n				animation.interpolationType = THREE.AnimationHandler.LINEAR;\n\n				animation.play();\n\n			}\n\n			function onDocumentMouseMove( event ) {\n\n				mouseX = ( event.clientX - windowHalfX );\n				mouseY = ( event.clientY - windowHalfY );\n\n			}\n\n			//\n\n			function animate() {\n\n				requestAnimationFrame( animate );\n\n				render();\n				stats.update();\n\n			}\n\n			function render() {\n\n				var delta = 0.75 * clock.getDelta();\n\n				camera.position.x += ( mouseX - camera.position.x ) * .05;\n				camera.position.y = THREE.Math.clamp( camera.position.y + ( - mouseY - camera.position.y ) * .05, 0, 1000 );\n\n				camera.lookAt( scene.position );\n\n				THREE.AnimationHandler.update( delta );\n\n				renderer.render( scene, camera );\n\n			}\n\n		",
+			"settings":
+			{
+				"buffer_size": 6147,
 				"line_ending": "Unix"
 			}
 		},
@@ -135,7 +187,24 @@
 			"file": "moment.coffee",
 			"settings":
 			{
-				"buffer_size": 74851,
+				"buffer_size": 79544,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "https://www.youtube.com/watch?v=vw5_YyM4hn8\nhttps://dl.dropboxusercontent.com/u/1236764/temp/stackoverflow_20131023/2.html\nhttp://stemkoski.github.io/Three.js/Model-Animation-Control.html\nhttp://threejs.org/examples/webgl_loader_collada.html\n\nhttp://foxtube.com/videos/beautiful-chesty-babe-called-shae-summers-soaked-oil-while-fucking-6960.shtml",
+			"settings":
+			{
+				"buffer_size": 346,
+				"line_ending": "Unix",
+				"name": "https://www.youtube.com/watch?v=vw5_YyM4hn8"
+			}
+		},
+		{
+			"contents": "currentMinute = Session.get('currentMinute')\n				previousMinute = window.timelineMinuteScroller.getCurrentIndex()\n				totalAmount = window.timelineMinuteScroller._node._.array.length\n				amountMidPoint = totalAmount / 2\n\n				log '====================================================================='\n\n				#What is the previousMinute?\n				log 'previousMinute',previousMinute\n				#What is the currentMinute?\n				log 'currentMinute',currentMinute\n\n				scrollStart = 0\n				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart\n\n				if previousMinute > amountMidPoint and currentMinute < amountMidPoint\n					log '***************We\\'re gonna overscroll past 0 here!*******(forwards)'\n					#Calculate the forwards sroll distance\n					scrollDistance = totalAmount + currentMinute - previousMinute\n					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number\n					log '##############currentMinute distance from previousMinute##############',scrollDistance\n					for i in [0...scrollDistance]\n						window.timelineMinuteScroller.goToNextPage()\n				else if previousMinute < amountMidPoint and currentMinute > amountMidPoint\n					log '%%%%%%%%%%%%%%%We\\'re gonna overscroll past 59 here!%%%%%(backwards)'\n					#Calculate the backwards scroll distance\n					scrollDistance = totalAmount + previousMinute - currentMinute\n					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number\n					log '@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@',scrollDistance\n					for i in [0...scrollDistance]\n						window.timelineMinuteScroller.goToPreviousPage()\n				else\n					#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.\n					log 'Just scroll as normal!'\n					scrollDistance = previousMinute - currentMinute\n					if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number\n					if previousMinute < currentMinute\n						log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance\n						#We need to add a +1 here so that we'll scroll to the proper top element, because of indexes.\n						#scrollDistance = scrollDistance + 1\n						for i in [0...scrollDistance]\n							window.timelineMinuteScroller.goToNextPage()\n					else\n						log '!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!',scrollDistance\n						#Check for an edge case where the user has clicked on a different index but it won't change to that one because of an overflow issue\n						if previousMinute is currentMinute\n							log 'Scrolling back one to cover this edgecase!'\n							window.timelineMinuteScroller.goToPreviousPage()\n						else\n							for i in [0...scrollDistance]\n								window.timelineMinuteScroller.goToPreviousPage()\n",
+			"settings":
+			{
+				"buffer_size": 2941,
 				"line_ending": "Unix"
 			}
 		},
@@ -161,6 +230,23 @@
 			{
 				"buffer_size": 4902,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/Pawka/Developer/Experiments/team-fortress-threejs/index.html",
+			"settings":
+			{
+				"buffer_size": 6087,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "wget -O output.rar --referer http://subs.sab.bz/ 'http://subs.sab.bz/your-link-here'\n\nwget --referer http://www.models-resource.com/ 'http://www.models-resource.com/download/8565/'",
+			"settings":
+			{
+				"buffer_size": 180,
+				"line_ending": "Unix",
+				"name": "wget -O output.rar --referer http://subs.sab.bz/ '"
 			}
 		},
 		{
@@ -248,6 +334,8 @@
 	],
 	"file_history":
 	[
+		"/Users/Pawka/Developer/Beep/beephq.github.io/index.html",
+		"/Users/Pawka/Developer/Experiments/team-fortress-threejs/team-fortress-threejs_files/ThreeTF2.js",
 		"/Users/Pawka/Developer/Parker/Resume/css/main.css",
 		"/Users/Pawka/Developer/Parker/Moment/.meteor/local/build/programs/server/node_modules/node-inspector/front-end/TimelineGrid.js",
 		"/Users/Pawka/Developer/Parker/LightningGame/phaser/src/pixi/loaders/ImageLoader.js",
@@ -312,6 +400,32 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"heavy",
+			"//",
+			"setDefault",
+			"unpublish",
+			"event.preve",
+			"window.video =",
+			"scene.remove",
+			"another streamdestroyed",
+			"subscribed',false",
+			"window.videoCube",
+			"streamDestroyed",
+			"videoCube",
+			"Running!",
+			"unpublish",
+			"25",
+			"timelineMOmentStyles",
+			"unpublish",
+			",5",
+			"5",
+			"StateModifier",
+			"modifierChain = ",
+			"Transitionable",
+			"or userIs",
+			"momentButton.rendered",
+			"spring",
+			"autorun",
 			"timelineActive",
 			"momentButton",
 			"dampingRatio",
@@ -413,29 +527,7 @@
 			"scale(",
 			"setDefault '",
 			"clicked",
-			"overlayStyles",
-			"#000000",
-			"timelineYearStyles",
-			"timelineMOnthStyles",
-			"timelineMOmentStyles",
-			"url('",
-			"tabs",
-			"2",
-			"x",
-			"info",
-			"timelineMomentStyles",
-			"timeline moment clicked",
-			"imageSurface",
-			"timelineMOment",
-			"hovered",
-			"VM546:5 ",
-			"lineHeight",
-			"backgroundImage",
-			"size='[360",
-			"timelineMOments",
-			"moments: ->",
-			"moment: ->",
-			"moments"
+			"overlayStyles"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -453,7 +545,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -462,15 +554,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10341,
+						"buffer_size": 7274,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2255,
-								2255
+								3228,
+								3228
 							]
 						],
 						"settings":
@@ -479,14 +571,43 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 68.0,
+						"translation.y": 237.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6147,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3845,
+								3874
+							]
+						],
+						"settings":
+						{
+							"auto_name": "",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2219.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
 					"file": "compatibility/konami.js",
 					"semi_transient": false,
 					"settings":
@@ -512,30 +633,30 @@
 						"translation.y": 1181.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 6,
+					"stack_index": 11,
 					"type": "text"
 				}
 			]
 		},
 		{
-			"selected": 0,
+			"selected": 1,
 			"sheets":
 			[
 				{
-					"buffer": 2,
+					"buffer": 3,
 					"file": "moment.coffee",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 74851,
+						"buffer_size": 79544,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								19459,
-								19459
+								6093,
+								6093
 							]
 						],
 						"settings":
@@ -544,14 +665,70 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 9884.0,
+						"translation.y": 3182.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 346,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								346,
+								346
+							]
+						],
+						"settings":
+						{
+							"auto_name": "https://www.youtube.com/watch?v=vw5_YyM4hn8",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
 					"type": "text"
 				},
 				{
-					"buffer": 3,
+					"buffer": 5,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2941,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2941,
+								2941
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 273.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
 					"semi_transient": false,
 					"settings":
 					{
@@ -574,11 +751,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 9,
 					"type": "text"
 				},
 				{
-					"buffer": 4,
+					"buffer": 7,
 					"semi_transient": false,
 					"settings":
 					{
@@ -600,14 +777,14 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 4814.0,
+						"translation.y": 4778.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 10,
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 8,
 					"semi_transient": false,
 					"settings":
 					{
@@ -634,6 +811,63 @@
 					},
 					"stack_index": 5,
 					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "/Users/Pawka/Developer/Experiments/team-fortress-threejs/index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6087,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5454,
+								5454
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 3794.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 180,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								180,
+								180
+							]
+						],
+						"settings":
+						{
+							"auto_name": "wget -O output.rar --referer http://subs.sab.bz/ '",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
 				}
 			]
 		},
@@ -642,7 +876,7 @@
 			"sheets":
 			[
 				{
-					"buffer": 6,
+					"buffer": 11,
 					"file": "moment.styl",
 					"semi_transient": false,
 					"settings":
@@ -654,8 +888,8 @@
 						"selection":
 						[
 							[
-								5207,
-								5192
+								4812,
+								4812
 							]
 						],
 						"settings":
@@ -665,10 +899,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2143.0,
+						"translation.y": 2187.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 4,
 					"type": "text"
 				}
 			]
