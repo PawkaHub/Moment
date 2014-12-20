@@ -14,8 +14,8 @@ template(name='about')
 	+View size='[undefined,undefined]'
 		+timelineMinuteScroller
 		+timelineDayScroller
-		+timelineMonthScroller
-		+timelineYearScroller
+		//-+timelineMonthScroller
+		//-+timelineYearScroller
 		+timelineSearchHolder
 		+CanvasSurface template='background' id='background' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' opacity='1' properties=backgroundStyles
 		+Surface template='overlay' id='overlay' size='[undefined,undefined]' origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,0,0]' properties=overlayStyles
@@ -37,7 +37,7 @@ template(name='timelineSearch')
 
 template(name='timelineMinuteScroller')
 	+StateModifier origin='[0.5,0.5]' align='[0.5,0.5]' translate='[0,230,1]'
-		+Scrollview id='timelineMinuteScroller' size='[undefined,undefined]' opacity='0' properties=timelineMinuteScrollerStyles
+		+Scrollview id='timelineMinuteScroller' size='[undefined,undefined]' opacity='1' properties=timelineMinuteScrollerStyles
 			+famousEach minutes
 				+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
 				+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
@@ -51,10 +51,10 @@ template(name='timelineMinuteScroller')
 				+ContainerSurface template='timelineMoment' size='[320,180]' origin='[0,0]' align='[0,0]' properties=timelineMomentStyles
 
 template(name='timelineDayScroller')
-	+StateModifier origin='[0,0]' align='[0,0]' translate='[0,200,2]'
-		+Scrollview id='timelineDayScroller' size='[undefined,40]' direction='0' opacity='0'
-			+famousEach days
-				+Surface template='timelineDay' size='[undefined,undefined]' origin='[0.5,0]' align='[0.5,0]' properties=timelineDayStyles
+	//-+StateModifier origin='[0,0]' align='[0,0]' translate='[0,200,2]'
+	+Scrollview id='timelineDayScroller' origin='[0,0]' align='[0,0]' translate='[0,200,2]' size='[undefined,40]' direction='0' opacity='1'
+		+famousEach days
+			+Surface template='timelineDay' size='[undefined,undefined]' origin='[0.5,0]' align='[0.5,0]' properties=timelineDayStyles
 
 template(name='timelineMonthScroller')
 	+StateModifier origin='[0,0]' align='[0,0]' translate='[0,180,2]'
@@ -95,7 +95,6 @@ template(name='timelineToggle')
 	= currentEpoch
 
 template(name='timelineOverlay')
-	| timelineOverlay
 
 template(name='timelineMinuteTime')
 	.minuteTime TIMELINE MINUTE TIME MOMENT

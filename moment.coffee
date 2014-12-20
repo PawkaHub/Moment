@@ -219,7 +219,7 @@ if Meteor.isClient
 				window.scene.add light
 
 				# Handle Window Resizing
-				THREEx.WindowResize window.renderer, window.camera
+				THREEx.WindowResize window.composer, window.camera
 
 				# Add debug controls for mouse movement
 				#window.controls = new THREE.OrbitControls window.camera, window.renderer.domElement
@@ -886,7 +886,7 @@ if Meteor.isClient
 		Session.setDefault 'epochYear', moment(Session.get('epoch')).year()
 
 		Template.timelineMinuteScroller.rendered = ->
-			#log 'TIMELINEMINUTESSCROLLER RENDERED',this
+			log 'TIMELINEMINUTESSCROLLER RENDERED',this
 			#fview = FView.from(this)
 			#log 'TIMELINEMINUTESSCROLLER FVIEW',fview
 			#target = fview.surface || fview.view._eventInput
@@ -942,29 +942,29 @@ if Meteor.isClient
 				#log 'velocity',e.velocity
 			#)
 
-			###@autorun((computation)->
+			@autorun((computation)->
 				timelineActive = Session.get 'timelineActive'
 				if timelineActive is true
 					timelineMinuteScrollerFView.modifier.halt()
 					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(1,1,1),
 						method: 'spring'
-						period: 1000
+						period: 500
 						dampingRatio: 0.8
 					timelineMinuteScrollerFView.modifier.setOpacity 1,
 						method: 'spring'
-						period: 1000
+						period: 500
 						dampingRatio: 0.8
 				else
 					timelineMinuteScrollerFView.modifier.halt()
 					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(3,3,3),
 						method: 'spring'
-						period: 600
+						period: 500
 						dampingRatio: 0.8
 					timelineMinuteScrollerFView.modifier.setOpacity 0,
 						method: 'spring'
-						period: 600
+						period: 500
 						dampingRatio: 0.8
-			)###
+			)
 
 		Template.timelineMinuteScroller.helpers
 			timelineMinuteScrollerStyles: ->
@@ -1147,6 +1147,7 @@ if Meteor.isClient
 
 		Template.timelineDayScroller.rendered = ->
 			timelineDayScrollerFView = FView.byId('timelineDayScroller')
+			log 'timelineDayScroller!'
 			scrollView = timelineDayScrollerFView.view._eventInput
 			window.timelineDayScroller = timelineDayScrollerFView.view
 			#Set the viewSequence within the scrollView to be a loop

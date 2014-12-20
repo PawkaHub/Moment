@@ -37,7 +37,7 @@ Template["about"] = new Template("Template.about", (function() {
     };
   }, function() {
     return Spacebars.include(view.lookupTemplate("View"), function() {
-      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), Spacebars.include(view.lookupTemplate("timelineDayScroller")), Spacebars.include(view.lookupTemplate("timelineMonthScroller")), Spacebars.include(view.lookupTemplate("timelineYearScroller")), Spacebars.include(view.lookupTemplate("timelineSearchHolder")), Blaze._TemplateWith(function() {
+      return [ Spacebars.include(view.lookupTemplate("timelineMinuteScroller")), Spacebars.include(view.lookupTemplate("timelineDayScroller")), null, null, Spacebars.include(view.lookupTemplate("timelineSearchHolder")), Blaze._TemplateWith(function() {
         return {
           template: Spacebars.call("background"),
           id: Spacebars.call("background"),
@@ -220,7 +220,7 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
         return {
           id: Spacebars.call("timelineMinuteScroller"),
           size: Spacebars.call("[undefined,undefined]"),
-          opacity: Spacebars.call("0"),
+          opacity: Spacebars.call("1"),
           properties: Spacebars.call(view.lookup("timelineMinuteScrollerStyles"))
         };
       }, function() {
@@ -341,44 +341,37 @@ Template["timelineMinuteScroller"] = new Template("Template.timelineMinuteScroll
 Template.__checkName("timelineDayScroller");
 Template["timelineDayScroller"] = new Template("Template.timelineDayScroller", (function() {
   var view = this;
-  return Blaze._TemplateWith(function() {
+  return [ Blaze._TemplateWith(function() {
     return {
+      id: Spacebars.call("timelineDayScroller"),
       origin: Spacebars.call("[0,0]"),
       align: Spacebars.call("[0,0]"),
-      translate: Spacebars.call("[0,200,2]")
+      translate: Spacebars.call("[0,200,2]"),
+      size: Spacebars.call("[undefined,40]"),
+      direction: Spacebars.call("0"),
+      opacity: Spacebars.call("1")
     };
   }, function() {
-    return Spacebars.include(view.lookupTemplate("StateModifier"), function() {
+    return Spacebars.include(view.lookupTemplate("Scrollview"), function() {
       return Blaze._TemplateWith(function() {
-        return {
-          id: Spacebars.call("timelineDayScroller"),
-          size: Spacebars.call("[undefined,40]"),
-          direction: Spacebars.call("0"),
-          opacity: Spacebars.call("0")
-        };
+        return Spacebars.call(view.lookup("days"));
       }, function() {
-        return Spacebars.include(view.lookupTemplate("Scrollview"), function() {
+        return Spacebars.include(view.lookupTemplate("famousEach"), function() {
           return Blaze._TemplateWith(function() {
-            return Spacebars.call(view.lookup("days"));
+            return {
+              template: Spacebars.call("timelineDay"),
+              size: Spacebars.call("[undefined,undefined]"),
+              origin: Spacebars.call("[0.5,0]"),
+              align: Spacebars.call("[0.5,0]"),
+              properties: Spacebars.call(view.lookup("timelineDayStyles"))
+            };
           }, function() {
-            return Spacebars.include(view.lookupTemplate("famousEach"), function() {
-              return Blaze._TemplateWith(function() {
-                return {
-                  template: Spacebars.call("timelineDay"),
-                  size: Spacebars.call("[undefined,undefined]"),
-                  origin: Spacebars.call("[0.5,0]"),
-                  align: Spacebars.call("[0.5,0]"),
-                  properties: Spacebars.call(view.lookup("timelineDayStyles"))
-                };
-              }, function() {
-                return Spacebars.include(view.lookupTemplate("Surface"));
-              });
-            });
+            return Spacebars.include(view.lookupTemplate("Surface"));
           });
         });
       });
     });
-  });
+  }) ];
 }));
 
 Template.__checkName("timelineMonthScroller");
@@ -525,7 +518,7 @@ Template["timelineToggle"] = new Template("Template.timelineToggle", (function()
 Template.__checkName("timelineOverlay");
 Template["timelineOverlay"] = new Template("Template.timelineOverlay", (function() {
   var view = this;
-  return "timelineOverlay";
+  return "";
 }));
 
 Template.__checkName("timelineMinuteTime");

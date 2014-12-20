@@ -182,7 +182,7 @@ if (Meteor.isClient) {
         scene.add(axisHelper);
         light = new THREE.AmbientLight("rgb(255,255,255)");
         window.scene.add(light);
-        THREEx.WindowResize(window.renderer, window.camera);
+        THREEx.WindowResize(window.composer, window.camera);
       }
       userIsPublishing = Session.get('userIsPublishing');
       subscribed = Session.get('subscribed');
@@ -874,34 +874,39 @@ if (Meteor.isClient) {
     Session.setDefault('epochYear', moment(Session.get('epoch')).year());
     Template.timelineMinuteScroller.rendered = function() {
       var timelineMinuteScrollerFView;
+      log('TIMELINEMINUTESSCROLLER RENDERED', this);
       timelineMinuteScrollerFView = FView.byId('timelineMinuteScroller');
       timelineMinuteScrollerFView.modifier.setOrigin([0.5, 0.5]);
-      return Engine.pipe(timelineMinuteScrollerFView.view);
-
-      /*@autorun((computation)->
-      				timelineActive = Session.get 'timelineActive'
-      				if timelineActive is true
-      					timelineMinuteScrollerFView.modifier.halt()
-      					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(1,1,1),
-      						method: 'spring'
-      						period: 1000
-      						dampingRatio: 0.8
-      					timelineMinuteScrollerFView.modifier.setOpacity 1,
-      						method: 'spring'
-      						period: 1000
-      						dampingRatio: 0.8
-      				else
-      					timelineMinuteScrollerFView.modifier.halt()
-      					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(3,3,3),
-      						method: 'spring'
-      						period: 600
-      						dampingRatio: 0.8
-      					timelineMinuteScrollerFView.modifier.setOpacity 0,
-      						method: 'spring'
-      						period: 600
-      						dampingRatio: 0.8
-      			)
-       */
+      Engine.pipe(timelineMinuteScrollerFView.view);
+      return this.autorun(function(computation) {
+        var timelineActive;
+        timelineActive = Session.get('timelineActive');
+        if (timelineActive === true) {
+          timelineMinuteScrollerFView.modifier.halt();
+          timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.8
+          });
+          return timelineMinuteScrollerFView.modifier.setOpacity(1, {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.8
+          });
+        } else {
+          timelineMinuteScrollerFView.modifier.halt();
+          timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(3, 3, 3), {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.8
+          });
+          return timelineMinuteScrollerFView.modifier.setOpacity(0, {
+            method: 'spring',
+            period: 500,
+            dampingRatio: 0.8
+          });
+        }
+      });
     };
     Template.timelineMinuteScroller.helpers({
       timelineMinuteScrollerStyles: function() {
@@ -1083,6 +1088,7 @@ if (Meteor.isClient) {
     Template.timelineDayScroller.rendered = function() {
       var scrollView, timelineDayScrollerFView;
       timelineDayScrollerFView = FView.byId('timelineDayScroller');
+      log('timelineDayScroller!');
       scrollView = timelineDayScrollerFView.view._eventInput;
       window.timelineDayScroller = timelineDayScrollerFView.view;
       window.timelineDaySequence = window.timelineDayScroller._node;
