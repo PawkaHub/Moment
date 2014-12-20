@@ -14,7 +14,7 @@ var Iron = Package['iron:core'].Iron;
 var HTML = Package.htmljs.HTML;
 
 /* Package-scope variables */
-var Router, RouteController, CurrentOptions, HTTP_METHODS, Route;
+var Router, RouteController, CurrentOptions, HTTP_METHODS, Route, route;
 
 (function () {
 
@@ -746,243 +746,257 @@ Router.prototype.route = function (path, fn, opts) {                            
  * Find the first route for the given url and options.                                        // 150
  */                                                                                           // 151
 Router.prototype.findFirstRoute = function (url) {                                            // 152
-  for (var i = 0; i < this.routes.length; i++) {                                              // 153
-    if (this.routes[i].handler.test(url, {}))                                                 // 154
-      return this.routes[i];                                                                  // 155
-  }                                                                                           // 156
+  var isMatch;                                                                                // 153
+  var routeHandler;                                                                           // 154
+  for (var i = 0; i < this.routes.length; i++) {                                              // 155
+    route = this.routes[i];                                                                   // 156
                                                                                               // 157
-  return null;                                                                                // 158
-};                                                                                            // 159
-                                                                                              // 160
-Router.prototype.path = function (routeName, params, options) {                               // 161
-  var route = this.routes[routeName];                                                         // 162
+    // only matches if the url matches AND the                                                // 158
+    // current environment matches.                                                           // 159
+    isMatch = route.handler.test(url, {                                                       // 160
+      where: Meteor.isServer ? 'server' : 'client'                                            // 161
+    });                                                                                       // 162
+                                                                                              // 163
+    if (isMatch)                                                                              // 164
+      return route;                                                                           // 165
+  }                                                                                           // 166
+                                                                                              // 167
+  return null;                                                                                // 168
+};                                                                                            // 169
+                                                                                              // 170
+Router.prototype.path = function (routeName, params, options) {                               // 171
+  var route = this.routes[routeName];                                                         // 172
   warn(route, "You called Router.path for a route named " + JSON.stringify(routeName) + " but that route doesn't seem to exist. Are you sure you created it?");
-  return route && route.path(params, options);                                                // 164
-};                                                                                            // 165
-                                                                                              // 166
-Router.prototype.url = function (routeName, params, options) {                                // 167
-  var route = this.routes[routeName];                                                         // 168
+  return route && route.path(params, options);                                                // 174
+};                                                                                            // 175
+                                                                                              // 176
+Router.prototype.url = function (routeName, params, options) {                                // 177
+  var route = this.routes[routeName];                                                         // 178
   warn(route, "You called Router.url for a route named " + JSON.stringify(routeName) + " but that route doesn't seem to exist. Are you sure you created it?");
-  return route && route.url(params, options);                                                 // 170
-};                                                                                            // 171
-                                                                                              // 172
-/**                                                                                           // 173
- * Create a new controller for a dispatch.                                                    // 174
- */                                                                                           // 175
-Router.prototype.createController = function (url, context) {                                 // 176
-  // see if there's a route for this url                                                      // 177
-  var route = this.findFirstRoute(url);                                                       // 178
-  var controller;                                                                             // 179
-                                                                                              // 180
-  context = context || {};                                                                    // 181
+  return route && route.url(params, options);                                                 // 180
+};                                                                                            // 181
                                                                                               // 182
-  if (route)                                                                                  // 183
-    // let the route decide what controller to use                                            // 184
-    controller = route.createController({layout: this._layout});                              // 185
-  else                                                                                        // 186
-    // create an anonymous controller                                                         // 187
-    controller = new RouteController({layout: this._layout});                                 // 188
-                                                                                              // 189
-  controller.router = this;                                                                   // 190
-  controller.configureFromUrl(url, context, {reactive: false});                               // 191
-  return controller;                                                                          // 192
-};                                                                                            // 193
-                                                                                              // 194
-Router.prototype.setTemplateNameConverter = function (fn) {                                   // 195
-  this._templateNameConverter = fn;                                                           // 196
-  return this;                                                                                // 197
-};                                                                                            // 198
-                                                                                              // 199
-Router.prototype.setControllerNameConverter = function (fn) {                                 // 200
-  this._controllerNameConverter = fn;                                                         // 201
-  return this;                                                                                // 202
-};                                                                                            // 203
-                                                                                              // 204
-Router.prototype.toTemplateName = function (str) {                                            // 205
-  if (this._templateNameConverter)                                                            // 206
-    return this._templateNameConverter(str);                                                  // 207
-  else                                                                                        // 208
-    return Iron.utils.classCase(str);                                                         // 209
-};                                                                                            // 210
-                                                                                              // 211
-Router.prototype.toControllerName = function (str) {                                          // 212
-  if (this._controllerNameConverter)                                                          // 213
-    return this._controllerNameConverter(str);                                                // 214
-  else                                                                                        // 215
-    return Iron.utils.classCase(str) + 'Controller';                                          // 216
-};                                                                                            // 217
-                                                                                              // 218
-/**                                                                                           // 219
- *                                                                                            // 220
- * Add a hook to all routes. The hooks will apply to all routes,                              // 221
- * unless you name routes to include or exclude via `only` and `except` options               // 222
- *                                                                                            // 223
- * @param {String} [type] one of 'load', 'unload', 'before' or 'after'                        // 224
- * @param {Object} [options] Options to controll the hooks [optional]                         // 225
- * @param {Function} [hook] Callback to run                                                   // 226
- * @return {IronRouter}                                                                       // 227
- * @api public                                                                                // 228
- *                                                                                            // 229
- */                                                                                           // 230
+/**                                                                                           // 183
+ * Create a new controller for a dispatch.                                                    // 184
+ */                                                                                           // 185
+Router.prototype.createController = function (url, context) {                                 // 186
+  // see if there's a route for this url and environment                                      // 187
+  // it's possible that we find a route but it's a client                                     // 188
+  // route so we don't instantiate its controller and instead                                 // 189
+  // use an anonymous controller to run the route.                                            // 190
+  var route = this.findFirstRoute(url);                                                       // 191
+  var controller;                                                                             // 192
+                                                                                              // 193
+  context = context || {};                                                                    // 194
+                                                                                              // 195
+  if (route)                                                                                  // 196
+    // let the route decide what controller to use                                            // 197
+    controller = route.createController({layout: this._layout});                              // 198
+  else                                                                                        // 199
+    // create an anonymous controller                                                         // 200
+    controller = new RouteController({layout: this._layout});                                 // 201
+                                                                                              // 202
+  controller.router = this;                                                                   // 203
+  controller.configureFromUrl(url, context, {reactive: false});                               // 204
+  return controller;                                                                          // 205
+};                                                                                            // 206
+                                                                                              // 207
+Router.prototype.setTemplateNameConverter = function (fn) {                                   // 208
+  this._templateNameConverter = fn;                                                           // 209
+  return this;                                                                                // 210
+};                                                                                            // 211
+                                                                                              // 212
+Router.prototype.setControllerNameConverter = function (fn) {                                 // 213
+  this._controllerNameConverter = fn;                                                         // 214
+  return this;                                                                                // 215
+};                                                                                            // 216
+                                                                                              // 217
+Router.prototype.toTemplateName = function (str) {                                            // 218
+  if (this._templateNameConverter)                                                            // 219
+    return this._templateNameConverter(str);                                                  // 220
+  else                                                                                        // 221
+    return Iron.utils.classCase(str);                                                         // 222
+};                                                                                            // 223
+                                                                                              // 224
+Router.prototype.toControllerName = function (str) {                                          // 225
+  if (this._controllerNameConverter)                                                          // 226
+    return this._controllerNameConverter(str);                                                // 227
+  else                                                                                        // 228
+    return Iron.utils.classCase(str) + 'Controller';                                          // 229
+};                                                                                            // 230
                                                                                               // 231
-Router.prototype.addHook = function(type, hook, options) {                                    // 232
-  var self = this;                                                                            // 233
-                                                                                              // 234
-  options = options || {};                                                                    // 235
-                                                                                              // 236
-  var toArray = function (input) {                                                            // 237
-    if (!input)                                                                               // 238
-      return [];                                                                              // 239
-    else if (_.isArray(input))                                                                // 240
-      return input;                                                                           // 241
-    else                                                                                      // 242
-      return [input];                                                                         // 243
-  }                                                                                           // 244
-                                                                                              // 245
-  if (options.only)                                                                           // 246
-    options.only = toArray(options.only);                                                     // 247
-  if (options.except)                                                                         // 248
-    options.except = toArray(options.except);                                                 // 249
-                                                                                              // 250
-  var hooks = this._globalHooks[type] = this._globalHooks[type] || [];                        // 251
-                                                                                              // 252
-  var hookWithOptions = function () {                                                         // 253
-    var thisArg = this;                                                                       // 254
-    var args = arguments;                                                                     // 255
-    // this allows us to bind hooks to options that get looked up when you call               // 256
-    // this.lookupOption from within the hook. And it looks better to keep                    // 257
-    // plugin/hook related options close to their definitions instead of                      // 258
-    // Router.configure. But we use a dynamic variable so we don't have to                    // 259
-    // pass the options explicitly as an argument and plugin creators can                     // 260
-    // just use this.lookupOption which will follow the proper lookup chain from              // 261
-    // "this", local options, dynamic variable options, route, router, etc.                   // 262
-    return CurrentOptions.withValue(options, function () {                                    // 263
-      return self.lookupHook(hook).apply(thisArg, args);                                      // 264
-    });                                                                                       // 265
-  };                                                                                          // 266
-                                                                                              // 267
-  hooks.push({options: options, hook: hookWithOptions});                                      // 268
-  return this;                                                                                // 269
-};                                                                                            // 270
-                                                                                              // 271
-/**                                                                                           // 272
- * If the argument is a function return it directly. If it's a string, see if                 // 273
- * there is a function in the Iron.Router.hooks namespace. Throw an error if we               // 274
- * can't find the hook.                                                                       // 275
- */                                                                                           // 276
-Router.prototype.lookupHook = function (nameOrFn) {                                           // 277
-  var fn = nameOrFn;                                                                          // 278
-                                                                                              // 279
-  // if we already have a func just return it                                                 // 280
-  if (_.isFunction(fn))                                                                       // 281
-    return fn;                                                                                // 282
-                                                                                              // 283
-  // look up one of the out-of-box hooks like                                                 // 284
-  // 'loaded or 'dataNotFound' if the nameOrFn is a                                           // 285
-  // string                                                                                   // 286
-  if (_.isString(fn)) {                                                                       // 287
-    if (_.isFunction(Iron.Router.hooks[fn]))                                                  // 288
-      return Iron.Router.hooks[fn];                                                           // 289
-  }                                                                                           // 290
-                                                                                              // 291
-  // we couldn't find it so throw an error                                                    // 292
-  throw new Error("No hook found named: " + nameOrFn);                                        // 293
-};                                                                                            // 294
-                                                                                              // 295
-/**                                                                                           // 296
- *                                                                                            // 297
- * Fetch the list of global hooks that apply to the given route name.                         // 298
- * Hooks are defined by the .addHook() function above.                                        // 299
- *                                                                                            // 300
- * @param {String} [type] one of IronRouter.HOOK_TYPES                                        // 301
- * @param {String} [name] the name of the route we are interested in                          // 302
- * @return {[Function]} [hooks] an array of hooks to run                                      // 303
- * @api public                                                                                // 304
- *                                                                                            // 305
- */                                                                                           // 306
-                                                                                              // 307
-Router.prototype.getHooks = function(type, name) {                                            // 308
-  var self = this;                                                                            // 309
-  var hooks = [];                                                                             // 310
-                                                                                              // 311
-  _.each(this._globalHooks[type], function(hook) {                                            // 312
-    var options = hook.options;                                                               // 313
-                                                                                              // 314
-    if (options.except && _.include(options.except, name))                                    // 315
-      return [];                                                                              // 316
-                                                                                              // 317
-    if (options.only && ! _.include(options.only, name))                                      // 318
-      return [];                                                                              // 319
+/**                                                                                           // 232
+ *                                                                                            // 233
+ * Add a hook to all routes. The hooks will apply to all routes,                              // 234
+ * unless you name routes to include or exclude via `only` and `except` options               // 235
+ *                                                                                            // 236
+ * @param {String} [type] one of 'load', 'unload', 'before' or 'after'                        // 237
+ * @param {Object} [options] Options to controll the hooks [optional]                         // 238
+ * @param {Function} [hook] Callback to run                                                   // 239
+ * @return {IronRouter}                                                                       // 240
+ * @api public                                                                                // 241
+ *                                                                                            // 242
+ */                                                                                           // 243
+                                                                                              // 244
+Router.prototype.addHook = function(type, hook, options) {                                    // 245
+  var self = this;                                                                            // 246
+                                                                                              // 247
+  options = options || {};                                                                    // 248
+                                                                                              // 249
+  var toArray = function (input) {                                                            // 250
+    if (!input)                                                                               // 251
+      return [];                                                                              // 252
+    else if (_.isArray(input))                                                                // 253
+      return input;                                                                           // 254
+    else                                                                                      // 255
+      return [input];                                                                         // 256
+  }                                                                                           // 257
+                                                                                              // 258
+  if (options.only)                                                                           // 259
+    options.only = toArray(options.only);                                                     // 260
+  if (options.except)                                                                         // 261
+    options.except = toArray(options.except);                                                 // 262
+                                                                                              // 263
+  var hooks = this._globalHooks[type] = this._globalHooks[type] || [];                        // 264
+                                                                                              // 265
+  var hookWithOptions = function () {                                                         // 266
+    var thisArg = this;                                                                       // 267
+    var args = arguments;                                                                     // 268
+    // this allows us to bind hooks to options that get looked up when you call               // 269
+    // this.lookupOption from within the hook. And it looks better to keep                    // 270
+    // plugin/hook related options close to their definitions instead of                      // 271
+    // Router.configure. But we use a dynamic variable so we don't have to                    // 272
+    // pass the options explicitly as an argument and plugin creators can                     // 273
+    // just use this.lookupOption which will follow the proper lookup chain from              // 274
+    // "this", local options, dynamic variable options, route, router, etc.                   // 275
+    return CurrentOptions.withValue(options, function () {                                    // 276
+      return self.lookupHook(hook).apply(thisArg, args);                                      // 277
+    });                                                                                       // 278
+  };                                                                                          // 279
+                                                                                              // 280
+  hooks.push({options: options, hook: hookWithOptions});                                      // 281
+  return this;                                                                                // 282
+};                                                                                            // 283
+                                                                                              // 284
+/**                                                                                           // 285
+ * If the argument is a function return it directly. If it's a string, see if                 // 286
+ * there is a function in the Iron.Router.hooks namespace. Throw an error if we               // 287
+ * can't find the hook.                                                                       // 288
+ */                                                                                           // 289
+Router.prototype.lookupHook = function (nameOrFn) {                                           // 290
+  var fn = nameOrFn;                                                                          // 291
+                                                                                              // 292
+  // if we already have a func just return it                                                 // 293
+  if (_.isFunction(fn))                                                                       // 294
+    return fn;                                                                                // 295
+                                                                                              // 296
+  // look up one of the out-of-box hooks like                                                 // 297
+  // 'loaded or 'dataNotFound' if the nameOrFn is a                                           // 298
+  // string                                                                                   // 299
+  if (_.isString(fn)) {                                                                       // 300
+    if (_.isFunction(Iron.Router.hooks[fn]))                                                  // 301
+      return Iron.Router.hooks[fn];                                                           // 302
+  }                                                                                           // 303
+                                                                                              // 304
+  // we couldn't find it so throw an error                                                    // 305
+  throw new Error("No hook found named: " + nameOrFn);                                        // 306
+};                                                                                            // 307
+                                                                                              // 308
+/**                                                                                           // 309
+ *                                                                                            // 310
+ * Fetch the list of global hooks that apply to the given route name.                         // 311
+ * Hooks are defined by the .addHook() function above.                                        // 312
+ *                                                                                            // 313
+ * @param {String} [type] one of IronRouter.HOOK_TYPES                                        // 314
+ * @param {String} [name] the name of the route we are interested in                          // 315
+ * @return {[Function]} [hooks] an array of hooks to run                                      // 316
+ * @api public                                                                                // 317
+ *                                                                                            // 318
+ */                                                                                           // 319
                                                                                               // 320
-    hooks.push(hook.hook);                                                                    // 321
-  });                                                                                         // 322
-                                                                                              // 323
-  return hooks;                                                                               // 324
-};                                                                                            // 325
-                                                                                              // 326
-Router.HOOK_TYPES = [                                                                         // 327
-  'onRun',                                                                                    // 328
-  'onRerun',                                                                                  // 329
-  'onBeforeAction',                                                                           // 330
-  'onAfterAction',                                                                            // 331
-  'onStop',                                                                                   // 332
+Router.prototype.getHooks = function(type, name) {                                            // 321
+  var self = this;                                                                            // 322
+  var hooks = [];                                                                             // 323
+                                                                                              // 324
+  _.each(this._globalHooks[type], function(hook) {                                            // 325
+    var options = hook.options;                                                               // 326
+                                                                                              // 327
+    if (options.except && _.include(options.except, name))                                    // 328
+      return [];                                                                              // 329
+                                                                                              // 330
+    if (options.only && ! _.include(options.only, name))                                      // 331
+      return [];                                                                              // 332
                                                                                               // 333
-  // not technically a hook but we'll use it                                                  // 334
-  // in a similar way. This will cause waitOn                                                 // 335
-  // to be added as a method to the Router and then                                           // 336
-  // it can be selectively applied to specific routes                                         // 337
-  'waitOn',                                                                                   // 338
+    hooks.push(hook.hook);                                                                    // 334
+  });                                                                                         // 335
+                                                                                              // 336
+  return hooks;                                                                               // 337
+};                                                                                            // 338
                                                                                               // 339
-  // legacy hook types but we'll let them slide                                               // 340
-  'load', // onRun                                                                            // 341
-  'before', // onBeforeAction                                                                 // 342
-  'after', // onAfterAction                                                                   // 343
-  'unload' // onStop                                                                          // 344
-];                                                                                            // 345
+Router.HOOK_TYPES = [                                                                         // 340
+  'onRun',                                                                                    // 341
+  'onRerun',                                                                                  // 342
+  'onBeforeAction',                                                                           // 343
+  'onAfterAction',                                                                            // 344
+  'onStop',                                                                                   // 345
                                                                                               // 346
-/**                                                                                           // 347
- * A namespace for hooks keyed by name.                                                       // 348
- */                                                                                           // 349
-Router.hooks = {};                                                                            // 350
-                                                                                              // 351
-                                                                                              // 352
-/**                                                                                           // 353
- * A namespace for plugin functions keyed by name.                                            // 354
- */                                                                                           // 355
-Router.plugins = {};                                                                          // 356
-                                                                                              // 357
-/**                                                                                           // 358
- * Auto add helper mtehods for all the hooks.                                                 // 359
- */                                                                                           // 360
-                                                                                              // 361
-_.each(Router.HOOK_TYPES, function (type) {                                                   // 362
-  Router.prototype[type] = function (hook, options) {                                         // 363
-    this.addHook(type, hook, options);                                                        // 364
-  };                                                                                          // 365
-});                                                                                           // 366
-                                                                                              // 367
-/**                                                                                           // 368
- * Add a plugin to the router instance.                                                       // 369
- */                                                                                           // 370
-Router.prototype.plugin = function (nameOrFn, options) {                                      // 371
-  var func;                                                                                   // 372
-                                                                                              // 373
-  if (typeof nameOrFn === 'function')                                                         // 374
-    func = nameOrFn;                                                                          // 375
-  else if (typeof nameOrFn === 'string')                                                      // 376
-    func = Iron.Router.plugins[nameOrFn];                                                     // 377
-                                                                                              // 378
-  if (!func)                                                                                  // 379
-    throw new Error("No plugin found named " + JSON.stringify(nameOrFn));                     // 380
+  // not technically a hook but we'll use it                                                  // 347
+  // in a similar way. This will cause waitOn                                                 // 348
+  // to be added as a method to the Router and then                                           // 349
+  // it can be selectively applied to specific routes                                         // 350
+  'waitOn',                                                                                   // 351
+  'subscriptions',                                                                            // 352
+                                                                                              // 353
+  // legacy hook types but we'll let them slide                                               // 354
+  'load', // onRun                                                                            // 355
+  'before', // onBeforeAction                                                                 // 356
+  'after', // onAfterAction                                                                   // 357
+  'unload' // onStop                                                                          // 358
+];                                                                                            // 359
+                                                                                              // 360
+/**                                                                                           // 361
+ * A namespace for hooks keyed by name.                                                       // 362
+ */                                                                                           // 363
+Router.hooks = {};                                                                            // 364
+                                                                                              // 365
+                                                                                              // 366
+/**                                                                                           // 367
+ * A namespace for plugin functions keyed by name.                                            // 368
+ */                                                                                           // 369
+Router.plugins = {};                                                                          // 370
+                                                                                              // 371
+/**                                                                                           // 372
+ * Auto add helper mtehods for all the hooks.                                                 // 373
+ */                                                                                           // 374
+                                                                                              // 375
+_.each(Router.HOOK_TYPES, function (type) {                                                   // 376
+  Router.prototype[type] = function (hook, options) {                                         // 377
+    this.addHook(type, hook, options);                                                        // 378
+  };                                                                                          // 379
+});                                                                                           // 380
                                                                                               // 381
-  // fn(router, options)                                                                      // 382
-  func.call(this, this, options);                                                             // 383
-                                                                                              // 384
-  return this;                                                                                // 385
-};                                                                                            // 386
+/**                                                                                           // 382
+ * Add a plugin to the router instance.                                                       // 383
+ */                                                                                           // 384
+Router.prototype.plugin = function (nameOrFn, options) {                                      // 385
+  var func;                                                                                   // 386
                                                                                               // 387
-Iron.Router = Router;                                                                         // 388
-                                                                                              // 389
+  if (typeof nameOrFn === 'function')                                                         // 388
+    func = nameOrFn;                                                                          // 389
+  else if (typeof nameOrFn === 'string')                                                      // 390
+    func = Iron.Router.plugins[nameOrFn];                                                     // 391
+                                                                                              // 392
+  if (!func)                                                                                  // 393
+    throw new Error("No plugin found named " + JSON.stringify(nameOrFn));                     // 394
+                                                                                              // 395
+  // fn(router, options)                                                                      // 396
+  func.call(this, this, options);                                                             // 397
+                                                                                              // 398
+  return this;                                                                                // 399
+};                                                                                            // 400
+                                                                                              // 401
+Iron.Router = Router;                                                                         // 402
+                                                                                              // 403
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);

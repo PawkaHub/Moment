@@ -344,20 +344,6 @@
       "path": "packages/mizzao_timesync.js"
     },
     {
-      "sourceMap": "packages/livedata.js.map",
-      "sourceMapRoot": "packages",
-      "path": "packages/livedata.js"
-    },
-    {
-      "node_modules": "npm/meteorhacks:fast-render/node_modules",
-      "sourceMap": "packages/meteorhacks_fast-render.js.map",
-      "sourceMapRoot": "packages",
-      "path": "packages/meteorhacks_fast-render.js",
-      "assets": {
-        "lib/server/inject_data.html": "assets/packages/meteorhacks_fast-render/lib/server/inject_data.html"
-      }
-    },
-    {
       "sourceMap": "packages/gadicohen_famous-views.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/gadicohen_famous-views.js"
@@ -374,14 +360,14 @@
       "path": "packages/limemakers_three.js"
     },
     {
-      "sourceMap": "packages/pierreeric_fview-flexgrid.js.map",
-      "sourceMapRoot": "packages",
-      "path": "packages/pierreeric_fview-flexgrid.js"
-    },
-    {
       "sourceMap": "packages/session.js.map",
       "sourceMapRoot": "packages",
       "path": "packages/session.js"
+    },
+    {
+      "sourceMap": "packages/livedata.js.map",
+      "sourceMapRoot": "packages",
+      "path": "packages/livedata.js"
     },
     {
       "path": "packages/global-imports.js"

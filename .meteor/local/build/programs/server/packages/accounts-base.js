@@ -162,54 +162,55 @@ if (Meteor.isClient) {                                                          
 /**                                                                                                              // 136
  * @summary A [Mongo.Collection](#collections) containing user documents.                                        // 137
  * @locus Anywhere                                                                                               // 138
- */                                                                                                              // 139
-Meteor.users = new Mongo.Collection("users", {                                                                   // 140
-  _preventAutopublish: true,                                                                                     // 141
-  connection: Meteor.isClient ? Accounts.connection : Meteor.connection                                          // 142
-});                                                                                                              // 143
-// There is an allow call in accounts_server that restricts this                                                 // 144
-// collection.                                                                                                   // 145
-                                                                                                                 // 146
-// loginServiceConfiguration and ConfigError are maintained for backwards compatibility                          // 147
-Meteor.startup(function () {                                                                                     // 148
-  var ServiceConfiguration =                                                                                     // 149
-    Package['service-configuration'].ServiceConfiguration;                                                       // 150
-  Accounts.loginServiceConfiguration = ServiceConfiguration.configurations;                                      // 151
-  Accounts.ConfigError = ServiceConfiguration.ConfigError;                                                       // 152
-});                                                                                                              // 153
-                                                                                                                 // 154
-// Thrown when the user cancels the login process (eg, closes an oauth                                           // 155
-// popup, declines retina scan, etc)                                                                             // 156
-Accounts.LoginCancelledError = function(description) {                                                           // 157
-  this.message = description;                                                                                    // 158
-};                                                                                                               // 159
-                                                                                                                 // 160
-// This is used to transmit specific subclass errors over the wire. We should                                    // 161
-// come up with a more generic way to do this (eg, with some sort of symbolic                                    // 162
-// error code rather than a number).                                                                             // 163
-Accounts.LoginCancelledError.numericError = 0x8acdc2f;                                                           // 164
-Accounts.LoginCancelledError.prototype = new Error();                                                            // 165
-Accounts.LoginCancelledError.prototype.name = 'Accounts.LoginCancelledError';                                    // 166
-                                                                                                                 // 167
-getTokenLifetimeMs = function () {                                                                               // 168
-  return (Accounts._options.loginExpirationInDays ||                                                             // 169
-          DEFAULT_LOGIN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;                                                  // 170
-};                                                                                                               // 171
-                                                                                                                 // 172
-Accounts._tokenExpiration = function (when) {                                                                    // 173
-  // We pass when through the Date constructor for backwards compatibility;                                      // 174
-  // `when` used to be a number.                                                                                 // 175
-  return new Date((new Date(when)).getTime() + getTokenLifetimeMs());                                            // 176
-};                                                                                                               // 177
-                                                                                                                 // 178
-Accounts._tokenExpiresSoon = function (when) {                                                                   // 179
-  var minLifetimeMs = .1 * getTokenLifetimeMs();                                                                 // 180
-  var minLifetimeCapMs = MIN_TOKEN_LIFETIME_CAP_SECS * 1000;                                                     // 181
-  if (minLifetimeMs > minLifetimeCapMs)                                                                          // 182
-    minLifetimeMs = minLifetimeCapMs;                                                                            // 183
-  return new Date() > (new Date(when) - minLifetimeMs);                                                          // 184
-};                                                                                                               // 185
-                                                                                                                 // 186
+ * @type {Mongo.Collection}                                                                                      // 139
+ */                                                                                                              // 140
+Meteor.users = new Mongo.Collection("users", {                                                                   // 141
+  _preventAutopublish: true,                                                                                     // 142
+  connection: Meteor.isClient ? Accounts.connection : Meteor.connection                                          // 143
+});                                                                                                              // 144
+// There is an allow call in accounts_server that restricts this                                                 // 145
+// collection.                                                                                                   // 146
+                                                                                                                 // 147
+// loginServiceConfiguration and ConfigError are maintained for backwards compatibility                          // 148
+Meteor.startup(function () {                                                                                     // 149
+  var ServiceConfiguration =                                                                                     // 150
+    Package['service-configuration'].ServiceConfiguration;                                                       // 151
+  Accounts.loginServiceConfiguration = ServiceConfiguration.configurations;                                      // 152
+  Accounts.ConfigError = ServiceConfiguration.ConfigError;                                                       // 153
+});                                                                                                              // 154
+                                                                                                                 // 155
+// Thrown when the user cancels the login process (eg, closes an oauth                                           // 156
+// popup, declines retina scan, etc)                                                                             // 157
+Accounts.LoginCancelledError = function(description) {                                                           // 158
+  this.message = description;                                                                                    // 159
+};                                                                                                               // 160
+                                                                                                                 // 161
+// This is used to transmit specific subclass errors over the wire. We should                                    // 162
+// come up with a more generic way to do this (eg, with some sort of symbolic                                    // 163
+// error code rather than a number).                                                                             // 164
+Accounts.LoginCancelledError.numericError = 0x8acdc2f;                                                           // 165
+Accounts.LoginCancelledError.prototype = new Error();                                                            // 166
+Accounts.LoginCancelledError.prototype.name = 'Accounts.LoginCancelledError';                                    // 167
+                                                                                                                 // 168
+getTokenLifetimeMs = function () {                                                                               // 169
+  return (Accounts._options.loginExpirationInDays ||                                                             // 170
+          DEFAULT_LOGIN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;                                                  // 171
+};                                                                                                               // 172
+                                                                                                                 // 173
+Accounts._tokenExpiration = function (when) {                                                                    // 174
+  // We pass when through the Date constructor for backwards compatibility;                                      // 175
+  // `when` used to be a number.                                                                                 // 176
+  return new Date((new Date(when)).getTime() + getTokenLifetimeMs());                                            // 177
+};                                                                                                               // 178
+                                                                                                                 // 179
+Accounts._tokenExpiresSoon = function (when) {                                                                   // 180
+  var minLifetimeMs = .1 * getTokenLifetimeMs();                                                                 // 181
+  var minLifetimeCapMs = MIN_TOKEN_LIFETIME_CAP_SECS * 1000;                                                     // 182
+  if (minLifetimeMs > minLifetimeCapMs)                                                                          // 183
+    minLifetimeMs = minLifetimeCapMs;                                                                            // 184
+  return new Date() > (new Date(when) - minLifetimeMs);                                                          // 185
+};                                                                                                               // 186
+                                                                                                                 // 187
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);

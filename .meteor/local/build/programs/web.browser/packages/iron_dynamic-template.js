@@ -523,200 +523,203 @@ DynamicTemplate.prototype.insert = function (options) {                         
  * is no lookup host.                                                                                             // 412
  */                                                                                                               // 413
 DynamicTemplate.prototype._getLookupHost = function () {                                                          // 414
-  return this._lookupHostValue;                                                                                   // 415
-};                                                                                                                // 416
-                                                                                                                  // 417
-/**                                                                                                               // 418
- * Set the reactive value of the lookup host.                                                                     // 419
- *                                                                                                                // 420
- */                                                                                                               // 421
-DynamicTemplate.prototype._setLookupHost = function (host) {                                                      // 422
-  var self = this;                                                                                                // 423
-                                                                                                                  // 424
-  if (self._lookupHostValue !== host) {                                                                           // 425
-    self._lookupHostValue = host;                                                                                 // 426
-    Deps.afterFlush(function () {                                                                                 // 427
-      // if the lookup host changes and the template also changes                                                 // 428
-      // before the next flush cycle, this gives the new template                                                 // 429
-      // a chance to render, and the old template to be torn off                                                  // 430
-      // the page (including stopping its computation) before the                                                 // 431
-      // lookupHostDep is changed.                                                                                // 432
-      self._lookupHostDep.changed();                                                                              // 433
-    });                                                                                                           // 434
-  }                                                                                                               // 435
-                                                                                                                  // 436
-  return this;                                                                                                    // 437
-};                                                                                                                // 438
+  // XXX this is called from the Blaze overrides so we can't create a dep                                         // 415
+  // here for every single lookup. Will revisit.                                                                  // 416
+  //this._lookupHostDep.depend();                                                                                 // 417
+  return this._lookupHostValue;                                                                                   // 418
+};                                                                                                                // 419
+                                                                                                                  // 420
+/**                                                                                                               // 421
+ * Set the reactive value of the lookup host.                                                                     // 422
+ *                                                                                                                // 423
+ */                                                                                                               // 424
+DynamicTemplate.prototype._setLookupHost = function (host) {                                                      // 425
+  var self = this;                                                                                                // 426
+                                                                                                                  // 427
+  if (self._lookupHostValue !== host) {                                                                           // 428
+    self._lookupHostValue = host;                                                                                 // 429
+    Deps.afterFlush(function () {                                                                                 // 430
+      // if the lookup host changes and the template also changes                                                 // 431
+      // before the next flush cycle, this gives the new template                                                 // 432
+      // a chance to render, and the old template to be torn off                                                  // 433
+      // the page (including stopping its computation) before the                                                 // 434
+      // lookupHostDep is changed.                                                                                // 435
+      self._lookupHostDep.changed();                                                                              // 436
+    });                                                                                                           // 437
+  }                                                                                                               // 438
                                                                                                                   // 439
-/*****************************************************************************/                                   // 440
-/* DynamicTemplate Static Methods */                                                                              // 441
-/*****************************************************************************/                                   // 442
-                                                                                                                  // 443
-/**                                                                                                               // 444
- * Get the first parent data context that are not inclusion arguments                                             // 445
- * (see above function). Note: This function can create reactive dependencies.                                    // 446
- */                                                                                                               // 447
-DynamicTemplate.getParentDataContext = function (view) {                                                          // 448
-  return DynamicTemplate.getDataContext(view && view.parentView);                                                 // 449
-};                                                                                                                // 450
-                                                                                                                  // 451
-/**                                                                                                               // 452
- * Get the first data context that is not inclusion arguments.                                                    // 453
- */                                                                                                               // 454
-DynamicTemplate.getDataContext = function (view) {                                                                // 455
-  while (view) {                                                                                                  // 456
-    if (view.name === 'with' && !view.__isTemplateWith)                                                           // 457
-      return view.dataVar.get();                                                                                  // 458
-    else                                                                                                          // 459
-      view = view.parentView;                                                                                     // 460
-  }                                                                                                               // 461
-                                                                                                                  // 462
-  return null;                                                                                                    // 463
-};                                                                                                                // 464
+  return this;                                                                                                    // 440
+};                                                                                                                // 441
+                                                                                                                  // 442
+/*****************************************************************************/                                   // 443
+/* DynamicTemplate Static Methods */                                                                              // 444
+/*****************************************************************************/                                   // 445
+                                                                                                                  // 446
+/**                                                                                                               // 447
+ * Get the first parent data context that are not inclusion arguments                                             // 448
+ * (see above function). Note: This function can create reactive dependencies.                                    // 449
+ */                                                                                                               // 450
+DynamicTemplate.getParentDataContext = function (view) {                                                          // 451
+  return DynamicTemplate.getDataContext(view && view.parentView);                                                 // 452
+};                                                                                                                // 453
+                                                                                                                  // 454
+/**                                                                                                               // 455
+ * Get the first data context that is not inclusion arguments.                                                    // 456
+ */                                                                                                               // 457
+DynamicTemplate.getDataContext = function (view) {                                                                // 458
+  while (view) {                                                                                                  // 459
+    if (view.name === 'with' && !view.__isTemplateWith)                                                           // 460
+      return view.dataVar.get();                                                                                  // 461
+    else                                                                                                          // 462
+      view = view.parentView;                                                                                     // 463
+  }                                                                                                               // 464
                                                                                                                   // 465
-/**                                                                                                               // 466
- * Get inclusion arguments, if any, from a view.                                                                  // 467
- *                                                                                                                // 468
- * Uses the __isTemplateWith property set when a parent view is used                                              // 469
- * specificially for a data context with inclusion args.                                                          // 470
+  return null;                                                                                                    // 466
+};                                                                                                                // 467
+                                                                                                                  // 468
+/**                                                                                                               // 469
+ * Get inclusion arguments, if any, from a view.                                                                  // 470
  *                                                                                                                // 471
- * Inclusion arguments are arguments provided in a template like this:                                            // 472
- * {{> yield "inclusionArg"}}                                                                                     // 473
- * or                                                                                                             // 474
- * {{> yield region="inclusionArgValue"}}                                                                         // 475
- */                                                                                                               // 476
-DynamicTemplate.getInclusionArguments = function (view) {                                                         // 477
-  var parent = view && view.parentView;                                                                           // 478
-                                                                                                                  // 479
-  if (!parent)                                                                                                    // 480
-    return null;                                                                                                  // 481
+ * Uses the __isTemplateWith property set when a parent view is used                                              // 472
+ * specificially for a data context with inclusion args.                                                          // 473
+ *                                                                                                                // 474
+ * Inclusion arguments are arguments provided in a template like this:                                            // 475
+ * {{> yield "inclusionArg"}}                                                                                     // 476
+ * or                                                                                                             // 477
+ * {{> yield region="inclusionArgValue"}}                                                                         // 478
+ */                                                                                                               // 479
+DynamicTemplate.getInclusionArguments = function (view) {                                                         // 480
+  var parent = view && view.parentView;                                                                           // 481
                                                                                                                   // 482
-  if (parent.__isTemplateWith)                                                                                    // 483
-    return parent.dataVar.get();                                                                                  // 484
+  if (!parent)                                                                                                    // 483
+    return null;                                                                                                  // 484
                                                                                                                   // 485
-  return null;                                                                                                    // 486
-};                                                                                                                // 487
+  if (parent.__isTemplateWith)                                                                                    // 486
+    return parent.dataVar.get();                                                                                  // 487
                                                                                                                   // 488
-/**                                                                                                               // 489
- * Given a view, return a function that can be used to access argument values at                                  // 490
- * the time the view was rendered. There are two key benefits:                                                    // 491
- *                                                                                                                // 492
- * 1. Save the argument data at the time of rendering. When you use lookup(...)                                   // 493
- *    it starts from the current data context which can change.                                                   // 494
- * 2. Defer creating a dependency on inclusion arguments until later.                                             // 495
- *                                                                                                                // 496
- * Example:                                                                                                       // 497
- *                                                                                                                // 498
- *   {{> MyTemplate template="MyTemplate"                                                                         // 499
- *   var args = DynamicTemplate.args(view);                                                                       // 500
- *   var tmplValue = args('template');                                                                            // 501
- *     => "MyTemplate"                                                                                            // 502
- */                                                                                                               // 503
-DynamicTemplate.args = function (view) {                                                                          // 504
-  return function (key) {                                                                                         // 505
-    var data = DynamicTemplate.getInclusionArguments(view);                                                       // 506
-                                                                                                                  // 507
-    if (data) {                                                                                                   // 508
-      if (key)                                                                                                    // 509
-        return data[key];                                                                                         // 510
-      else                                                                                                        // 511
-        return data;                                                                                              // 512
-    }                                                                                                             // 513
-                                                                                                                  // 514
-    return null;                                                                                                  // 515
-  };                                                                                                              // 516
-};                                                                                                                // 517
-                                                                                                                  // 518
-/**                                                                                                               // 519
- * Inherit from DynamicTemplate.                                                                                  // 520
- */                                                                                                               // 521
-DynamicTemplate.extend = function (props) {                                                                       // 522
-  return Iron.utils.extend(this, props);                                                                          // 523
-};                                                                                                                // 524
-                                                                                                                  // 525
-DynamicTemplate.findFirstLookupHost = function (view) {                                                           // 526
-  var host;                                                                                                       // 527
-  var helper;                                                                                                     // 528
-  assert(view instanceof Blaze.View, "view must be a Blaze.View");                                                // 529
-  while (view) {                                                                                                  // 530
-    if (view.__dynamicTemplate__) {                                                                               // 531
-      // creates a reactive dependency.                                                                           // 532
-      var host = view.__dynamicTemplate__._getLookupHost();                                                       // 533
-      if (host) return host;                                                                                      // 534
-    } else {                                                                                                      // 535
-      view = view.parentView;                                                                                     // 536
-    }                                                                                                             // 537
-  }                                                                                                               // 538
-                                                                                                                  // 539
-  return undefined;                                                                                               // 540
-};                                                                                                                // 541
+  return null;                                                                                                    // 489
+};                                                                                                                // 490
+                                                                                                                  // 491
+/**                                                                                                               // 492
+ * Given a view, return a function that can be used to access argument values at                                  // 493
+ * the time the view was rendered. There are two key benefits:                                                    // 494
+ *                                                                                                                // 495
+ * 1. Save the argument data at the time of rendering. When you use lookup(...)                                   // 496
+ *    it starts from the current data context which can change.                                                   // 497
+ * 2. Defer creating a dependency on inclusion arguments until later.                                             // 498
+ *                                                                                                                // 499
+ * Example:                                                                                                       // 500
+ *                                                                                                                // 501
+ *   {{> MyTemplate template="MyTemplate"                                                                         // 502
+ *   var args = DynamicTemplate.args(view);                                                                       // 503
+ *   var tmplValue = args('template');                                                                            // 504
+ *     => "MyTemplate"                                                                                            // 505
+ */                                                                                                               // 506
+DynamicTemplate.args = function (view) {                                                                          // 507
+  return function (key) {                                                                                         // 508
+    var data = DynamicTemplate.getInclusionArguments(view);                                                       // 509
+                                                                                                                  // 510
+    if (data) {                                                                                                   // 511
+      if (key)                                                                                                    // 512
+        return data[key];                                                                                         // 513
+      else                                                                                                        // 514
+        return data;                                                                                              // 515
+    }                                                                                                             // 516
+                                                                                                                  // 517
+    return null;                                                                                                  // 518
+  };                                                                                                              // 519
+};                                                                                                                // 520
+                                                                                                                  // 521
+/**                                                                                                               // 522
+ * Inherit from DynamicTemplate.                                                                                  // 523
+ */                                                                                                               // 524
+DynamicTemplate.extend = function (props) {                                                                       // 525
+  return Iron.utils.extend(this, props);                                                                          // 526
+};                                                                                                                // 527
+                                                                                                                  // 528
+DynamicTemplate.findFirstLookupHost = function (view) {                                                           // 529
+  var host;                                                                                                       // 530
+  var helper;                                                                                                     // 531
+  assert(view instanceof Blaze.View, "view must be a Blaze.View");                                                // 532
+  while (view) {                                                                                                  // 533
+    if (view.__dynamicTemplate__) {                                                                               // 534
+      // creates a reactive dependency.                                                                           // 535
+      var host = view.__dynamicTemplate__._getLookupHost();                                                       // 536
+      if (host) return host;                                                                                      // 537
+    } else {                                                                                                      // 538
+      view = view.parentView;                                                                                     // 539
+    }                                                                                                             // 540
+  }                                                                                                               // 541
                                                                                                                   // 542
-DynamicTemplate.findLookupHostWithProperty = function (view, key) {                                               // 543
-  var host;                                                                                                       // 544
-  var prop;                                                                                                       // 545
-  assert(view instanceof Blaze.View, "view must be a Blaze.View");                                                // 546
-  while (view) {                                                                                                  // 547
-    if (view.__dynamicTemplate__) {                                                                               // 548
-                                                                                                                  // 549
-      // creates a reactive dependency                                                                            // 550
-      var host = view.__dynamicTemplate__._getLookupHost();                                                       // 551
+  return undefined;                                                                                               // 543
+};                                                                                                                // 544
+                                                                                                                  // 545
+DynamicTemplate.findLookupHostWithProperty = function (view, key) {                                               // 546
+  var host;                                                                                                       // 547
+  var prop;                                                                                                       // 548
+  assert(view instanceof Blaze.View, "view must be a Blaze.View");                                                // 549
+  while (view) {                                                                                                  // 550
+    if (view.__dynamicTemplate__) {                                                                               // 551
                                                                                                                   // 552
-      if (host && get(host, key)) {                                                                               // 553
-        return host;                                                                                              // 554
-      }                                                                                                           // 555
-    }                                                                                                             // 556
-                                                                                                                  // 557
-    view = view.parentView;                                                                                       // 558
-  }                                                                                                               // 559
+      // creates a reactive dependency                                                                            // 553
+      var host = view.__dynamicTemplate__._getLookupHost();                                                       // 554
+                                                                                                                  // 555
+      if (host && get(host, key)) {                                                                               // 556
+        return host;                                                                                              // 557
+      }                                                                                                           // 558
+    }                                                                                                             // 559
                                                                                                                   // 560
-  return undefined;                                                                                               // 561
-};                                                                                                                // 562
+    view = view.parentView;                                                                                       // 561
+  }                                                                                                               // 562
                                                                                                                   // 563
-/**                                                                                                               // 564
- * Find a lookup host that has a given helper and returns the host. Note,                                         // 565
- * this will create a reactive dependency on each dynamic template's getLookupHost                                // 566
- * function. This is required becuase we need to rerun the entire lookup if                                       // 567
- * the host changes or is added or removed later, anywhere in the chain.                                          // 568
- */                                                                                                               // 569
-DynamicTemplate.findLookupHostWithHelper = function (view, helperKey) {                                           // 570
-  var host;                                                                                                       // 571
-  var helper;                                                                                                     // 572
-  assert(view instanceof Blaze.View, "view must be a Blaze.View");                                                // 573
-  while (view) {                                                                                                  // 574
-    if (view.__dynamicTemplate__) {                                                                               // 575
-      // creates a reactive dependency                                                                            // 576
-      var host = view.__dynamicTemplate__._getLookupHost();                                                       // 577
-      if (host && get(host, 'constructor', '_helpers', helperKey)) {                                              // 578
-        return host;                                                                                              // 579
-      }                                                                                                           // 580
-    }                                                                                                             // 581
-                                                                                                                  // 582
-    view = view.parentView;                                                                                       // 583
-  }                                                                                                               // 584
+  return undefined;                                                                                               // 564
+};                                                                                                                // 565
+                                                                                                                  // 566
+/**                                                                                                               // 567
+ * Find a lookup host that has a given helper and returns the host. Note,                                         // 568
+ * this will create a reactive dependency on each dynamic template's getLookupHost                                // 569
+ * function. This is required becuase we need to rerun the entire lookup if                                       // 570
+ * the host changes or is added or removed later, anywhere in the chain.                                          // 571
+ */                                                                                                               // 572
+DynamicTemplate.findLookupHostWithHelper = function (view, helperKey) {                                           // 573
+  var host;                                                                                                       // 574
+  var helper;                                                                                                     // 575
+  assert(view instanceof Blaze.View, "view must be a Blaze.View");                                                // 576
+  while (view) {                                                                                                  // 577
+    if (view.__dynamicTemplate__) {                                                                               // 578
+      // creates a reactive dependency                                                                            // 579
+      var host = view.__dynamicTemplate__._getLookupHost();                                                       // 580
+      if (host && get(host, 'constructor', '_helpers', helperKey)) {                                              // 581
+        return host;                                                                                              // 582
+      }                                                                                                           // 583
+    }                                                                                                             // 584
                                                                                                                   // 585
-  return undefined;                                                                                               // 586
-};                                                                                                                // 587
+    view = view.parentView;                                                                                       // 586
+  }                                                                                                               // 587
                                                                                                                   // 588
-/*****************************************************************************/                                   // 589
-/* UI Helpers */                                                                                                  // 590
-/*****************************************************************************/                                   // 591
-if (typeof Template !== 'undefined') {                                                                            // 592
-  UI.registerHelper('DynamicTemplate', new Template('DynamicTemplateHelper', function () {                        // 593
-    var args = DynamicTemplate.args(this);                                                                        // 594
-                                                                                                                  // 595
-    return new DynamicTemplate({                                                                                  // 596
-      data: function () { return args('data'); },                                                                 // 597
-      template: function () { return args('template'); },                                                         // 598
-      content: this.templateContentBlock                                                                          // 599
-    }).create();                                                                                                  // 600
-  }));                                                                                                            // 601
-}                                                                                                                 // 602
-                                                                                                                  // 603
-/*****************************************************************************/                                   // 604
-/* Namespacing */                                                                                                 // 605
-/*****************************************************************************/                                   // 606
-Iron.DynamicTemplate = DynamicTemplate;                                                                           // 607
-                                                                                                                  // 608
+  return undefined;                                                                                               // 589
+};                                                                                                                // 590
+                                                                                                                  // 591
+/*****************************************************************************/                                   // 592
+/* UI Helpers */                                                                                                  // 593
+/*****************************************************************************/                                   // 594
+if (typeof Template !== 'undefined') {                                                                            // 595
+  UI.registerHelper('DynamicTemplate', new Template('DynamicTemplateHelper', function () {                        // 596
+    var args = DynamicTemplate.args(this);                                                                        // 597
+                                                                                                                  // 598
+    return new DynamicTemplate({                                                                                  // 599
+      data: function () { return args('data'); },                                                                 // 600
+      template: function () { return args('template'); },                                                         // 601
+      content: this.templateContentBlock                                                                          // 602
+    }).create();                                                                                                  // 603
+  }));                                                                                                            // 604
+}                                                                                                                 // 605
+                                                                                                                  // 606
+/*****************************************************************************/                                   // 607
+/* Namespacing */                                                                                                 // 608
+/*****************************************************************************/                                   // 609
+Iron.DynamicTemplate = DynamicTemplate;                                                                           // 610
+                                                                                                                  // 611
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
@@ -752,19 +755,21 @@ var get = Iron.utils.get;                                                       
  */                                                                                                               // 16
 var origLookup = Blaze.View.prototype.lookup;                                                                     // 17
 Blaze.View.prototype.lookup = function (name /*, args */) {                                                       // 18
-  var host = DynamicTemplate.findLookupHostWithHelper(Blaze.getView(), name);                                     // 19
+  var host;                                                                                                       // 19
                                                                                                                   // 20
-  if (host) {                                                                                                     // 21
-    return function callLookupHostHelper (/* args */) {                                                           // 22
-      var helper = get(host, 'constructor', '_helpers', name);                                                    // 23
-      var args = [].slice.call(arguments);                                                                        // 24
-      return (typeof helper === 'function') ? helper.apply(host, args) : helper;                                  // 25
-    }                                                                                                             // 26
-  } else {                                                                                                        // 27
-    return origLookup.apply(this, arguments);                                                                     // 28
-  }                                                                                                               // 29
-};                                                                                                                // 30
-                                                                                                                  // 31
+  host = DynamicTemplate.findLookupHostWithHelper(Blaze.getView(), name);                                         // 21
+                                                                                                                  // 22
+  if (host) {                                                                                                     // 23
+    return function callLookupHostHelper (/* args */) {                                                           // 24
+      var helper = get(host, 'constructor', '_helpers', name);                                                    // 25
+      var args = [].slice.call(arguments);                                                                        // 26
+      return (typeof helper === 'function') ? helper.apply(host, args) : helper;                                  // 27
+    }                                                                                                             // 28
+  } else {                                                                                                        // 29
+    return origLookup.apply(this, arguments);                                                                     // 30
+  }                                                                                                               // 31
+};                                                                                                                // 32
+                                                                                                                  // 33
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);

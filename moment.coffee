@@ -22,27 +22,28 @@ Router.map ->
 
 if Meteor.isClient
 	# Create Famous Views
-	FView.registerView 'InputSurface',famous.surfaces.InputSurface,
-		famousCreatedPost: ->
-			log 'INPUT SURFACE!!!!!!!1111'
-	    	# `this` or `@` is the fview for this instance
-			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+	FView.ready ->
+		FView.registerView 'InputSurface',famous.surfaces.InputSurface,
+			famousCreatedPost: ->
+				log 'INPUT SURFACE!!!!!!!1111'
+		    	# `this` or `@` is the fview for this instance
+				@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
 
-	FView.registerView 'ImageSurface',famous.surfaces.ImageSurface,
-		famousCreatedPost: ->
-	    	# `this` or `@` is the fview for this instance
-			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+		FView.registerView 'ImageSurface',famous.surfaces.ImageSurface,
+			famousCreatedPost: ->
+		    	# `this` or `@` is the fview for this instance
+				@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
 
-	FView.registerView 'CanvasSurface',famous.surfaces.CanvasSurface,
-		famousCreatedPost: ->
-	    	# `this` or `@` is the fview for this instance
-			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
-			log 'CONTEXT?!'
+		FView.registerView 'CanvasSurface',famous.surfaces.CanvasSurface,
+			famousCreatedPost: ->
+		    	# `this` or `@` is the fview for this instance
+				@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+				log 'CONTEXT?!'
 
-	FView.registerView 'GridLayout',famous.views.GridLayout,
-		famousCreatedPost: ->
-			# `this` or `@` is the fview for this instance
-			@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
+		FView.registerView 'GridLayout',famous.views.GridLayout,
+			famousCreatedPost: ->
+				# `this` or `@` is the fview for this instance
+				@pipeChildrenTo = if @parent.pipeChildrenTo? then [ @view, @parent.pipeChildrenTo[0] ] else [ @view ]
 
 	Meteor.startup ->
 		#Set famous logging to be more calm
@@ -128,6 +129,7 @@ if Meteor.isClient
 		Session.setDefault 'timer', momentTimer
 		Session.setDefault 'now', TimeSync.serverTime()
 		Session.setDefault 'easterEggActive',false
+		Session.setDefault 'loaded',false
 
 		#Filters
 		Session.setDefault 'blur', 100
@@ -147,11 +149,9 @@ if Meteor.isClient
 		# Detect loading to initialize Canvas
 		Engine.on('postrender', () ->
 			if window.canvas and not window.context
-				#log 'MAKE CANVAS!!!!'
+				log 'MAKE CANVAS!!!!'
 				size = FView.mainCtx.getSize()
 				canvasSize = [size[0] * 2, size[1] * 2];
-				#size = [320,240]
-				#canvasSize = [640,480]
 				window.canvas.setSize(size, canvasSize);
 
 				# Get the context
@@ -177,9 +177,6 @@ if Meteor.isClient
 				window.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
 				window.camera.position.set 0, 0, 3
 				window.camera.lookAt window.scene.position
-
-				# Handle Window Resizing
-				THREEx.WindowResize window.renderer, window.camera
 
 				# Create a Composer for Post Processing
 				window.composer = new THREE.EffectComposer window.renderer
@@ -220,6 +217,9 @@ if Meteor.isClient
 				# Add a soft light
 				light = new THREE.AmbientLight("rgb(255,255,255)") # soft white light
 				window.scene.add light
+
+				# Handle Window Resizing
+				THREEx.WindowResize window.renderer, window.camera
 
 				# Add debug controls for mouse movement
 				#window.controls = new THREE.OrbitControls window.camera, window.renderer.domElement
@@ -425,82 +425,56 @@ if Meteor.isClient
 			)
 
 		Template.background.rendered = ->
-			fview = FView.from(this)
+			Engine.defer ->
+				backgroundFView = FView.byId('background')
+				log 'backgroundFView',backgroundFView
+				window.canvas = backgroundFView.view
+				#Get around a weird rendering issue
+				#Session.set 'loaded',true
 
-			log 'Set videoWrapper layout!',fview
-			videoWrapper = this.find '#videoWrapper'
-			log 'videoWrapper',videoWrapper
-			window.canvasParent = fview
-			window.canvas = fview.view
+				#Initialize the Konami Code easter egg ;)
+				easterEgg = new Konami () ->
+					log 'Trigger Model Viewer!'
+					easterEggActive = Session.get 'easterEggActive'
 
-			log 'Ready?',FView.isReady
+					if !easterEggActive
 
-			log 'Canvas!',this.$('canvas')
+						Session.set 'easterEggActive',true
 
-			#Initialize the Konami Code easter egg ;)
-			easterEgg = new Konami () ->
-				log 'Trigger Model Viewer!'
-				easterEggActive = Session.get 'easterEggActive'
+						# Add basic three point lighting
+						threePointLighting = new THREEx.ThreePointsLighting()
+						window.scene.add threePointLighting
 
-				if !easterEggActive
+						# Create a universal loader
+						loader = new THREEx.UniversalLoader()
 
-					Session.set 'easterEggActive',true
+						# Model Assets
+						YoungLink = ['models/YoungLink/YoungLinkEquipped.obj','models/YoungLink/YoungLinkEquipped.mtl']
+						WindWakerLink = ['models/WindWakerLink/link.obj','models/WindWakerLink/link.mtl']
+						SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae'
+						SkywardSwordLink = ['models/SkywardSwordLink/Link.obj','models/SkywardSwordLink/Link.mtl']
+						TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae'
+						TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj','models/TwilightPrincessLink/Link.mtl']
 
-					# Add basic three point lighting
-					threePointLighting = new THREEx.ThreePointsLighting()
-					window.scene.add threePointLighting
+						# Load the Model
+						loader.load YoungLink, (object) ->
+							log 'MODEL LOADED!',object
 
-					# Create a universal loader
-					loader = new THREEx.UniversalLoader()
+							# Normalize the scale
+							boundingBox = new THREE.Box3().setFromObject(object)
+							window.link = boundingBox
+							log 'boundingBox!',boundingBox
+							size = boundingBox.size()
+							log 'size',size
+							scaleScalar = Math.max(size.x, Math.max(size.y, size.z))
+							log 'scaleScalar',scaleScalar
+							object.scale.divideScalar scaleScalar
 
-					# Model Assets
-					YoungLink = ['models/YoungLink/YoungLinkEquipped.obj','models/YoungLink/YoungLinkEquipped.mtl']
-					WindWakerLink = ['models/WindWakerLink/link.obj','models/WindWakerLink/link.mtl']
-					SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae'
-					SkywardSwordLink = ['models/SkywardSwordLink/Link.obj','models/SkywardSwordLink/Link.mtl']
-					TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae'
-					TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj','models/TwilightPrincessLink/Link.mtl']
-
-					# Load the Model
-					loader.load YoungLink, (object) ->
-						log 'MODEL LOADED!',object
-
-						# Normalize the scale
-						boundingBox = new THREE.Box3().setFromObject(object)
-						window.link = boundingBox
-						log 'boundingBox!',boundingBox
-						size = boundingBox.size()
-						log 'size',size
-						scaleScalar = Math.max(size.x, Math.max(size.y, size.z))
-						log 'scaleScalar',scaleScalar
-						object.scale.divideScalar scaleScalar
-
-						# Normalize the position
-						boundingBox = new THREE.Box3().setFromObject(object)
-						object.position.copy boundingBox.center().negate()
-						window.easterEggModel = object
-						scene.add object
-
-			target = fview.surface || fview.view || fview.view._eventInput
-			target.on('click', () ->
-				log 'BACKGROUND TARGET CLICKED',fview, target
-			)
-
-			@autorun((computation)->
-				###timelineActive = Session.get('timelineActive')
-				if timelineActive is true
-					fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(0.5,0.5,1),
-						method: 'spring'
-						period: 500
-						dampingRatio: 0.5
-				else
-					fview.modifier.halt()
-					fview.modifier.setTransform Transform.scale(1,1,1),
-						method: 'spring'
-						period: 500
-						dampingRatio: 0.5###
-			)
+							# Normalize the position
+							boundingBox = new THREE.Box3().setFromObject(object)
+							object.position.copy boundingBox.center().negate()
+							window.easterEggModel = object
+							scene.add object
 
 		Template.overlay.rendered = ->
 			fview = FView.from(this)
@@ -840,7 +814,7 @@ if Meteor.isClient
 			target.on('keyup', (e) ->
 				log 'TIMELINESEARCHHOLDER KEYUP',e
 			)
-			@autorun((computation)->
+			###@autorun((computation)->
 				timelineActive = Session.get('timelineActive')
 				if timelineActive is true
 					timelineSearchFView.modifier.halt()
@@ -854,7 +828,7 @@ if Meteor.isClient
 						method: 'spring'
 						period: 500
 						dampingRatio: 0.5
-			)
+			)###
 
 		Template.timelineSearchHolder.helpers
 			timelineSearchStyles: ->
@@ -968,25 +942,7 @@ if Meteor.isClient
 				#log 'velocity',e.velocity
 			#)
 
-			@autorun((computation)->
-				#currentMinute = Session.get('currentMinute')
-				#previousMinute = window.timelineMinuteScroller.getCurrentIndex()
-				#totalAmount = window.timelineMinuteScroller._node._.array.length
-				#amountMidPoint = totalAmount / 2
-
-				#log '====================================================================='
-
-				#What is the previousMinute?
-				#log 'previousMinute',previousMinute
-				#What is the currentMinute?
-				#log 'currentMinute',currentMinute
-
-				#scrollStart = 0
-				#log '&&&&&&&&&&&&&&&&&&&&&&&&&scrollStart&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',scrollStart
-
-				#Get the Template instance
-				#instance = Template.instance()
-				#log 'AUTORUN INSTANCE',instance
+			###@autorun((computation)->
 				timelineActive = Session.get 'timelineActive'
 				if timelineActive is true
 					timelineMinuteScrollerFView.modifier.halt()
@@ -1008,48 +964,7 @@ if Meteor.isClient
 						method: 'spring'
 						period: 600
 						dampingRatio: 0.8
-
-				# Trigger smart scrolling XXX: Fix this later
-				disableThisDebugStyle = false
-				if disableThisDebugStyle
-					if previousMinute > amountMidPoint and currentMinute < amountMidPoint
-						log '***************We\'re gonna overscroll past 0 here!*******(forwards)'
-						#Calculate the forwards sroll distance
-						scrollDistance = totalAmount + currentMinute - previousMinute
-						if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-						log '##############currentMinute distance from previousMinute##############',scrollDistance
-						for i in [0...scrollDistance]
-							window.timelineMinuteScroller.goToNextPage()
-					else if previousMinute < amountMidPoint and currentMinute > amountMidPoint
-						log '%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)'
-						#Calculate the backwards scroll distance
-						scrollDistance = totalAmount + previousMinute - currentMinute
-						if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-						log '@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@',scrollDistance
-						for i in [0...scrollDistance]
-							window.timelineMinuteScroller.goToPreviousPage()
-					else
-						#No overlaps going on here, just scroll normally to get things going for the time being, I can optimize this last.
-						log 'Just scroll as normal!'
-						scrollDistance = previousMinute - currentMinute
-						if scrollDistance < 0 then scrollDistance = scrollDistance * -1 #Make sure that scrollDistance is always a positive number
-						if previousMinute < currentMinute
-							log '!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!',scrollDistance
-							#We need to add a +1 here so that we'll scroll to the proper top element, because of indexes.
-							#scrollDistance = scrollDistance + 1
-							for i in [0...scrollDistance]
-								window.timelineMinuteScroller.goToNextPage()
-						else
-							log '!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!',scrollDistance
-							#Check for an edge case where the user has clicked on a different index but it won't change to that one because of an overflow issue
-							if previousMinute is currentMinute
-								log 'Scrolling back one to cover this edgecase!'
-								window.timelineMinuteScroller.goToPreviousPage()
-							else
-								for i in [0...scrollDistance]
-									window.timelineMinuteScroller.goToPreviousPage()
-
-			)
+			)###
 
 		Template.timelineMinuteScroller.helpers
 			timelineMinuteScrollerStyles: ->
@@ -1172,7 +1087,7 @@ if Meteor.isClient
 				Session.set('currentMinute',data.index)
 			)
 
-			@autorun((computation)->
+			###@autorun((computation)->
 				currentMinute = Session.get('currentMinute')
 				#Get the Template instance
 				instance = Template.instance()
@@ -1189,7 +1104,7 @@ if Meteor.isClient
 						method: 'spring'
 						period: 1000
 						dampingRatio: 0.3
-			)
+			)###
 
 		Template.timelineMinute.helpers
 			minute: ->

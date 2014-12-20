@@ -406,452 +406,458 @@ Meteor.methods({changePassword: function (oldPassword, newPassword) {           
       $set: { 'services.password.bcrypt': hashed },                                        // 307
       $pull: {                                                                             // 308
         'services.resume.loginTokens': { hashedToken: { $ne: currentToken } }              // 309
-      }                                                                                    // 310
-    }                                                                                      // 311
-  );                                                                                       // 312
-                                                                                           // 313
-  return {passwordChanged: true};                                                          // 314
-}});                                                                                       // 315
-                                                                                           // 316
+      },                                                                                   // 310
+      $unset: { 'services.password.reset': 1 }                                             // 311
+    }                                                                                      // 312
+  );                                                                                       // 313
+                                                                                           // 314
+  return {passwordChanged: true};                                                          // 315
+}});                                                                                       // 316
                                                                                            // 317
-// Force change the users password.                                                        // 318
-                                                                                           // 319
-/**                                                                                        // 320
- * @summary Forcibly change the password for a user.                                       // 321
- * @locus Server                                                                           // 322
- * @param {String} userId The id of the user to update.                                    // 323
- * @param {String} newPassword A new password for the user.                                // 324
- */                                                                                        // 325
-Accounts.setPassword = function (userId, newPlaintextPassword) {                           // 326
-  var user = Meteor.users.findOne(userId);                                                 // 327
-  if (!user)                                                                               // 328
-    throw new Meteor.Error(403, "User not found");                                         // 329
-                                                                                           // 330
-  Meteor.users.update(                                                                     // 331
-    {_id: user._id},                                                                       // 332
-    { $unset: {'services.password.srp': 1}, // XXX COMPAT WITH 0.8.1.3                     // 333
-      $set: {'services.password.bcrypt': hashPassword(newPlaintextPassword)} }             // 334
-  );                                                                                       // 335
-};                                                                                         // 336
-                                                                                           // 337
-                                                                                           // 338
-///                                                                                        // 339
-/// RESETTING VIA EMAIL                                                                    // 340
-///                                                                                        // 341
-                                                                                           // 342
-// Method called by a user to request a password reset email. This is                      // 343
-// the start of the reset process.                                                         // 344
-Meteor.methods({forgotPassword: function (options) {                                       // 345
-  check(options, {email: String});                                                         // 346
-                                                                                           // 347
-  var user = Meteor.users.findOne({"emails.address": options.email});                      // 348
-  if (!user)                                                                               // 349
-    throw new Meteor.Error(403, "User not found");                                         // 350
-                                                                                           // 351
-  Accounts.sendResetPasswordEmail(user._id, options.email);                                // 352
-}});                                                                                       // 353
-                                                                                           // 354
-// send the user an email with a link that when opened allows the user                     // 355
-// to set a new password, without the old password.                                        // 356
+                                                                                           // 318
+// Force change the users password.                                                        // 319
+                                                                                           // 320
+/**                                                                                        // 321
+ * @summary Forcibly change the password for a user.                                       // 322
+ * @locus Server                                                                           // 323
+ * @param {String} userId The id of the user to update.                                    // 324
+ * @param {String} newPassword A new password for the user.                                // 325
+ */                                                                                        // 326
+Accounts.setPassword = function (userId, newPlaintextPassword) {                           // 327
+  var user = Meteor.users.findOne(userId);                                                 // 328
+  if (!user)                                                                               // 329
+    throw new Meteor.Error(403, "User not found");                                         // 330
+                                                                                           // 331
+  Meteor.users.update(                                                                     // 332
+    {_id: user._id},                                                                       // 333
+    {                                                                                      // 334
+      $unset: {                                                                            // 335
+        'services.password.srp': 1, // XXX COMPAT WITH 0.8.1.3                             // 336
+        'services.password.reset': 1,                                                      // 337
+        'services.resume.loginTokens': 1                                                   // 338
+      },                                                                                   // 339
+      $set: {'services.password.bcrypt': hashPassword(newPlaintextPassword)} }             // 340
+  );                                                                                       // 341
+};                                                                                         // 342
+                                                                                           // 343
+                                                                                           // 344
+///                                                                                        // 345
+/// RESETTING VIA EMAIL                                                                    // 346
+///                                                                                        // 347
+                                                                                           // 348
+// Method called by a user to request a password reset email. This is                      // 349
+// the start of the reset process.                                                         // 350
+Meteor.methods({forgotPassword: function (options) {                                       // 351
+  check(options, {email: String});                                                         // 352
+                                                                                           // 353
+  var user = Meteor.users.findOne({"emails.address": options.email});                      // 354
+  if (!user)                                                                               // 355
+    throw new Meteor.Error(403, "User not found");                                         // 356
                                                                                            // 357
-/**                                                                                        // 358
- * @summary Send an email with a link the user can use to reset their password.            // 359
- * @locus Server                                                                           // 360
- * @param {String} userId The id of the user to send email to.                             // 361
+  Accounts.sendResetPasswordEmail(user._id, options.email);                                // 358
+}});                                                                                       // 359
+                                                                                           // 360
+// send the user an email with a link that when opened allows the user                     // 361
+// to set a new password, without the old password.                                        // 362
+                                                                                           // 363
+/**                                                                                        // 364
+ * @summary Send an email with a link the user can use to reset their password.            // 365
+ * @locus Server                                                                           // 366
+ * @param {String} userId The id of the user to send email to.                             // 367
  * @param {String} [email] Optional. Which address of the user's to send the email to. This address must be in the user's `emails` list. Defaults to the first email in the list.
- */                                                                                        // 363
-Accounts.sendResetPasswordEmail = function (userId, email) {                               // 364
-  // Make sure the user exists, and email is one of their addresses.                       // 365
-  var user = Meteor.users.findOne(userId);                                                 // 366
-  if (!user)                                                                               // 367
-    throw new Error("Can't find user");                                                    // 368
-  // pick the first email if we weren't passed an email.                                   // 369
-  if (!email && user.emails && user.emails[0])                                             // 370
-    email = user.emails[0].address;                                                        // 371
-  // make sure we have a valid email                                                       // 372
-  if (!email || !_.contains(_.pluck(user.emails || [], 'address'), email))                 // 373
-    throw new Error("No such email for user.");                                            // 374
-                                                                                           // 375
-  var token = Random.secret();                                                             // 376
-  var when = new Date();                                                                   // 377
-  var tokenRecord = {                                                                      // 378
-    token: token,                                                                          // 379
-    email: email,                                                                          // 380
-    when: when                                                                             // 381
-  };                                                                                       // 382
-  Meteor.users.update(userId, {$set: {                                                     // 383
-    "services.password.reset": tokenRecord                                                 // 384
-  }});                                                                                     // 385
-  // before passing to template, update user object with new token                         // 386
-  Meteor._ensure(user, 'services', 'password').reset = tokenRecord;                        // 387
-                                                                                           // 388
-  var resetPasswordUrl = Accounts.urls.resetPassword(token);                               // 389
-                                                                                           // 390
-  var options = {                                                                          // 391
-    to: email,                                                                             // 392
-    from: Accounts.emailTemplates.from,                                                    // 393
-    subject: Accounts.emailTemplates.resetPassword.subject(user),                          // 394
-    text: Accounts.emailTemplates.resetPassword.text(user, resetPasswordUrl)               // 395
-  };                                                                                       // 396
-                                                                                           // 397
-  if (typeof Accounts.emailTemplates.resetPassword.html === 'function')                    // 398
-    options.html =                                                                         // 399
-      Accounts.emailTemplates.resetPassword.html(user, resetPasswordUrl);                  // 400
-                                                                                           // 401
-  Email.send(options);                                                                     // 402
-};                                                                                         // 403
-                                                                                           // 404
-// send the user an email informing them that their account was created, with              // 405
-// a link that when opened both marks their email as verified and forces them              // 406
-// to choose their password. The email must be one of the addresses in the                 // 407
-// user's emails field, or undefined to pick the first email automatically.                // 408
-//                                                                                         // 409
-// This is not called automatically. It must be called manually if you                     // 410
-// want to use enrollment emails.                                                          // 411
-                                                                                           // 412
-/**                                                                                        // 413
- * @summary Send an email with a link the user can use to set their initial password.      // 414
- * @locus Server                                                                           // 415
- * @param {String} userId The id of the user to send email to.                             // 416
+ */                                                                                        // 369
+Accounts.sendResetPasswordEmail = function (userId, email) {                               // 370
+  // Make sure the user exists, and email is one of their addresses.                       // 371
+  var user = Meteor.users.findOne(userId);                                                 // 372
+  if (!user)                                                                               // 373
+    throw new Error("Can't find user");                                                    // 374
+  // pick the first email if we weren't passed an email.                                   // 375
+  if (!email && user.emails && user.emails[0])                                             // 376
+    email = user.emails[0].address;                                                        // 377
+  // make sure we have a valid email                                                       // 378
+  if (!email || !_.contains(_.pluck(user.emails || [], 'address'), email))                 // 379
+    throw new Error("No such email for user.");                                            // 380
+                                                                                           // 381
+  var token = Random.secret();                                                             // 382
+  var when = new Date();                                                                   // 383
+  var tokenRecord = {                                                                      // 384
+    token: token,                                                                          // 385
+    email: email,                                                                          // 386
+    when: when                                                                             // 387
+  };                                                                                       // 388
+  Meteor.users.update(userId, {$set: {                                                     // 389
+    "services.password.reset": tokenRecord                                                 // 390
+  }});                                                                                     // 391
+  // before passing to template, update user object with new token                         // 392
+  Meteor._ensure(user, 'services', 'password').reset = tokenRecord;                        // 393
+                                                                                           // 394
+  var resetPasswordUrl = Accounts.urls.resetPassword(token);                               // 395
+                                                                                           // 396
+  var options = {                                                                          // 397
+    to: email,                                                                             // 398
+    from: Accounts.emailTemplates.from,                                                    // 399
+    subject: Accounts.emailTemplates.resetPassword.subject(user),                          // 400
+    text: Accounts.emailTemplates.resetPassword.text(user, resetPasswordUrl)               // 401
+  };                                                                                       // 402
+                                                                                           // 403
+  if (typeof Accounts.emailTemplates.resetPassword.html === 'function')                    // 404
+    options.html =                                                                         // 405
+      Accounts.emailTemplates.resetPassword.html(user, resetPasswordUrl);                  // 406
+                                                                                           // 407
+  Email.send(options);                                                                     // 408
+};                                                                                         // 409
+                                                                                           // 410
+// send the user an email informing them that their account was created, with              // 411
+// a link that when opened both marks their email as verified and forces them              // 412
+// to choose their password. The email must be one of the addresses in the                 // 413
+// user's emails field, or undefined to pick the first email automatically.                // 414
+//                                                                                         // 415
+// This is not called automatically. It must be called manually if you                     // 416
+// want to use enrollment emails.                                                          // 417
+                                                                                           // 418
+/**                                                                                        // 419
+ * @summary Send an email with a link the user can use to set their initial password.      // 420
+ * @locus Server                                                                           // 421
+ * @param {String} userId The id of the user to send email to.                             // 422
  * @param {String} [email] Optional. Which address of the user's to send the email to. This address must be in the user's `emails` list. Defaults to the first email in the list.
- */                                                                                        // 418
-Accounts.sendEnrollmentEmail = function (userId, email) {                                  // 419
-  // XXX refactor! This is basically identical to sendResetPasswordEmail.                  // 420
-                                                                                           // 421
-  // Make sure the user exists, and email is in their addresses.                           // 422
-  var user = Meteor.users.findOne(userId);                                                 // 423
-  if (!user)                                                                               // 424
-    throw new Error("Can't find user");                                                    // 425
-  // pick the first email if we weren't passed an email.                                   // 426
-  if (!email && user.emails && user.emails[0])                                             // 427
-    email = user.emails[0].address;                                                        // 428
-  // make sure we have a valid email                                                       // 429
-  if (!email || !_.contains(_.pluck(user.emails || [], 'address'), email))                 // 430
-    throw new Error("No such email for user.");                                            // 431
-                                                                                           // 432
-  var token = Random.secret();                                                             // 433
-  var when = new Date();                                                                   // 434
-  var tokenRecord = {                                                                      // 435
-    token: token,                                                                          // 436
-    email: email,                                                                          // 437
-    when: when                                                                             // 438
-  };                                                                                       // 439
-  Meteor.users.update(userId, {$set: {                                                     // 440
-    "services.password.reset": tokenRecord                                                 // 441
-  }});                                                                                     // 442
-                                                                                           // 443
-  // before passing to template, update user object with new token                         // 444
-  Meteor._ensure(user, 'services', 'password').reset = tokenRecord;                        // 445
-                                                                                           // 446
-  var enrollAccountUrl = Accounts.urls.enrollAccount(token);                               // 447
-                                                                                           // 448
-  var options = {                                                                          // 449
-    to: email,                                                                             // 450
-    from: Accounts.emailTemplates.from,                                                    // 451
-    subject: Accounts.emailTemplates.enrollAccount.subject(user),                          // 452
-    text: Accounts.emailTemplates.enrollAccount.text(user, enrollAccountUrl)               // 453
-  };                                                                                       // 454
-                                                                                           // 455
-  if (typeof Accounts.emailTemplates.enrollAccount.html === 'function')                    // 456
-    options.html =                                                                         // 457
-      Accounts.emailTemplates.enrollAccount.html(user, enrollAccountUrl);                  // 458
-                                                                                           // 459
-  Email.send(options);                                                                     // 460
-};                                                                                         // 461
-                                                                                           // 462
-                                                                                           // 463
-// Take token from sendResetPasswordEmail or sendEnrollmentEmail, change                   // 464
-// the users password, and log them in.                                                    // 465
-Meteor.methods({resetPassword: function (token, newPassword) {                             // 466
-  var self = this;                                                                         // 467
-  return Accounts._loginMethod(                                                            // 468
-    self,                                                                                  // 469
-    "resetPassword",                                                                       // 470
-    arguments,                                                                             // 471
-    "password",                                                                            // 472
-    function () {                                                                          // 473
-      check(token, String);                                                                // 474
-      check(newPassword, passwordValidator);                                               // 475
-                                                                                           // 476
-      var user = Meteor.users.findOne({                                                    // 477
-        "services.password.reset.token": token});                                          // 478
-      if (!user)                                                                           // 479
-        throw new Meteor.Error(403, "Token expired");                                      // 480
-      var email = user.services.password.reset.email;                                      // 481
-      if (!_.include(_.pluck(user.emails || [], 'address'), email))                        // 482
-        return {                                                                           // 483
-          userId: user._id,                                                                // 484
-          error: new Meteor.Error(403, "Token has invalid email address")                  // 485
-        };                                                                                 // 486
-                                                                                           // 487
-      var hashed = hashPassword(newPassword);                                              // 488
-                                                                                           // 489
-      // NOTE: We're about to invalidate tokens on the user, who we might be               // 490
-      // logged in as. Make sure to avoid logging ourselves out if this                    // 491
-      // happens. But also make sure not to leave the connection in a state                // 492
-      // of having a bad token set if things fail.                                         // 493
-      var oldToken = Accounts._getLoginToken(self.connection.id);                          // 494
-      Accounts._setLoginToken(user._id, self.connection, null);                            // 495
-      var resetToOldToken = function () {                                                  // 496
-        Accounts._setLoginToken(user._id, self.connection, oldToken);                      // 497
-      };                                                                                   // 498
-                                                                                           // 499
-      try {                                                                                // 500
-        // Update the user record by:                                                      // 501
-        // - Changing the password to the new one                                          // 502
-        // - Forgetting about the reset token that was just used                           // 503
-        // - Verifying their email, since they got the password reset via email.           // 504
-        var affectedRecords = Meteor.users.update(                                         // 505
-          {                                                                                // 506
-            _id: user._id,                                                                 // 507
-            'emails.address': email,                                                       // 508
-            'services.password.reset.token': token                                         // 509
-          },                                                                               // 510
-          {$set: {'services.password.bcrypt': hashed,                                      // 511
-                  'emails.$.verified': true},                                              // 512
-           $unset: {'services.password.reset': 1,                                          // 513
-                    'services.password.srp': 1}});                                         // 514
-        if (affectedRecords !== 1)                                                         // 515
-          return {                                                                         // 516
-            userId: user._id,                                                              // 517
-            error: new Meteor.Error(403, "Invalid email")                                  // 518
-          };                                                                               // 519
-      } catch (err) {                                                                      // 520
-        resetToOldToken();                                                                 // 521
-        throw err;                                                                         // 522
-      }                                                                                    // 523
-                                                                                           // 524
-      // Replace all valid login tokens with new ones (changing                            // 525
-      // password should invalidate existing sessions).                                    // 526
-      Accounts._clearAllLoginTokens(user._id);                                             // 527
-                                                                                           // 528
-      return {userId: user._id};                                                           // 529
-    }                                                                                      // 530
-  );                                                                                       // 531
-}});                                                                                       // 532
-                                                                                           // 533
-///                                                                                        // 534
-/// EMAIL VERIFICATION                                                                     // 535
-///                                                                                        // 536
-                                                                                           // 537
-                                                                                           // 538
-// send the user an email with a link that when opened marks that                          // 539
-// address as verified                                                                     // 540
-                                                                                           // 541
-/**                                                                                        // 542
- * @summary Send an email with a link the user can use verify their email address.         // 543
- * @locus Server                                                                           // 544
- * @param {String} userId The id of the user to send email to.                             // 545
+ */                                                                                        // 424
+Accounts.sendEnrollmentEmail = function (userId, email) {                                  // 425
+  // XXX refactor! This is basically identical to sendResetPasswordEmail.                  // 426
+                                                                                           // 427
+  // Make sure the user exists, and email is in their addresses.                           // 428
+  var user = Meteor.users.findOne(userId);                                                 // 429
+  if (!user)                                                                               // 430
+    throw new Error("Can't find user");                                                    // 431
+  // pick the first email if we weren't passed an email.                                   // 432
+  if (!email && user.emails && user.emails[0])                                             // 433
+    email = user.emails[0].address;                                                        // 434
+  // make sure we have a valid email                                                       // 435
+  if (!email || !_.contains(_.pluck(user.emails || [], 'address'), email))                 // 436
+    throw new Error("No such email for user.");                                            // 437
+                                                                                           // 438
+  var token = Random.secret();                                                             // 439
+  var when = new Date();                                                                   // 440
+  var tokenRecord = {                                                                      // 441
+    token: token,                                                                          // 442
+    email: email,                                                                          // 443
+    when: when                                                                             // 444
+  };                                                                                       // 445
+  Meteor.users.update(userId, {$set: {                                                     // 446
+    "services.password.reset": tokenRecord                                                 // 447
+  }});                                                                                     // 448
+                                                                                           // 449
+  // before passing to template, update user object with new token                         // 450
+  Meteor._ensure(user, 'services', 'password').reset = tokenRecord;                        // 451
+                                                                                           // 452
+  var enrollAccountUrl = Accounts.urls.enrollAccount(token);                               // 453
+                                                                                           // 454
+  var options = {                                                                          // 455
+    to: email,                                                                             // 456
+    from: Accounts.emailTemplates.from,                                                    // 457
+    subject: Accounts.emailTemplates.enrollAccount.subject(user),                          // 458
+    text: Accounts.emailTemplates.enrollAccount.text(user, enrollAccountUrl)               // 459
+  };                                                                                       // 460
+                                                                                           // 461
+  if (typeof Accounts.emailTemplates.enrollAccount.html === 'function')                    // 462
+    options.html =                                                                         // 463
+      Accounts.emailTemplates.enrollAccount.html(user, enrollAccountUrl);                  // 464
+                                                                                           // 465
+  Email.send(options);                                                                     // 466
+};                                                                                         // 467
+                                                                                           // 468
+                                                                                           // 469
+// Take token from sendResetPasswordEmail or sendEnrollmentEmail, change                   // 470
+// the users password, and log them in.                                                    // 471
+Meteor.methods({resetPassword: function (token, newPassword) {                             // 472
+  var self = this;                                                                         // 473
+  return Accounts._loginMethod(                                                            // 474
+    self,                                                                                  // 475
+    "resetPassword",                                                                       // 476
+    arguments,                                                                             // 477
+    "password",                                                                            // 478
+    function () {                                                                          // 479
+      check(token, String);                                                                // 480
+      check(newPassword, passwordValidator);                                               // 481
+                                                                                           // 482
+      var user = Meteor.users.findOne({                                                    // 483
+        "services.password.reset.token": token});                                          // 484
+      if (!user)                                                                           // 485
+        throw new Meteor.Error(403, "Token expired");                                      // 486
+      var email = user.services.password.reset.email;                                      // 487
+      if (!_.include(_.pluck(user.emails || [], 'address'), email))                        // 488
+        return {                                                                           // 489
+          userId: user._id,                                                                // 490
+          error: new Meteor.Error(403, "Token has invalid email address")                  // 491
+        };                                                                                 // 492
+                                                                                           // 493
+      var hashed = hashPassword(newPassword);                                              // 494
+                                                                                           // 495
+      // NOTE: We're about to invalidate tokens on the user, who we might be               // 496
+      // logged in as. Make sure to avoid logging ourselves out if this                    // 497
+      // happens. But also make sure not to leave the connection in a state                // 498
+      // of having a bad token set if things fail.                                         // 499
+      var oldToken = Accounts._getLoginToken(self.connection.id);                          // 500
+      Accounts._setLoginToken(user._id, self.connection, null);                            // 501
+      var resetToOldToken = function () {                                                  // 502
+        Accounts._setLoginToken(user._id, self.connection, oldToken);                      // 503
+      };                                                                                   // 504
+                                                                                           // 505
+      try {                                                                                // 506
+        // Update the user record by:                                                      // 507
+        // - Changing the password to the new one                                          // 508
+        // - Forgetting about the reset token that was just used                           // 509
+        // - Verifying their email, since they got the password reset via email.           // 510
+        var affectedRecords = Meteor.users.update(                                         // 511
+          {                                                                                // 512
+            _id: user._id,                                                                 // 513
+            'emails.address': email,                                                       // 514
+            'services.password.reset.token': token                                         // 515
+          },                                                                               // 516
+          {$set: {'services.password.bcrypt': hashed,                                      // 517
+                  'emails.$.verified': true},                                              // 518
+           $unset: {'services.password.reset': 1,                                          // 519
+                    'services.password.srp': 1}});                                         // 520
+        if (affectedRecords !== 1)                                                         // 521
+          return {                                                                         // 522
+            userId: user._id,                                                              // 523
+            error: new Meteor.Error(403, "Invalid email")                                  // 524
+          };                                                                               // 525
+      } catch (err) {                                                                      // 526
+        resetToOldToken();                                                                 // 527
+        throw err;                                                                         // 528
+      }                                                                                    // 529
+                                                                                           // 530
+      // Replace all valid login tokens with new ones (changing                            // 531
+      // password should invalidate existing sessions).                                    // 532
+      Accounts._clearAllLoginTokens(user._id);                                             // 533
+                                                                                           // 534
+      return {userId: user._id};                                                           // 535
+    }                                                                                      // 536
+  );                                                                                       // 537
+}});                                                                                       // 538
+                                                                                           // 539
+///                                                                                        // 540
+/// EMAIL VERIFICATION                                                                     // 541
+///                                                                                        // 542
+                                                                                           // 543
+                                                                                           // 544
+// send the user an email with a link that when opened marks that                          // 545
+// address as verified                                                                     // 546
+                                                                                           // 547
+/**                                                                                        // 548
+ * @summary Send an email with a link the user can use verify their email address.         // 549
+ * @locus Server                                                                           // 550
+ * @param {String} userId The id of the user to send email to.                             // 551
  * @param {String} [email] Optional. Which address of the user's to send the email to. This address must be in the user's `emails` list. Defaults to the first unverified email in the list.
- */                                                                                        // 547
-Accounts.sendVerificationEmail = function (userId, address) {                              // 548
-  // XXX Also generate a link using which someone can delete this                          // 549
-  // account if they own said address but weren't those who created                        // 550
-  // this account.                                                                         // 551
-                                                                                           // 552
-  // Make sure the user exists, and address is one of their addresses.                     // 553
-  var user = Meteor.users.findOne(userId);                                                 // 554
-  if (!user)                                                                               // 555
-    throw new Error("Can't find user");                                                    // 556
-  // pick the first unverified address if we weren't passed an address.                    // 557
-  if (!address) {                                                                          // 558
-    var email = _.find(user.emails || [],                                                  // 559
-                       function (e) { return !e.verified; });                              // 560
-    address = (email || {}).address;                                                       // 561
-  }                                                                                        // 562
-  // make sure we have a valid address                                                     // 563
-  if (!address || !_.contains(_.pluck(user.emails || [], 'address'), address))             // 564
-    throw new Error("No such email address for user.");                                    // 565
-                                                                                           // 566
-                                                                                           // 567
-  var tokenRecord = {                                                                      // 568
-    token: Random.secret(),                                                                // 569
-    address: address,                                                                      // 570
-    when: new Date()};                                                                     // 571
-  Meteor.users.update(                                                                     // 572
-    {_id: userId},                                                                         // 573
-    {$push: {'services.email.verificationTokens': tokenRecord}});                          // 574
-                                                                                           // 575
-  // before passing to template, update user object with new token                         // 576
-  Meteor._ensure(user, 'services', 'email');                                               // 577
-  if (!user.services.email.verificationTokens) {                                           // 578
-    user.services.email.verificationTokens = [];                                           // 579
-  }                                                                                        // 580
-  user.services.email.verificationTokens.push(tokenRecord);                                // 581
-                                                                                           // 582
-  var verifyEmailUrl = Accounts.urls.verifyEmail(tokenRecord.token);                       // 583
-                                                                                           // 584
-  var options = {                                                                          // 585
-    to: address,                                                                           // 586
-    from: Accounts.emailTemplates.from,                                                    // 587
-    subject: Accounts.emailTemplates.verifyEmail.subject(user),                            // 588
-    text: Accounts.emailTemplates.verifyEmail.text(user, verifyEmailUrl)                   // 589
-  };                                                                                       // 590
-                                                                                           // 591
-  if (typeof Accounts.emailTemplates.verifyEmail.html === 'function')                      // 592
-    options.html =                                                                         // 593
-      Accounts.emailTemplates.verifyEmail.html(user, verifyEmailUrl);                      // 594
-                                                                                           // 595
-  Email.send(options);                                                                     // 596
-};                                                                                         // 597
-                                                                                           // 598
-// Take token from sendVerificationEmail, mark the email as verified,                      // 599
-// and log them in.                                                                        // 600
-Meteor.methods({verifyEmail: function (token) {                                            // 601
-  var self = this;                                                                         // 602
-  return Accounts._loginMethod(                                                            // 603
-    self,                                                                                  // 604
-    "verifyEmail",                                                                         // 605
-    arguments,                                                                             // 606
-    "password",                                                                            // 607
-    function () {                                                                          // 608
-      check(token, String);                                                                // 609
-                                                                                           // 610
-      var user = Meteor.users.findOne(                                                     // 611
-        {'services.email.verificationTokens.token': token});                               // 612
-      if (!user)                                                                           // 613
-        throw new Meteor.Error(403, "Verify email link expired");                          // 614
-                                                                                           // 615
-      var tokenRecord = _.find(user.services.email.verificationTokens,                     // 616
-                               function (t) {                                              // 617
-                                 return t.token == token;                                  // 618
-                               });                                                         // 619
-      if (!tokenRecord)                                                                    // 620
-        return {                                                                           // 621
-          userId: user._id,                                                                // 622
-          error: new Meteor.Error(403, "Verify email link expired")                        // 623
-        };                                                                                 // 624
-                                                                                           // 625
-      var emailsRecord = _.find(user.emails, function (e) {                                // 626
-        return e.address == tokenRecord.address;                                           // 627
-      });                                                                                  // 628
-      if (!emailsRecord)                                                                   // 629
-        return {                                                                           // 630
-          userId: user._id,                                                                // 631
-          error: new Meteor.Error(403, "Verify email link is for unknown address")         // 632
-        };                                                                                 // 633
-                                                                                           // 634
-      // By including the address in the query, we can use 'emails.$' in the               // 635
-      // modifier to get a reference to the specific object in the emails                  // 636
-      // array. See                                                                        // 637
-      // http://www.mongodb.org/display/DOCS/Updating/#Updating-The%24positionaloperator)  // 638
-      // http://www.mongodb.org/display/DOCS/Updating#Updating-%24pull                     // 639
-      Meteor.users.update(                                                                 // 640
-        {_id: user._id,                                                                    // 641
-         'emails.address': tokenRecord.address},                                           // 642
-        {$set: {'emails.$.verified': true},                                                // 643
-         $pull: {'services.email.verificationTokens': {token: token}}});                   // 644
-                                                                                           // 645
-      return {userId: user._id};                                                           // 646
-    }                                                                                      // 647
-  );                                                                                       // 648
-}});                                                                                       // 649
-                                                                                           // 650
+ */                                                                                        // 553
+Accounts.sendVerificationEmail = function (userId, address) {                              // 554
+  // XXX Also generate a link using which someone can delete this                          // 555
+  // account if they own said address but weren't those who created                        // 556
+  // this account.                                                                         // 557
+                                                                                           // 558
+  // Make sure the user exists, and address is one of their addresses.                     // 559
+  var user = Meteor.users.findOne(userId);                                                 // 560
+  if (!user)                                                                               // 561
+    throw new Error("Can't find user");                                                    // 562
+  // pick the first unverified address if we weren't passed an address.                    // 563
+  if (!address) {                                                                          // 564
+    var email = _.find(user.emails || [],                                                  // 565
+                       function (e) { return !e.verified; });                              // 566
+    address = (email || {}).address;                                                       // 567
+  }                                                                                        // 568
+  // make sure we have a valid address                                                     // 569
+  if (!address || !_.contains(_.pluck(user.emails || [], 'address'), address))             // 570
+    throw new Error("No such email address for user.");                                    // 571
+                                                                                           // 572
+                                                                                           // 573
+  var tokenRecord = {                                                                      // 574
+    token: Random.secret(),                                                                // 575
+    address: address,                                                                      // 576
+    when: new Date()};                                                                     // 577
+  Meteor.users.update(                                                                     // 578
+    {_id: userId},                                                                         // 579
+    {$push: {'services.email.verificationTokens': tokenRecord}});                          // 580
+                                                                                           // 581
+  // before passing to template, update user object with new token                         // 582
+  Meteor._ensure(user, 'services', 'email');                                               // 583
+  if (!user.services.email.verificationTokens) {                                           // 584
+    user.services.email.verificationTokens = [];                                           // 585
+  }                                                                                        // 586
+  user.services.email.verificationTokens.push(tokenRecord);                                // 587
+                                                                                           // 588
+  var verifyEmailUrl = Accounts.urls.verifyEmail(tokenRecord.token);                       // 589
+                                                                                           // 590
+  var options = {                                                                          // 591
+    to: address,                                                                           // 592
+    from: Accounts.emailTemplates.from,                                                    // 593
+    subject: Accounts.emailTemplates.verifyEmail.subject(user),                            // 594
+    text: Accounts.emailTemplates.verifyEmail.text(user, verifyEmailUrl)                   // 595
+  };                                                                                       // 596
+                                                                                           // 597
+  if (typeof Accounts.emailTemplates.verifyEmail.html === 'function')                      // 598
+    options.html =                                                                         // 599
+      Accounts.emailTemplates.verifyEmail.html(user, verifyEmailUrl);                      // 600
+                                                                                           // 601
+  Email.send(options);                                                                     // 602
+};                                                                                         // 603
+                                                                                           // 604
+// Take token from sendVerificationEmail, mark the email as verified,                      // 605
+// and log them in.                                                                        // 606
+Meteor.methods({verifyEmail: function (token) {                                            // 607
+  var self = this;                                                                         // 608
+  return Accounts._loginMethod(                                                            // 609
+    self,                                                                                  // 610
+    "verifyEmail",                                                                         // 611
+    arguments,                                                                             // 612
+    "password",                                                                            // 613
+    function () {                                                                          // 614
+      check(token, String);                                                                // 615
+                                                                                           // 616
+      var user = Meteor.users.findOne(                                                     // 617
+        {'services.email.verificationTokens.token': token});                               // 618
+      if (!user)                                                                           // 619
+        throw new Meteor.Error(403, "Verify email link expired");                          // 620
+                                                                                           // 621
+      var tokenRecord = _.find(user.services.email.verificationTokens,                     // 622
+                               function (t) {                                              // 623
+                                 return t.token == token;                                  // 624
+                               });                                                         // 625
+      if (!tokenRecord)                                                                    // 626
+        return {                                                                           // 627
+          userId: user._id,                                                                // 628
+          error: new Meteor.Error(403, "Verify email link expired")                        // 629
+        };                                                                                 // 630
+                                                                                           // 631
+      var emailsRecord = _.find(user.emails, function (e) {                                // 632
+        return e.address == tokenRecord.address;                                           // 633
+      });                                                                                  // 634
+      if (!emailsRecord)                                                                   // 635
+        return {                                                                           // 636
+          userId: user._id,                                                                // 637
+          error: new Meteor.Error(403, "Verify email link is for unknown address")         // 638
+        };                                                                                 // 639
+                                                                                           // 640
+      // By including the address in the query, we can use 'emails.$' in the               // 641
+      // modifier to get a reference to the specific object in the emails                  // 642
+      // array. See                                                                        // 643
+      // http://www.mongodb.org/display/DOCS/Updating/#Updating-The%24positionaloperator)  // 644
+      // http://www.mongodb.org/display/DOCS/Updating#Updating-%24pull                     // 645
+      Meteor.users.update(                                                                 // 646
+        {_id: user._id,                                                                    // 647
+         'emails.address': tokenRecord.address},                                           // 648
+        {$set: {'emails.$.verified': true},                                                // 649
+         $pull: {'services.email.verificationTokens': {token: token}}});                   // 650
                                                                                            // 651
-                                                                                           // 652
-///                                                                                        // 653
-/// CREATING USERS                                                                         // 654
-///                                                                                        // 655
+      return {userId: user._id};                                                           // 652
+    }                                                                                      // 653
+  );                                                                                       // 654
+}});                                                                                       // 655
                                                                                            // 656
-// Shared createUser function called from the createUser method, both                      // 657
-// if originates in client or server code. Calls user provided hooks,                      // 658
-// does the actual user insertion.                                                         // 659
-//                                                                                         // 660
-// returns the user id                                                                     // 661
-var createUser = function (options) {                                                      // 662
-  // Unknown keys allowed, because a onCreateUserHook can take arbitrary                   // 663
-  // options.                                                                              // 664
-  check(options, Match.ObjectIncluding({                                                   // 665
-    username: Match.Optional(String),                                                      // 666
-    email: Match.Optional(String),                                                         // 667
-    password: Match.Optional(passwordValidator)                                            // 668
-  }));                                                                                     // 669
-                                                                                           // 670
-  var username = options.username;                                                         // 671
-  var email = options.email;                                                               // 672
-  if (!username && !email)                                                                 // 673
-    throw new Meteor.Error(400, "Need to set a username or email");                        // 674
-                                                                                           // 675
-  var user = {services: {}};                                                               // 676
-  if (options.password) {                                                                  // 677
-    var hashed = hashPassword(options.password);                                           // 678
-    user.services.password = { bcrypt: hashed };                                           // 679
-  }                                                                                        // 680
+                                                                                           // 657
+                                                                                           // 658
+///                                                                                        // 659
+/// CREATING USERS                                                                         // 660
+///                                                                                        // 661
+                                                                                           // 662
+// Shared createUser function called from the createUser method, both                      // 663
+// if originates in client or server code. Calls user provided hooks,                      // 664
+// does the actual user insertion.                                                         // 665
+//                                                                                         // 666
+// returns the user id                                                                     // 667
+var createUser = function (options) {                                                      // 668
+  // Unknown keys allowed, because a onCreateUserHook can take arbitrary                   // 669
+  // options.                                                                              // 670
+  check(options, Match.ObjectIncluding({                                                   // 671
+    username: Match.Optional(String),                                                      // 672
+    email: Match.Optional(String),                                                         // 673
+    password: Match.Optional(passwordValidator)                                            // 674
+  }));                                                                                     // 675
+                                                                                           // 676
+  var username = options.username;                                                         // 677
+  var email = options.email;                                                               // 678
+  if (!username && !email)                                                                 // 679
+    throw new Meteor.Error(400, "Need to set a username or email");                        // 680
                                                                                            // 681
-  if (username)                                                                            // 682
-    user.username = username;                                                              // 683
-  if (email)                                                                               // 684
-    user.emails = [{address: email, verified: false}];                                     // 685
-                                                                                           // 686
-  return Accounts.insertUserDoc(options, user);                                            // 687
-};                                                                                         // 688
-                                                                                           // 689
-// method for create user. Requests come from the client.                                  // 690
-Meteor.methods({createUser: function (options) {                                           // 691
-  var self = this;                                                                         // 692
-  return Accounts._loginMethod(                                                            // 693
-    self,                                                                                  // 694
-    "createUser",                                                                          // 695
-    arguments,                                                                             // 696
-    "password",                                                                            // 697
-    function () {                                                                          // 698
-      // createUser() above does more checking.                                            // 699
-      check(options, Object);                                                              // 700
-      if (Accounts._options.forbidClientAccountCreation)                                   // 701
-        return {                                                                           // 702
-          error: new Meteor.Error(403, "Signups forbidden")                                // 703
-        };                                                                                 // 704
-                                                                                           // 705
-      // Create user. result contains id and token.                                        // 706
-      var userId = createUser(options);                                                    // 707
-      // safety belt. createUser is supposed to throw on error. send 500 error             // 708
-      // instead of sending a verification email with empty userid.                        // 709
-      if (! userId)                                                                        // 710
-        throw new Error("createUser failed to insert new user");                           // 711
-                                                                                           // 712
-      // If `Accounts._options.sendVerificationEmail` is set, register                     // 713
-      // a token to verify the user's primary email, and send it to                        // 714
-      // that address.                                                                     // 715
-      if (options.email && Accounts._options.sendVerificationEmail)                        // 716
-        Accounts.sendVerificationEmail(userId, options.email);                             // 717
+  var user = {services: {}};                                                               // 682
+  if (options.password) {                                                                  // 683
+    var hashed = hashPassword(options.password);                                           // 684
+    user.services.password = { bcrypt: hashed };                                           // 685
+  }                                                                                        // 686
+                                                                                           // 687
+  if (username)                                                                            // 688
+    user.username = username;                                                              // 689
+  if (email)                                                                               // 690
+    user.emails = [{address: email, verified: false}];                                     // 691
+                                                                                           // 692
+  return Accounts.insertUserDoc(options, user);                                            // 693
+};                                                                                         // 694
+                                                                                           // 695
+// method for create user. Requests come from the client.                                  // 696
+Meteor.methods({createUser: function (options) {                                           // 697
+  var self = this;                                                                         // 698
+  return Accounts._loginMethod(                                                            // 699
+    self,                                                                                  // 700
+    "createUser",                                                                          // 701
+    arguments,                                                                             // 702
+    "password",                                                                            // 703
+    function () {                                                                          // 704
+      // createUser() above does more checking.                                            // 705
+      check(options, Object);                                                              // 706
+      if (Accounts._options.forbidClientAccountCreation)                                   // 707
+        return {                                                                           // 708
+          error: new Meteor.Error(403, "Signups forbidden")                                // 709
+        };                                                                                 // 710
+                                                                                           // 711
+      // Create user. result contains id and token.                                        // 712
+      var userId = createUser(options);                                                    // 713
+      // safety belt. createUser is supposed to throw on error. send 500 error             // 714
+      // instead of sending a verification email with empty userid.                        // 715
+      if (! userId)                                                                        // 716
+        throw new Error("createUser failed to insert new user");                           // 717
                                                                                            // 718
-      // client gets logged in as the new user afterwards.                                 // 719
-      return {userId: userId};                                                             // 720
-    }                                                                                      // 721
-  );                                                                                       // 722
-}});                                                                                       // 723
+      // If `Accounts._options.sendVerificationEmail` is set, register                     // 719
+      // a token to verify the user's primary email, and send it to                        // 720
+      // that address.                                                                     // 721
+      if (options.email && Accounts._options.sendVerificationEmail)                        // 722
+        Accounts.sendVerificationEmail(userId, options.email);                             // 723
                                                                                            // 724
-// Create user directly on the server.                                                     // 725
-//                                                                                         // 726
-// Unlike the client version, this does not log you in as this user                        // 727
-// after creation.                                                                         // 728
-//                                                                                         // 729
-// returns userId or throws an error if it can't create                                    // 730
-//                                                                                         // 731
-// XXX add another argument ("server options") that gets sent to onCreateUser,             // 732
-// which is always empty when called from the createUser method? eg, "admin:               // 733
-// true", which we want to prevent the client from setting, but which a custom             // 734
-// method calling Accounts.createUser could set?                                           // 735
-//                                                                                         // 736
-Accounts.createUser = function (options, callback) {                                       // 737
-  options = _.clone(options);                                                              // 738
-                                                                                           // 739
-  // XXX allow an optional callback?                                                       // 740
-  if (callback) {                                                                          // 741
-    throw new Error("Accounts.createUser with callback not supported on the server yet."); // 742
-  }                                                                                        // 743
-                                                                                           // 744
-  return createUser(options);                                                              // 745
-};                                                                                         // 746
-                                                                                           // 747
-///                                                                                        // 748
-/// PASSWORD-SPECIFIC INDEXES ON USERS                                                     // 749
-///                                                                                        // 750
-Meteor.users._ensureIndex('emails.validationTokens.token',                                 // 751
-                          {unique: 1, sparse: 1});                                         // 752
-Meteor.users._ensureIndex('services.password.reset.token',                                 // 753
-                          {unique: 1, sparse: 1});                                         // 754
-                                                                                           // 755
+      // client gets logged in as the new user afterwards.                                 // 725
+      return {userId: userId};                                                             // 726
+    }                                                                                      // 727
+  );                                                                                       // 728
+}});                                                                                       // 729
+                                                                                           // 730
+// Create user directly on the server.                                                     // 731
+//                                                                                         // 732
+// Unlike the client version, this does not log you in as this user                        // 733
+// after creation.                                                                         // 734
+//                                                                                         // 735
+// returns userId or throws an error if it can't create                                    // 736
+//                                                                                         // 737
+// XXX add another argument ("server options") that gets sent to onCreateUser,             // 738
+// which is always empty when called from the createUser method? eg, "admin:               // 739
+// true", which we want to prevent the client from setting, but which a custom             // 740
+// method calling Accounts.createUser could set?                                           // 741
+//                                                                                         // 742
+Accounts.createUser = function (options, callback) {                                       // 743
+  options = _.clone(options);                                                              // 744
+                                                                                           // 745
+  // XXX allow an optional callback?                                                       // 746
+  if (callback) {                                                                          // 747
+    throw new Error("Accounts.createUser with callback not supported on the server yet."); // 748
+  }                                                                                        // 749
+                                                                                           // 750
+  return createUser(options);                                                              // 751
+};                                                                                         // 752
+                                                                                           // 753
+///                                                                                        // 754
+/// PASSWORD-SPECIFIC INDEXES ON USERS                                                     // 755
+///                                                                                        // 756
+Meteor.users._ensureIndex('emails.validationTokens.token',                                 // 757
+                          {unique: 1, sparse: 1});                                         // 758
+Meteor.users._ensureIndex('services.password.reset.token',                                 // 759
+                          {unique: 1, sparse: 1});                                         // 760
+                                                                                           // 761
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);

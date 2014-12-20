@@ -32,27 +32,29 @@ this.log = function() {
 };
 
 if (Meteor.isClient) {
-  FView.registerView('InputSurface', famous.surfaces.InputSurface, {
-    famousCreatedPost: function() {
-      log('INPUT SURFACE!!!!!!!1111');
-      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
-    }
-  });
-  FView.registerView('ImageSurface', famous.surfaces.ImageSurface, {
-    famousCreatedPost: function() {
-      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
-    }
-  });
-  FView.registerView('CanvasSurface', famous.surfaces.CanvasSurface, {
-    famousCreatedPost: function() {
-      this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
-      return log('CONTEXT?!');
-    }
-  });
-  FView.registerView('GridLayout', famous.views.GridLayout, {
-    famousCreatedPost: function() {
-      return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
-    }
+  FView.ready(function() {
+    FView.registerView('InputSurface', famous.surfaces.InputSurface, {
+      famousCreatedPost: function() {
+        log('INPUT SURFACE!!!!!!!1111');
+        return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+      }
+    });
+    FView.registerView('ImageSurface', famous.surfaces.ImageSurface, {
+      famousCreatedPost: function() {
+        return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+      }
+    });
+    FView.registerView('CanvasSurface', famous.surfaces.CanvasSurface, {
+      famousCreatedPost: function() {
+        this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+        return log('CONTEXT?!');
+      }
+    });
+    return FView.registerView('GridLayout', famous.views.GridLayout, {
+      famousCreatedPost: function() {
+        return this.pipeChildrenTo = this.parent.pipeChildrenTo != null ? [this.view, this.parent.pipeChildrenTo[0]] : [this.view];
+      }
+    });
   });
   Meteor.startup(function() {
     Logger.setLevel('famous-views', 'info');
@@ -126,6 +128,7 @@ if (Meteor.isClient) {
     Session.setDefault('timer', momentTimer);
     Session.setDefault('now', TimeSync.serverTime());
     Session.setDefault('easterEggActive', false);
+    Session.setDefault('loaded', false);
     Session.setDefault('blur', 100);
     Session.setDefault('grayscale', false);
     Session.setDefault('bloom', 1);
@@ -143,6 +146,7 @@ if (Meteor.isClient) {
     Engine.on('postrender', function() {
       var FAR, NEAR, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_ANGLE, axisHelper, canvasSize, effectBloom, effectCopy, effectHorizBlur, effectVertiBlur, light, renderModel, size, subscribed, userIsPublishing, videoGeometry, videoMaterial;
       if (window.canvas && !window.context) {
+        log('MAKE CANVAS!!!!');
         size = FView.mainCtx.getSize();
         canvasSize = [size[0] * 2, size[1] * 2];
         window.canvas.setSize(size, canvasSize);
@@ -162,7 +166,6 @@ if (Meteor.isClient) {
         window.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR);
         window.camera.position.set(0, 0, 3);
         window.camera.lookAt(window.scene.position);
-        THREEx.WindowResize(window.renderer, window.camera);
         window.composer = new THREE.EffectComposer(window.renderer);
         renderModel = new THREE.RenderPass(window.scene, window.camera);
         effectBloom = new THREE.BloomPass(Session.get('bloom'));
@@ -179,6 +182,7 @@ if (Meteor.isClient) {
         scene.add(axisHelper);
         light = new THREE.AmbientLight("rgb(255,255,255)");
         window.scene.add(light);
+        THREEx.WindowResize(window.renderer, window.camera);
       }
       userIsPublishing = Session.get('userIsPublishing');
       subscribed = Session.get('subscribed');
@@ -389,68 +393,44 @@ if (Meteor.isClient) {
       });
     };
     Template.background.rendered = function() {
-      var easterEgg, fview, target, videoWrapper;
-      fview = FView.from(this);
-      log('Set videoWrapper layout!', fview);
-      videoWrapper = this.find('#videoWrapper');
-      log('videoWrapper', videoWrapper);
-      window.canvasParent = fview;
-      window.canvas = fview.view;
-      log('Ready?', FView.isReady);
-      log('Canvas!', this.$('canvas'));
-      easterEgg = new Konami(function() {
-        var SkywardSwordLink, SkywardSwordLinkDAE, TwilightPrincessLink, TwilightPrincessLinkDAE, WindWakerLink, YoungLink, easterEggActive, loader, threePointLighting;
-        log('Trigger Model Viewer!');
-        easterEggActive = Session.get('easterEggActive');
-        if (!easterEggActive) {
-          Session.set('easterEggActive', true);
-          threePointLighting = new THREEx.ThreePointsLighting();
-          window.scene.add(threePointLighting);
-          loader = new THREEx.UniversalLoader();
-          YoungLink = ['models/YoungLink/YoungLinkEquipped.obj', 'models/YoungLink/YoungLinkEquipped.mtl'];
-          WindWakerLink = ['models/WindWakerLink/link.obj', 'models/WindWakerLink/link.mtl'];
-          SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae';
-          SkywardSwordLink = ['models/SkywardSwordLink/Link.obj', 'models/SkywardSwordLink/Link.mtl'];
-          TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae';
-          TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj', 'models/TwilightPrincessLink/Link.mtl'];
-          return loader.load(YoungLink, function(object) {
-            var boundingBox, scaleScalar, size;
-            log('MODEL LOADED!', object);
-            boundingBox = new THREE.Box3().setFromObject(object);
-            window.link = boundingBox;
-            log('boundingBox!', boundingBox);
-            size = boundingBox.size();
-            log('size', size);
-            scaleScalar = Math.max(size.x, Math.max(size.y, size.z));
-            log('scaleScalar', scaleScalar);
-            object.scale.divideScalar(scaleScalar);
-            boundingBox = new THREE.Box3().setFromObject(object);
-            object.position.copy(boundingBox.center().negate());
-            window.easterEggModel = object;
-            return scene.add(object);
-          });
-        }
-      });
-      target = fview.surface || fview.view || fview.view._eventInput;
-      target.on('click', function() {
-        return log('BACKGROUND TARGET CLICKED', fview, target);
-      });
-      return this.autorun(function(computation) {
-
-        /*timelineActive = Session.get('timelineActive')
-        				if timelineActive is true
-        					fview.modifier.halt()
-        					fview.modifier.setTransform Transform.scale(0.5,0.5,1),
-        						method: 'spring'
-        						period: 500
-        						dampingRatio: 0.5
-        				else
-        					fview.modifier.halt()
-        					fview.modifier.setTransform Transform.scale(1,1,1),
-        						method: 'spring'
-        						period: 500
-        						dampingRatio: 0.5
-         */
+      return Engine.defer(function() {
+        var backgroundFView, easterEgg;
+        backgroundFView = FView.byId('background');
+        log('backgroundFView', backgroundFView);
+        window.canvas = backgroundFView.view;
+        return easterEgg = new Konami(function() {
+          var SkywardSwordLink, SkywardSwordLinkDAE, TwilightPrincessLink, TwilightPrincessLinkDAE, WindWakerLink, YoungLink, easterEggActive, loader, threePointLighting;
+          log('Trigger Model Viewer!');
+          easterEggActive = Session.get('easterEggActive');
+          if (!easterEggActive) {
+            Session.set('easterEggActive', true);
+            threePointLighting = new THREEx.ThreePointsLighting();
+            window.scene.add(threePointLighting);
+            loader = new THREEx.UniversalLoader();
+            YoungLink = ['models/YoungLink/YoungLinkEquipped.obj', 'models/YoungLink/YoungLinkEquipped.mtl'];
+            WindWakerLink = ['models/WindWakerLink/link.obj', 'models/WindWakerLink/link.mtl'];
+            SkywardSwordLinkDAE = 'models/SkywardSwordLink/Link_2.dae';
+            SkywardSwordLink = ['models/SkywardSwordLink/Link.obj', 'models/SkywardSwordLink/Link.mtl'];
+            TwilightPrincessLinkDAE = 'models/TwilightPrincessLink/Link.dae';
+            TwilightPrincessLink = ['models/TwilightPrincessLink/Link.obj', 'models/TwilightPrincessLink/Link.mtl'];
+            return loader.load(YoungLink, function(object) {
+              var boundingBox, scaleScalar, size;
+              log('MODEL LOADED!', object);
+              boundingBox = new THREE.Box3().setFromObject(object);
+              window.link = boundingBox;
+              log('boundingBox!', boundingBox);
+              size = boundingBox.size();
+              log('size', size);
+              scaleScalar = Math.max(size.x, Math.max(size.y, size.z));
+              log('scaleScalar', scaleScalar);
+              object.scale.divideScalar(scaleScalar);
+              boundingBox = new THREE.Box3().setFromObject(object);
+              object.position.copy(boundingBox.center().negate());
+              window.easterEggModel = object;
+              return scene.add(object);
+            });
+          }
+        });
       });
     };
     Template.overlay.rendered = function() {
@@ -815,28 +795,26 @@ if (Meteor.isClient) {
       log('TIMELINESEARCHHOLDER FVIEW', timelineSearchFView);
       target = timelineSearchFView.surface || timelineSearchFView.view._eventInput;
       log('TIMELINESEARCHHOLDER TARGET', target);
-      target.on('keyup', function(e) {
+      return target.on('keyup', function(e) {
         return log('TIMELINESEARCHHOLDER KEYUP', e);
       });
-      return this.autorun(function(computation) {
-        var timelineActive;
-        timelineActive = Session.get('timelineActive');
-        if (timelineActive === true) {
-          timelineSearchFView.modifier.halt();
-          return timelineSearchFView.modifier.setTransform(Transform.scale(1, 1, 1), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        } else {
-          timelineSearchFView.modifier.halt();
-          return timelineSearchFView.modifier.setTransform(Transform.scale(0, 0, 0), {
-            method: 'spring',
-            period: 500,
-            dampingRatio: 0.5
-          });
-        }
-      });
+
+      /*@autorun((computation)->
+      				timelineActive = Session.get('timelineActive')
+      				if timelineActive is true
+      					timelineSearchFView.modifier.halt()
+      					timelineSearchFView.modifier.setTransform Transform.scale(1,1,1),
+      						method: 'spring'
+      						period: 500
+      						dampingRatio: 0.5
+      				else
+      					timelineSearchFView.modifier.halt()
+      					timelineSearchFView.modifier.setTransform Transform.scale(0,0,0),
+      						method: 'spring'
+      						period: 500
+      						dampingRatio: 0.5
+      			)
+       */
     };
     Template.timelineSearchHolder.helpers({
       timelineSearchStyles: function() {
@@ -898,90 +876,32 @@ if (Meteor.isClient) {
       var timelineMinuteScrollerFView;
       timelineMinuteScrollerFView = FView.byId('timelineMinuteScroller');
       timelineMinuteScrollerFView.modifier.setOrigin([0.5, 0.5]);
-      Engine.pipe(timelineMinuteScrollerFView.view);
-      return this.autorun(function(computation) {
-        var disableThisDebugStyle, i, scrollDistance, timelineActive, _i, _j, _k, _l, _results, _results1, _results2, _results3;
-        timelineActive = Session.get('timelineActive');
-        if (timelineActive === true) {
-          timelineMinuteScrollerFView.modifier.halt();
-          timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(1, 1, 1), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.8
-          });
-          timelineMinuteScrollerFView.modifier.setOpacity(1, {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.8
-          });
-        } else {
-          timelineMinuteScrollerFView.modifier.halt();
-          timelineMinuteScrollerFView.modifier.setTransform(Transform.scale(3, 3, 3), {
-            method: 'spring',
-            period: 600,
-            dampingRatio: 0.8
-          });
-          timelineMinuteScrollerFView.modifier.setOpacity(0, {
-            method: 'spring',
-            period: 600,
-            dampingRatio: 0.8
-          });
-        }
-        disableThisDebugStyle = false;
-        if (disableThisDebugStyle) {
-          if (previousMinute > amountMidPoint && currentMinute < amountMidPoint) {
-            log('***************We\'re gonna overscroll past 0 here!*******(forwards)');
-            scrollDistance = totalAmount + currentMinute - previousMinute;
-            if (scrollDistance < 0) {
-              scrollDistance = scrollDistance * -1;
-            }
-            log('##############currentMinute distance from previousMinute##############', scrollDistance);
-            _results = [];
-            for (i = _i = 0; 0 <= scrollDistance ? _i < scrollDistance : _i > scrollDistance; i = 0 <= scrollDistance ? ++_i : --_i) {
-              _results.push(window.timelineMinuteScroller.goToNextPage());
-            }
-            return _results;
-          } else if (previousMinute < amountMidPoint && currentMinute > amountMidPoint) {
-            log('%%%%%%%%%%%%%%%We\'re gonna overscroll past 59 here!%%%%%(backwards)');
-            scrollDistance = totalAmount + previousMinute - currentMinute;
-            if (scrollDistance < 0) {
-              scrollDistance = scrollDistance * -1;
-            }
-            log('@@@@@@@@@@@@@@currentMinute distance from previousMinute@@@@@@@@@@@@@@', scrollDistance);
-            _results1 = [];
-            for (i = _j = 0; 0 <= scrollDistance ? _j < scrollDistance : _j > scrollDistance; i = 0 <= scrollDistance ? ++_j : --_j) {
-              _results1.push(window.timelineMinuteScroller.goToPreviousPage());
-            }
-            return _results1;
-          } else {
-            log('Just scroll as normal!');
-            scrollDistance = previousMinute - currentMinute;
-            if (scrollDistance < 0) {
-              scrollDistance = scrollDistance * -1;
-            }
-            if (previousMinute < currentMinute) {
-              log('!!!!!!!!!!!!!currentMinute distance from previousMinute!(forwards)!!!!', scrollDistance);
-              _results2 = [];
-              for (i = _k = 0; 0 <= scrollDistance ? _k < scrollDistance : _k > scrollDistance; i = 0 <= scrollDistance ? ++_k : --_k) {
-                _results2.push(window.timelineMinuteScroller.goToNextPage());
-              }
-              return _results2;
-            } else {
-              log('!!!!!!!!!!!!currentMinute distance from previousMinute!(backwards)!!!!', scrollDistance);
-              if (previousMinute === currentMinute) {
-                log('Scrolling back one to cover this edgecase!');
-                return window.timelineMinuteScroller.goToPreviousPage();
-              } else {
-                _results3 = [];
-                for (i = _l = 0; 0 <= scrollDistance ? _l < scrollDistance : _l > scrollDistance; i = 0 <= scrollDistance ? ++_l : --_l) {
-                  _results3.push(window.timelineMinuteScroller.goToPreviousPage());
-                }
-                return _results3;
-              }
-            }
-          }
-        }
-      });
+      return Engine.pipe(timelineMinuteScrollerFView.view);
+
+      /*@autorun((computation)->
+      				timelineActive = Session.get 'timelineActive'
+      				if timelineActive is true
+      					timelineMinuteScrollerFView.modifier.halt()
+      					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(1,1,1),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.8
+      					timelineMinuteScrollerFView.modifier.setOpacity 1,
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.8
+      				else
+      					timelineMinuteScrollerFView.modifier.halt()
+      					timelineMinuteScrollerFView.modifier.setTransform Transform.scale(3,3,3),
+      						method: 'spring'
+      						period: 600
+      						dampingRatio: 0.8
+      					timelineMinuteScrollerFView.modifier.setOpacity 0,
+      						method: 'spring'
+      						period: 600
+      						dampingRatio: 0.8
+      			)
+       */
     };
     Template.timelineMinuteScroller.helpers({
       timelineMinuteScrollerStyles: function() {
@@ -1112,31 +1032,30 @@ if (Meteor.isClient) {
       if (momentMinute.format('h:mm A') === serverMoment.format('h:mm A')) {
         Session.set('currentMinute', data.index);
       }
-      target.on('click', function() {
+      return target.on('click', function() {
         log('TIMELINE MINUTE CLICKED', fview, target, this, self);
         return Session.set('currentMinute', data.index);
       });
-      return this.autorun(function(computation) {
-        var currentMinute, instance;
-        currentMinute = Session.get('currentMinute');
-        instance = Template.instance();
-        data = instance.data;
-        if (currentMinute === data.index) {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(30, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        } else {
-          fview.modifier.halt();
-          return fview.modifier.setTransform(Transform.translate(0, 0), {
-            method: 'spring',
-            period: 1000,
-            dampingRatio: 0.3
-          });
-        }
-      });
+
+      /*@autorun((computation)->
+      				currentMinute = Session.get('currentMinute')
+      				 *Get the Template instance
+      				instance = Template.instance()
+      				data = instance.data
+      				if currentMinute is data.index
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(30, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      				else
+      					fview.modifier.halt()
+      					fview.modifier.setTransform Transform.translate(0, 0),
+      						method: 'spring'
+      						period: 1000
+      						dampingRatio: 0.3
+      			)
+       */
     };
     Template.timelineMinute.helpers({
       minute: function() {
